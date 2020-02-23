@@ -1,0 +1,100 @@
+swagger: "2.0"
+info:
+  title: Eventum
+  description: Eventum api.
+  version: 1.0.0
+host: eventum.rowbot.dev
+basePath: /v1
+schemes:
+  - https
+paths:
+  /:
+    get:
+      summary: Landing page if user is not auth.
+      description: If user auth it returns a feed page in another case it returns landing.
+      produces:
+        - text/html
+      responses:
+        200:
+          description: OK
+  /profile:
+    put:
+      summary: update profile info
+      description: user profile page will updated by new data
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        401:
+          description: Forbidden
+  /profile/{NUM}:
+    get:
+      summary: get user info
+      description: user profile page
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        401:
+          description: Forbidden
+  /events:
+    get:
+      summary: get several events
+      description:
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        403:
+          description: Forbidden
+  /events/{NUM}:
+    post:
+      summary: vote for event
+      description:
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        403:
+          description: Forbidden
+  /feed:
+    post:
+      summary: likes and dislikes by user
+        description: send likes and dislikes by user
+        produces:
+          - application/json
+        responses:
+          200:
+            description: OK
+
+  /singup:
+    post:
+      summary: register
+        description: signup user in application
+        produces:
+          - application/json
+        responses:
+          200:
+            description: OK
+          409:
+            description: Conflict
+  /singin:
+    post:
+      summary: authtorize
+        description: signup user in application
+        produces:
+          - application/json
+        responses:
+          200:
+            description: OK
+          403:
+            description: Wrong password or login
+  /band/chat:
+    get:
+  /chat/{NUM}/page:
+    post:
+    get:
