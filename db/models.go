@@ -4,6 +4,7 @@ import "time"
 
 type User struct {
 	Uid      int    `json:"uid"`
+	Name     string `json:"name"`
 	Phone    string `json:"phone"`
 	Email    string `json:"email"`
 	Password []byte `json:"-"`

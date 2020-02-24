@@ -3,7 +3,6 @@ package routes
 import (
 	"../../db"
 	"../forms"
-	"database/sql"
 	"encoding/json"
 	htmux "github.com/dimfeld/httptreemux"
 	"net/http"
@@ -12,7 +11,7 @@ import (
 func SignIn(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	r.Header.Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(r.Body)
-	var form forms.SignUp
+	var form forms.SignForm
 	err := decoder.Decode(&form)
 	if err != nil {
 		GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
@@ -22,16 +21,24 @@ func SignIn(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	ok := form.Validate()
 	if !ok {
 		ValidationFailed(w, r)
+		return
 	}
 
 	user, err := db.GetUserByPhoneOrEmail(db.ConnectToDB(), form.Name, form.Email)
 	if err != nil {
+		GenErrorCode(w, r, "User doesn't exist", http.StatusNotFound)
 		return
 	}
 
-	Handle200(w, r, u)
+	if ComparePasswords(user.Password, form.Password) {
+		err := CreateAuth(w, r, user)
+		if err != nil {
+			GenErrorCode(w, r, err.Error(), 400)
+		}
+	}
+
 }
 
 func SignInHandler(router *htmux.TreeMux) {
-	router.POST("/api/signin", createNewUser)
+	router.POST("/api/signin", SignIn)
 }

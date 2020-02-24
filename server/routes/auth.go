@@ -10,6 +10,14 @@ func EncryptPassword(password string) ([]byte, error) {
 	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }
 
+func ComparePasswords(hash []byte, p string) bool {
+	err := bcrypt.CompareHashAndPassword(hash, p)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
 func createNewUser(writer http.ResponseWriter, request *http.Request, ps map[string]string) {
 }
 
@@ -19,10 +27,8 @@ func getUserProfile(writer http.ResponseWriter, request *http.Request, ps map[st
 func updateUserProfile(writer http.ResponseWriter, request *http.Request, ps map[string]string) {
 }
 
-
 func UserHandler(router *htmux.TreeMux) {
-	router.POST("/api/user/create",  createNewUser)
-	router.GET( "/api/user/profile/:id", getUserProfile)
+	router.POST("/api/user/create", createNewUser)
+	router.GET("/api/user/profile/:id", getUserProfile)
 	router.POST("/api/user/profile", updateUserProfile)
 }
-
