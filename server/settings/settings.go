@@ -2,10 +2,12 @@ package settings
 
 type ServerSettings struct {
 	Port int
-	Ip string
-
+	Ip   string
 }
 
 func GetSettings() ServerSettings {
-	return ServerSettings{}
+	return ServerSettings{
+		5000,
+		"localhost",
+	}
 }

@@ -11,6 +11,7 @@ CREATE TYPE ETYPE_T AS ENUM ('concert', 'museum', 'bar', 'theater', 'walk', 'tou
 CREATE TABLE IF NOT EXISTS profile
 (
     uid      SERIAL PRIMARY KEY,
+    name     VARCHAR(32)        NOT NULL check ( name <> '' ),
     phone    VARCHAR(12) UNIQUE NOT NULL CHECK ( phone <> '' ),
     email    VARCHAR(64) UNIQUE NOT NULL CHECK ( email <> '' ),
     password BYTEA              NOT NULL CHECK ( octet_length(password) <> 0 )
