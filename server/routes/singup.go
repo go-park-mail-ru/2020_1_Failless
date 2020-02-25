@@ -3,6 +3,7 @@ package routes
 import (
 	"../../db"
 	"../forms"
+	"../utils"
 	"encoding/json"
 	htmux "github.com/dimfeld/httptreemux"
 	"net/http"
@@ -33,10 +34,12 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		GenErrorCode(w, r, "User with this information already exist", http.StatusConflict)
 		return
 	}
-	ok := RegisterNewUser(form)
+
+	ok = utils.RegisterNewUser(form)
 	if !ok {
 		GenErrorCode(w, r, "error", 500)
 	}
+
 	output, err := json.Marshal(form)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -48,5 +51,5 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 }
 
 func SignUPHandler(router *htmux.TreeMux) {
-	router.POST("/api/signun", SignUp)
+	router.POST("/api/signup", SignUp)
 }

@@ -3,22 +3,30 @@ package routes
 import (
 	"../../db"
 	"../forms"
+	"../utils"
 	"encoding/json"
 	htmux "github.com/dimfeld/httptreemux"
+	"log"
 	"net/http"
 )
 
 func SignIn(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	log.Print("handler work")
+	ok, err := utils.IsAuth(w, r)
+	if err != nil || ok {
+		return
+	}
+
 	r.Header.Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm
-	err := decoder.Decode(&form)
+	err = decoder.Decode(&form)
 	if err != nil {
 		GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
 		return
 	}
 
-	ok := form.Validate()
+	ok = form.Validate()
 	if !ok {
 		ValidationFailed(w, r)
 		return
@@ -31,9 +39,10 @@ func SignIn(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 
 	if ComparePasswords(user.Password, form.Password) {
-		err := CreateAuth(w, r, user)
+		err := utils.CreateAuth(w, r, user)
 		if err != nil {
-			GenErrorCode(w, r, err.Error(), 400)
+			GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
+			return
 		}
 	}
 

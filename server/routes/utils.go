@@ -28,3 +28,7 @@ func GenErrorCode(w http.ResponseWriter, r *http.Request, what string, status in
 	page := ErrorMessage{r, what, status}
 	_ = json.NewEncoder(w).Encode(page)
 }
+
+
+func ValidationFailed(w http.ResponseWriter, r *http.Request) {
+}

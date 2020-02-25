@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS profile_info
     photos     VARCHAR(64)[]                        DEFAULT NULL,
     rating     FLOAT                                DEFAULT 0,
     location   GEOGRAPHY                            DEFAULT NULL, -- ST_POINT(latitude, longitude)
-    birthday   DATE                        NOT NULL,
+    birthday   DATE                                 DEFAULT NULL,
     gender     SEX_T,
     login_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
