@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"../../db"
-	"../forms"
-	"../utils"
+	"eventum/db"
+	"eventum/server/forms"
+	"eventum/server/utils"
 	"encoding/json"
 	htmux "github.com/dimfeld/httptreemux"
 	"log"

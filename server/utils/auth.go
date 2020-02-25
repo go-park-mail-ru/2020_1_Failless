@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"../../db"
-	"../forms"
+	"eventum/db"
+	"eventum/server/forms"
 	"encoding/json"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
