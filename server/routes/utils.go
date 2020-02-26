@@ -2,9 +2,12 @@ package routes
 
 import (
 	"encoding/json"
+	"github.com/go-park-mail-ru/2020_1_Failless/db"
+	"github.com/go-park-mail-ru/2020_1_Failless/server/forms"
 	"net/http"
 	"path"
 	"strings"
+	"time"
 )
 
 type ErrorMessage struct {
@@ -32,4 +35,19 @@ func GenErrorCode(w http.ResponseWriter, r *http.Request, what string, status in
 
 func ValidationFailed(w http.ResponseWriter, r *http.Request) {
 	GenErrorCode(w, r, "validation failed", http.StatusBadRequest)
+}
+
+func FillProfile(row db.UserInfo) forms.ProfileForm {
+	// todo: take pictures from media
+	// todo: fill form
+	return forms.ProfileForm{
+		SignForm: nil,
+		Avatar:   forms.EImage{},
+		Photos:   nil,
+		Gender:   0,
+		About:    "",
+		Rating:   0,
+		Location: db.LocationPoint{},
+		Birthday: time.Time{},
+	}
 }

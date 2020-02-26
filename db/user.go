@@ -75,3 +75,18 @@ func UpdateUserRating(db *pgx.ConnPool, uid int, rating float32) error {
 	_, err := db.Exec(sqlStatement, rating, uid)
 	return err
 }
+
+func GetProfileInfo(db *pgx.ConnPool, uid int) (user UserInfo, err error) {
+	sqlStatement := `SELECT about, photos, rating, birthday, gender FROM profile_info WHERE pid = $1 ;`
+	err = db.QueryRow(sqlStatement, uid).Scan(
+		&user.Photos,
+		&user.Photos,
+		&user.Rating,
+		&user.Birthday,
+		&user.Gender)
+	if err != nil {
+		log.Println(sqlStatement)
+		log.Println("error in db")
+	}
+	return
+}

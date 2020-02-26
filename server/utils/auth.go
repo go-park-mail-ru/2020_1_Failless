@@ -1,13 +1,13 @@
 package utils
 
 import (
-	"encoding/json"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-park-mail-ru/2020_1_Failless/db"
 	"github.com/go-park-mail-ru/2020_1_Failless/server/forms"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -46,7 +46,7 @@ func createJWTToken(user db.User) (string, error) {
 	return tokenString, nil
 }
 
-func CreateAuth(w http.ResponseWriter, r *http.Request, user db.User) error {
+func CreateAuth(w http.ResponseWriter, user db.User) error {
 	token, err := createJWTToken(user)
 	if err != nil {
 		return err
@@ -58,15 +58,27 @@ func CreateAuth(w http.ResponseWriter, r *http.Request, user db.User) error {
 		Expires:  time.Now().Add(time.Hour * 24 * 30),
 		HttpOnly: true,
 	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "name",
+		Value:    user.Name,
+		Expires:  time.Now().Add(time.Hour * 24 * 30),
+		HttpOnly: false,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "uid",
+		Value:    strconv.Itoa(user.Uid),
+		Expires:  time.Now().Add(time.Hour * 24 * 30),
+		HttpOnly: false,
+	})
 
 	return nil
 }
 
-func IsAuth(w http.ResponseWriter, r *http.Request) (bool, error) {
+func IsAuth(w http.ResponseWriter, r *http.Request) (int, error) {
 	c, err := r.Cookie("token")
 	if err != nil {
 		log.Print(err.Error())
-		return false, nil
+		return -1, nil
 	}
 
 	// Get the JWT string from the cookie
@@ -81,22 +93,25 @@ func IsAuth(w http.ResponseWriter, r *http.Request) (bool, error) {
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			w.WriteHeader(http.StatusUnauthorized)
-			return false, nil
+			return -1, nil
 		}
 		w.WriteHeader(http.StatusBadRequest)
-		return false, err
+		return -1, err
 	}
 
 	if !tkn.Valid {
 		w.WriteHeader(http.StatusUnauthorized)
-		return false, nil
+		return -1, nil
+	}
+	c, err = r.Cookie("uid")
+	if err != nil {
+		log.Print(err.Error())
+		return -1, nil
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	page := claims
-	_ = json.NewEncoder(w).Encode(page)
-	return true, nil
+	// Get the JWT string from the cookie
+	uid, err := strconv.Atoi(c.Value)
+	return uid, err
 }
 
 func EncryptPassword(password string) ([]byte, error) {

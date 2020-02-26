@@ -12,6 +12,12 @@ import (
 
 func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Println("/api/signup")
+	uid, err := utils.IsAuth(w, r)
+	if err != nil || uid > 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
 	r.Header.Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm

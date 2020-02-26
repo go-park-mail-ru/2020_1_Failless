@@ -10,12 +10,10 @@ import (
 	"net/http"
 )
 
-func SignIn(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Print("handler work")
 	uid, err := utils.IsAuth(w, r)
 	if err != nil || uid > 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotModified)
 		return
 	}
 
@@ -37,28 +35,27 @@ func SignIn(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 	log.Println("validation passed")
 
-	user, err := db.GetUserByPhoneOrEmail(db.ConnectToDB(), form.Name, form.Email)
-	if user.Uid < 0 {
-		log.Println("user not found")
-		GenErrorCode(w, r, "User doesn't exist", http.StatusNotFound)
-		return
-	} else if err != nil {
-		log.Println(err.Error())
-		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if ComparePasswords(user.Password, form.Password) {
-		err := utils.CreateAuth(w, user)
-		if err != nil {
-			GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
-			return
-		}
-	} else {
-		GenErrorCode(w, r, "Passwords is not equal", http.StatusUnauthorized)
-	}
+	// todo: added images download and update db data
 }
 
-func SignInHandler(router *htmux.TreeMux) {
-	router.POST("/api/signin", SignIn)
+func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	log.Println("/api/profile")
+	uid, err := utils.IsAuth(w, r)
+	if err != nil || uid < 0 {
+		return
+	}
+
+	row, err := db.GetProfileInfo(db.ConnectToDB(), uid)
+	if err != nil {
+		log.Println(err.Error())
+		GenErrorCode(w, r, "Profile not found", http.StatusNotFound)
+		return
+	}
+
+
+}
+
+func ProfileHandler(router *htmux.TreeMux) {
+	router.POST("/api/profile", UpdProfilePage)
+	router.GET("/api/profile", GetProfilePage)
 }
