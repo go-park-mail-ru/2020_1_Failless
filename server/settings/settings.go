@@ -8,6 +8,6 @@ type ServerSettings struct {
 func GetSettings() ServerSettings {
 	return ServerSettings{
 		5000,
-		"localhost",
+		"0.0.0.0",
 	}
 }

@@ -1,12 +1,15 @@
 package forms
 
-import "regexp"
+import (
+	"log"
+	"regexp"
+)
 
 type SignForm struct {
 	Name     string `json:"name"`
 	Phone    string `json:"phone"`
 	Email    string `json:"email"`
-	Password string `json:"-"`
+	Password string `json:"password"`
 }
 
 const (
@@ -31,12 +34,17 @@ func (s *SignForm) ValidatePassword() bool {
 	if symCounter < MinSym || digitCounter < MinDigit {
 		return false
 	}
+	log.Println("passwdord valid")
 	return true
 }
 
 func (s *SignForm) ValidateEmail() bool {
 	r, _ := regexp.Compile("[a-zA-Z0-9.]+@[a-zA-Z0-9]+[.]{1}[a-z]{2,10}")
-	return r.MatchString(s.Email)
+	if r.MatchString(s.Email) {
+		log.Println("email valid")
+		return true
+	}
+	return false
 }
 
 func (s *SignForm) ValidatePhone() bool {
@@ -44,12 +52,14 @@ func (s *SignForm) ValidatePhone() bool {
 	for _, sym := range s.Phone {
 		if '0' <= sym && sym <= '9' {
 			digitCounter++
+		} else {
+			return false
 		}
-		return false
 	}
 	if !(5 < digitCounter && digitCounter < 15) {
 		return false
 	}
+	log.Println("phone valid")
 	return true
 }
 

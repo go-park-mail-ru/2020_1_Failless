@@ -1,10 +1,12 @@
 package utils
 
 import (
-	"github.com/go-park-mail-ru/2020_1_Failless/db"
-	"github.com/go-park-mail-ru/2020_1_Failless/server/forms"
 	"encoding/json"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/go-park-mail-ru/2020_1_Failless/db"
+	"github.com/go-park-mail-ru/2020_1_Failless/server/forms"
+	"golang.org/x/crypto/bcrypt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -63,10 +65,11 @@ func CreateAuth(w http.ResponseWriter, r *http.Request, user db.User) error {
 func IsAuth(w http.ResponseWriter, r *http.Request) (bool, error) {
 	c, err := r.Cookie("token")
 	if err != nil {
-		if err == http.ErrNoCookie {
-			return false, nil
-		}
-		return false, err
+		log.Print(err.Error())
+		//if err == http.ErrNoCookie {
+		//	return false, nil
+		//}
+		return false, nil
 	}
 
 	// Get the JWT string from the cookie
@@ -99,6 +102,22 @@ func IsAuth(w http.ResponseWriter, r *http.Request) (bool, error) {
 	return true, nil
 }
 
-func RegisterNewUser(user forms.SignForm) bool {
-	return false
+func EncryptPassword(password string) ([]byte, error) {
+	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+}
+
+func RegisterNewUser(user forms.SignForm) error {
+	bPass, err := EncryptPassword(user.Password)
+	if err != nil {
+		return err
+	}
+
+	dbUser := db.User{
+		Name:     user.Name,
+		Phone:    user.Phone,
+		Email:    user.Email,
+		Password: bPass,
+	}
+
+	return db.AddNewUser(db.ConnectToDB(), &dbUser)
 }

@@ -6,10 +6,6 @@ import (
 	"net/http"
 )
 
-func EncryptPassword(password string) ([]byte, error) {
-	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-}
-
 func ComparePasswords(hash []byte, p string) bool {
 	err := bcrypt.CompareHashAndPassword(hash, []byte(p))
 	if err != nil {

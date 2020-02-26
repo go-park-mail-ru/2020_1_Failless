@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"github.com/jackc/pgx"
+	"log"
 )
 
 func GetUserByPhoneOrEmail(db *pgx.ConnPool, phone string, email string) (User, error) {
@@ -16,30 +17,33 @@ func GetUserByPhoneOrEmail(db *pgx.ConnPool, phone string, email string) (User, 
 		&user.Phone,
 		&user.Email,
 		&user.Password)
+	log.Println(sqlStatement)
 	if err == pgx.ErrNoRows {
 		return User{-1, "", "", "", []byte{}}, nil
 	} else if err != nil {
 		return User{}, err
 	}
+	log.Println(user)
 	return user, nil
 }
 
 func AddNewUser(db *pgx.ConnPool, user *User) error {
 	sqlStatement := `INSERT INTO profile VALUES (default, $1, $2, $3, $4) RETURNING uid;`
-	row, err := db.Query(sqlStatement, user.Name, user.Phone, user.Email, user.Password)
+	uid := int(0)
+	err := db.QueryRow(sqlStatement, user.Name, user.Phone, user.Email, user.Password).Scan(&uid)
 	if err != nil {
+		log.Println(err.Error())
 		return err
 	}
-	err = row.Scan(&user.Uid)
-	if err != nil {
-		return err
-	}
+	user.Uid = uid
 	sqlStatement = `INSERT INTO profile_info VALUES ( $1  `
 	for i := 0; i < 7; i++ {
 		sqlStatement += ` , default `
 	}
 	sqlStatement += `) ;`
+	log.Println(sqlStatement)
 	_, err = db.Exec(sqlStatement, user.Uid)
+	log.Println(err)
 	return err
 }
 

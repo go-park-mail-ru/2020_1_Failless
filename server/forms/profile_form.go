@@ -17,7 +17,7 @@ type ProfileForm struct {
 }
 
 func (p *ProfileForm) ValidateGender() bool {
-	return true
+	return 0 <= p.Gender && p.Gender <= 2
 }
 
 func (p *ProfileForm) ValidationImage() bool {

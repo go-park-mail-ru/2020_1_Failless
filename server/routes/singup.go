@@ -1,15 +1,17 @@
 package routes
 
 import (
+	"encoding/json"
+	htmux "github.com/dimfeld/httptreemux"
 	"github.com/go-park-mail-ru/2020_1_Failless/db"
 	"github.com/go-park-mail-ru/2020_1_Failless/server/forms"
 	"github.com/go-park-mail-ru/2020_1_Failless/server/utils"
-	"encoding/json"
-	htmux "github.com/dimfeld/httptreemux"
+	"log"
 	"net/http"
 )
 
 func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	log.Println("/api/signup")
 	r.Header.Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm
@@ -27,7 +29,7 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 	user, err := db.GetUserByPhoneOrEmail(db.ConnectToDB(), form.Name, form.Email)
 	if err != nil {
-		GenErrorCode(w, r, "User doesn't exist", http.StatusNotFound)
+		GenErrorCode(w, r, "DB error", http.StatusInternalServerError)
 		return
 	}
 	if user.Uid > 0 {
@@ -35,10 +37,14 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	ok = utils.RegisterNewUser(form)
-	if !ok {
-		GenErrorCode(w, r, "error", 500)
+	err = utils.RegisterNewUser(form)
+	if err != nil {
+		log.Println("user wasn't registered")
+		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		return
 	}
+
+	log.Println("user was registered")
 
 	output, err := json.Marshal(form)
 	if err != nil {

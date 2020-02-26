@@ -26,15 +26,23 @@ func SignIn(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	ok = form.Validate()
-	if !ok {
+	log.Println(form)
+
+	if !(form.ValidatePhone() || form.ValidateEmail()) /*|| !(form.ValidatePassword())*/ {
+		log.Println("validation error")
 		ValidationFailed(w, r)
 		return
 	}
+	log.Println("validation passed")
 
 	user, err := db.GetUserByPhoneOrEmail(db.ConnectToDB(), form.Name, form.Email)
-	if err != nil {
+	if user.Uid < 0 {
+		log.Println("user not found")
 		GenErrorCode(w, r, "User doesn't exist", http.StatusNotFound)
+		return
+	} else if err != nil {
+		log.Println(err.Error())
+		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -45,7 +53,7 @@ func SignIn(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 			return
 		}
 	}
-
+	GenErrorCode(w, r, "Passwords is not equal", http.StatusUnauthorized)
 }
 
 func SignInHandler(router *htmux.TreeMux) {
