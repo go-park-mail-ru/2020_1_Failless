@@ -9,9 +9,9 @@ import (
 const (
 	host     = "localhost"
 	port     = 5432
-	user     = "park"
-	password = "admin"
-	dbname   = "park_forum"
+	user     = "eventum"
+	password = "eventum"
+	dbname   = "eventum"
 )
 var db *pgx.ConnPool = nil
 var syncOnce = sync.Once{}
