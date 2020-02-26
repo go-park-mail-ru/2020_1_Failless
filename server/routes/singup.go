@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"github.com/go-park-mailru/2020_1_Failless/db"
-	"github.com/go-park-mailru/2020_1_Failless/server/forms"
-	"github.com/go-park-mailru/2020_1_Failless/server/utils"
+	"github.com/go-park-mail-ru/2020_1_Failless/db"
+	"github.com/go-park-mail-ru/2020_1_Failless/server/forms"
+	"github.com/go-park-mail-ru/2020_1_Failless/server/utils"
 	"encoding/json"
 	htmux "github.com/dimfeld/httptreemux"
 	"net/http"

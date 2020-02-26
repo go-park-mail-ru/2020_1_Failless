@@ -13,7 +13,6 @@ const (
 	password = "admin"
 	dbname   = "park_forum"
 )
-
 var db *pgx.ConnPool = nil
 var syncOnce = sync.Once{}
 

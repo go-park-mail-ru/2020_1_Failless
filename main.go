@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/dimfeld/httptreemux"
-	"github.com/go-park-mailru/2020_1_Failless/server/routes"
-	"github.com/go-park-mailru/2020_1_Failless/server/settings"
+	"github.com/go-park-mail-ru/2020_1_Failless/server/routes"
+	"github.com/go-park-mail-ru/2020_1_Failless/server/settings"
 	"log"
 	"net/http"
 	"strconv"

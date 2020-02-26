@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"github.com/go-park-mailru/2020_1_Failless/db"
-	"github.com/go-park-mailru/2020_1_Failless/server/forms"
+	"github.com/go-park-mail-ru/2020_1_Failless/db"
+	"github.com/go-park-mail-ru/2020_1_Failless/server/forms"
 	"encoding/json"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
