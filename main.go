@@ -17,6 +17,7 @@ func main() {
 	router := httptreemux.New()
 	routes.SignInHandler(router)
 	routes.SignUPHandler(router)
+	routes.ProfileHandler(router)
 	server := http.Server{
 		Addr:         "0.0.0.0:" + strconv.Itoa(serverSettings.Port),
 		Handler:      router,

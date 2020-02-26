@@ -21,7 +21,7 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	r.Header.Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm
-	err := decoder.Decode(&form)
+	err = decoder.Decode(&form)
 	if err != nil {
 		GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
 		return
