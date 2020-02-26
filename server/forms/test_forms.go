@@ -5,6 +5,22 @@ import (
 	"testing"
 )
 
+//testing all profile forms
+func TestProfileFull(t *testing.T) {
+	f := ProfileForm{
+		SignForm:  nil,
+		ImgBase64: "?",
+		ImgName:   "?",
+		Img:       nil,
+		Gender:    1,
+	}
+	assert.Equal(t, true, f.ValidateGender())
+
+	// needs to write ProfileForm in correct format to fully test image validation
+	assert.Equal(t, false, f.ValidationImage())
+}
+
+// testing all signup forms
 func TestValidateFull(t *testing.T) {
 	s := SignForm{
 		Name:     "Sergey",
