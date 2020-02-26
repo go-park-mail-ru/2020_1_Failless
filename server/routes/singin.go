@@ -1,11 +1,11 @@
 package routes
 
 import (
-	"eventum/db"
-	"eventum/server/forms"
-	"eventum/server/utils"
 	"encoding/json"
 	htmux "github.com/dimfeld/httptreemux"
+	"github.com/go-park-mailru/2020_1_Failless/db"
+	"github.com/go-park-mailru/2020_1_Failless/server/forms"
+	"github.com/go-park-mailru/2020_1_Failless/server/utils"
 	"log"
 	"net/http"
 )
