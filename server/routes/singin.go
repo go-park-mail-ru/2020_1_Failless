@@ -52,8 +52,9 @@ func SignIn(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 			GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
 			return
 		}
+	} else {
+		GenErrorCode(w, r, "Passwords is not equal", http.StatusUnauthorized)
 	}
-	GenErrorCode(w, r, "Passwords is not equal", http.StatusUnauthorized)
 }
 
 func SignInHandler(router *htmux.TreeMux) {

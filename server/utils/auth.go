@@ -66,9 +66,6 @@ func IsAuth(w http.ResponseWriter, r *http.Request) (bool, error) {
 	c, err := r.Cookie("token")
 	if err != nil {
 		log.Print(err.Error())
-		//if err == http.ErrNoCookie {
-		//	return false, nil
-		//}
 		return false, nil
 	}
 
