@@ -9,9 +9,9 @@ import (
 func TestProfileFull(t *testing.T) {
 	f := ProfileForm{
 		SignForm:  nil,
-		ImgBase64: "?",
-		ImgName:   "?",
-		Img:       nil,
+		//ImgBase64: "?",
+		//ImgName:   "?",
+		//Img:       nil,
 		Gender:    1,
 	}
 	assert.Equal(t, true, f.ValidateGender())

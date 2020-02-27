@@ -2,8 +2,8 @@ package routes
 
 import (
 	"encoding/json"
-	"github.com/go-park-mail-ru/2020_1_Failless/db"
-	"github.com/go-park-mail-ru/2020_1_Failless/server/forms"
+	"failless/db"
+	"failless/server/forms"
 	"net/http"
 	"path"
 	"strings"

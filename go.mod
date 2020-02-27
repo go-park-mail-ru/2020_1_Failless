@@ -1,4 +1,4 @@
-module github.com/go-park-mail-ru/2020_1_Failless
+module failless
 
 go 1.13
 
@@ -14,5 +14,6 @@ require (
 	github.com/lib/pq v1.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/shopspring/decimal v0.0.0-20200226005030-a08b92da27ed // indirect
+	github.com/stretchr/testify v1.5.1
 	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d
 )

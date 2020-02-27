@@ -2,10 +2,10 @@ package routes
 
 import (
 	"encoding/json"
+	"failless/db"
+	"failless/server/forms"
+	"failless/server/utils"
 	htmux "github.com/dimfeld/httptreemux"
-	"github.com/go-park-mail-ru/2020_1_Failless/db"
-	"github.com/go-park-mail-ru/2020_1_Failless/server/forms"
-	"github.com/go-park-mail-ru/2020_1_Failless/server/utils"
 	"log"
 	"net/http"
 )
@@ -58,7 +58,6 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		GenErrorCode(w, r, "Passwords is not equal", http.StatusUnauthorized)
 	}
 }
-
 
 func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Print("/api/logout")

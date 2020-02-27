@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/base64"
+	"failless/db"
+	"failless/server/utils"
 	"github.com/disintegration/imaging"
-	"github.com/go-park-mail-ru/2020_1_Failless/db"
 	"github.com/google/uuid"
 	"image"
 	"image/jpeg"
@@ -37,6 +38,7 @@ func (pic *EImage) Encode() error {
 		return err
 	}
 	pic.ImgBase64 = base64.StdEncoding.EncodeToString(buf)
+	return nil
 }
 
 func (pic *EImage) GetImage(name string) (err error) {
@@ -78,6 +80,41 @@ func (p *ProfileForm) ValidationImage() bool {
 	p.Avatar.Img = imaging.Fill(dstImage128, 100, 100, imaging.Center, imaging.Lanczos)
 
 	p.Avatar.ImgName = uuid.New().String() + ".jpg"
+	err = p.Avatar.SaveImage()
+	if err != nil {
+		return false
+	}
 
+	p.Photos = append(p.Photos, p.Avatar)
 	return true
+}
+
+func (p *ProfileForm) GetDBFormat(info *db.UserInfo, user *db.User) error {
+	encPass, err := utils.EncryptPassword(p.Password)
+	if err != nil {
+		return err
+	}
+
+	var photos []string
+	for _, pic := range p.Photos {
+		photos = append(photos, pic.ImgName)
+	}
+
+	*info = db.UserInfo{
+		About:     p.About,
+		Photos:    photos,
+		Rating:    p.Rating,
+		Birthday:  p.Birthday,
+		Gender:    p.Gender,
+		LoginDate: time.Time{},
+		Location:  p.Location,
+	}
+	*user = db.User{
+		Uid:      0,
+		Name:     p.Name,
+		Phone:    p.Phone,
+		Email:    p.Email,
+		Password: encPass,
+	}
+	return nil
 }

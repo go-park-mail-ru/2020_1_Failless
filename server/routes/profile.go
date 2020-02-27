@@ -2,16 +2,16 @@ package routes
 
 import (
 	"encoding/json"
+	"failless/db"
+	"failless/server/forms"
+	"failless/server/utils"
 	htmux "github.com/dimfeld/httptreemux"
-	"github.com/go-park-mail-ru/2020_1_Failless/db"
-	"github.com/go-park-mail-ru/2020_1_Failless/server/forms"
-	"github.com/go-park-mail-ru/2020_1_Failless/server/utils"
 	"log"
 	"net/http"
 )
 
 func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	log.Print("handler work")
+	log.Print("/api/profile")
 	uid, err := utils.IsAuth(w, r)
 	if err != nil || uid > 0 {
 		return
@@ -19,23 +19,41 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 
 	r.Header.Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(r.Body)
-	var form forms.SignForm
+	var form forms.ProfileForm
 	err = decoder.Decode(&form)
 	if err != nil {
 		GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
 		return
 	}
 
-	log.Println(form)
-
-	if !form.Validate() {
+	if !(form.Validate() && form.ValidateGender()) {
 		log.Println("validation error")
 		ValidationFailed(w, r)
 		return
 	}
-	log.Println("validation passed")
+	if !form.ValidationImage() {
+		GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
+	}
+	var info db.UserInfo
+	var user db.User
 
-	// todo: added images download and update db data
+	if err := form.GetDBFormat(&info, &user); err != nil {
+		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := db.AddUserInfo(db.ConnectToDB(), user, info); err != nil {
+		GenErrorCode(w, r, err.Error(), http.StatusNotFound)
+		return
+	}
+	output, err := json.Marshal(form)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(output)
 }
 
 func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {

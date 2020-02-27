@@ -52,7 +52,7 @@ func AddUserInfo(db *pgx.ConnPool, user User, info UserInfo) error {
 	row := db.QueryRow(sqlStatement, user.Email, user.Phone)
 	err := row.Scan(&user.Uid)
 	if err == pgx.ErrNoRows {
-		return errors.New("user " + user.Email + "doesn't exist\n")
+		return errors.New("user " + user.Email + "doesn't exist")
 	} else if err != nil {
 		return err
 	}

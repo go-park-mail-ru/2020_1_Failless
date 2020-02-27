@@ -1,9 +1,9 @@
 package utils
 
 import (
+	"failless/db"
+	"failless/server/forms"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/go-park-mail-ru/2020_1_Failless/db"
-	"github.com/go-park-mail-ru/2020_1_Failless/server/forms"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
