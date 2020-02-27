@@ -15,7 +15,7 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 	serverSettings := settings.GetSettings()
 	router := httptreemux.New()
-	routes.SignInHandler(router)
+	routes.AuthHandler(router)
 	routes.SignUPHandler(router)
 	routes.ProfileHandler(router)
 	server := http.Server{

@@ -10,8 +10,8 @@ import (
 	"net/http"
 )
 
-func SignIn(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	log.Print("handler work")
+func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	log.Print("/api/signin")
 	uid, err := utils.IsAuth(w, r)
 	if err != nil || uid > 0 {
 		w.Header().Set("Content-Type", "application/json")
@@ -59,6 +59,25 @@ func SignIn(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 }
 
-func SignInHandler(router *htmux.TreeMux) {
+
+func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	log.Print("/api/logout")
+	uid, err := utils.IsAuth(w, r)
+	if err != nil || uid < 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	if err := utils.CreateLogout(w); err != nil {
+		GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	return
+}
+
+func AuthHandler(router *htmux.TreeMux) {
 	router.POST("/api/signin", SignIn)
+	router.GET("/api/logout", Logout)
 }

@@ -74,6 +74,30 @@ func CreateAuth(w http.ResponseWriter, user db.User) error {
 	return nil
 }
 
+func CreateLogout(w http.ResponseWriter) error {
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    "-",
+		MaxAge:   0,
+		HttpOnly: true,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "name",
+		Value:    "-",
+		MaxAge:   0,
+		HttpOnly: false,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "uid",
+		Value:    "-",
+		MaxAge:   0,
+		HttpOnly: false,
+	})
+
+	return nil
+}
+
 func IsAuth(w http.ResponseWriter, r *http.Request) (int, error) {
 	c, err := r.Cookie("token")
 	if err != nil {

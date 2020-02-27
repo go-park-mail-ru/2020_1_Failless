@@ -28,7 +28,7 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 
 	log.Println(form)
 
-	if !(form.ValidatePhone() || form.ValidateEmail()) /*|| !(form.ValidatePassword())*/ {
+	if !form.Validate() {
 		log.Println("validation error")
 		ValidationFailed(w, r)
 		return
@@ -51,8 +51,20 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		GenErrorCode(w, r, "Profile not found", http.StatusNotFound)
 		return
 	}
+	profile, err := FillProfile(row)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-
+	output, err := json.Marshal(profile)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(output)
 }
 
 func ProfileHandler(router *htmux.TreeMux) {

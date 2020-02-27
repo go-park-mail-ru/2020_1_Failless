@@ -1,12 +1,15 @@
 package forms
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/base64"
 	"github.com/disintegration/imaging"
 	"github.com/go-park-mail-ru/2020_1_Failless/db"
 	"github.com/google/uuid"
 	"image"
+	"image/jpeg"
+	"path"
 	"time"
 )
 
@@ -14,6 +17,32 @@ type EImage struct {
 	ImgBase64 string      `json:"img"`
 	ImgName   string      `json:"-"`
 	Img       image.Image `json:"-"`
+}
+
+const (
+	Media = "media/images/"
+)
+
+func (pic *EImage) SaveImage() error {
+	err := imaging.Save(pic.Img, path.Join(Media, pic.ImgName))
+	return err
+}
+
+func (pic *EImage) Encode() error {
+	buf := make([]byte, 128*128*3)
+	var b bytes.Buffer
+	w := bufio.NewWriter(&b)
+	err := jpeg.Encode(w, pic.Img, &jpeg.Options{})
+	if err != nil {
+		return err
+	}
+	pic.ImgBase64 = base64.StdEncoding.EncodeToString(buf)
+}
+
+func (pic *EImage) GetImage(name string) (err error) {
+	pic.ImgName = name
+	pic.Img, err = imaging.Open(path.Join(Media, name))
+	return
 }
 
 type ProfileForm struct {
