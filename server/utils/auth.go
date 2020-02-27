@@ -2,9 +2,7 @@ package utils
 
 import (
 	"failless/db"
-	"failless/server/forms"
 	"github.com/dgrijalva/jwt-go"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"strconv"
@@ -139,22 +137,3 @@ func IsAuth(w http.ResponseWriter, r *http.Request) (int, error) {
 	return uid, err
 }
 
-func EncryptPassword(password string) ([]byte, error) {
-	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-}
-
-func RegisterNewUser(user forms.SignForm) error {
-	bPass, err := EncryptPassword(user.Password)
-	if err != nil {
-		return err
-	}
-
-	dbUser := db.User{
-		Name:     user.Name,
-		Phone:    user.Phone,
-		Email:    user.Email,
-		Password: bPass,
-	}
-
-	return db.AddNewUser(db.ConnectToDB(), &dbUser)
-}

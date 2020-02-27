@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"failless/db"
-	"failless/server/utils"
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
 	"image"
@@ -90,7 +89,7 @@ func (p *ProfileForm) ValidationImage() bool {
 }
 
 func (p *ProfileForm) GetDBFormat(info *db.UserInfo, user *db.User) error {
-	encPass, err := utils.EncryptPassword(p.Password)
+	encPass, err := EncryptPassword(p.Password)
 	if err != nil {
 		return err
 	}

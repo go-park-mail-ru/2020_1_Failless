@@ -69,7 +69,8 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		GenErrorCode(w, r, "Profile not found", http.StatusNotFound)
 		return
 	}
-	profile, err := FillProfile(row)
+	var profile forms.ProfileForm
+	err = profile.FillProfile(row)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

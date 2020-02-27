@@ -43,7 +43,7 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	err = utils.RegisterNewUser(form)
+	err = forms.RegisterNewUser(form)
 	if err != nil {
 		log.Println("user wasn't registered")
 		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)

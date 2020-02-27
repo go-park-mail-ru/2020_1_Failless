@@ -1,6 +1,8 @@
 package forms
 
 import (
+	"failless/db"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"regexp"
 	"sync"
@@ -72,3 +74,24 @@ func (s *SignForm) ValidatePhone() bool {
 func (s *SignForm) Validate() bool {
 	return s.ValidateEmail() && s.ValidatePassword() && s.ValidatePhone()
 }
+
+func EncryptPassword(password string) ([]byte, error) {
+	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+}
+
+func RegisterNewUser(user SignForm) error {
+	bPass, err := EncryptPassword(user.Password)
+	if err != nil {
+		return err
+	}
+
+	dbUser := db.User{
+		Name:     user.Name,
+		Phone:    user.Phone,
+		Email:    user.Email,
+		Password: bPass,
+	}
+
+	return db.AddNewUser(db.ConnectToDB(), &dbUser)
+}
+
