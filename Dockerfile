@@ -24,6 +24,7 @@ RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-k
 RUN apt-get -y update
 ENV PGVERSION 12
 RUN apt-get -y install postgresql-$PGVERSION postgresql-contrib
+RUN apt install -y postgis
 
 USER postgres
 ARG dbuser
