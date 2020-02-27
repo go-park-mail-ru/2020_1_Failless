@@ -18,6 +18,9 @@ func main() {
 	routes.AuthHandler(router)
 	routes.SignUPHandler(router)
 	routes.ProfileHandler(router)
+	routes.TagHandler(router)
+	routes.EventHandler(router)
+
 	server := http.Server{
 		Addr:         "0.0.0.0:" + strconv.Itoa(serverSettings.Port),
 		Handler:      router,

@@ -14,6 +14,8 @@ var (
 	password = os.Getenv("DB_PASSWORD")
 	dbname   = os.Getenv("DB_NAME")
 )
+
+
 var db *pgx.ConnPool = nil
 var syncOnce = sync.Once{}
 

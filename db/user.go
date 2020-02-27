@@ -17,13 +17,11 @@ func GetUserByPhoneOrEmail(db *pgx.ConnPool, phone string, email string) (User, 
 		&user.Phone,
 		&user.Email,
 		&user.Password)
-	log.Println(sqlStatement)
 	if err == pgx.ErrNoRows {
 		return User{-1, "", "", "", []byte{}}, nil
 	} else if err != nil {
 		return User{}, err
 	}
-	log.Println(user)
 	return user, nil
 }
 
@@ -36,14 +34,8 @@ func AddNewUser(db *pgx.ConnPool, user *User) error {
 		return err
 	}
 	user.Uid = uid
-	sqlStatement = `INSERT INTO profile_info VALUES ( $1  `
-	for i := 0; i < 7; i++ {
-		sqlStatement += ` , default `
-	}
-	sqlStatement += `) ;`
-	log.Println(sqlStatement)
+	sqlStatement = `INSERT INTO profile_info VALUES ( $1 , default , default , default , default , default , default , default ) ;`
 	_, err = db.Exec(sqlStatement, user.Uid)
-	log.Println(err)
 	return err
 }
 
@@ -64,7 +56,7 @@ func AddUserInfo(db *pgx.ConnPool, user User, info UserInfo) error {
 	return nil
 }
 
-func SetUserLocation(db *pgx.ConnPool, uid int,  point LocationPoint) error {
+func SetUserLocation(db *pgx.ConnPool, uid int, point LocationPoint) error {
 	sqlStatement := `UPDATE profile_info SET location = ST_POINT($1, $2) WHERE pid = $3;`
 	_, err := db.Exec(sqlStatement, point.Latitude, point.Longitude, uid)
 	return err
@@ -86,7 +78,7 @@ func GetProfileInfo(db *pgx.ConnPool, uid int) (user UserInfo, err error) {
 		&user.Gender)
 	if err != nil {
 		log.Println(sqlStatement)
-		log.Println("error in db")
+		log.Println("error in get profile info")
 		return UserInfo{}, err
 	}
 	return
