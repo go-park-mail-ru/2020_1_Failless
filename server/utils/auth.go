@@ -52,22 +52,23 @@ func CreateAuth(w http.ResponseWriter, user db.User) error {
 		return err
 	}
 
+	expires := time.Now().Add(time.Hour * 24 * 30)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 24 * 30),
+		Expires:  expires,
 		HttpOnly: true,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "name",
 		Value:    user.Name,
-		Expires:  time.Now().Add(time.Hour * 24 * 30),
+		Expires:  expires,
 		HttpOnly: false,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "uid",
 		Value:    strconv.Itoa(user.Uid),
-		Expires:  time.Now().Add(time.Hour * 24 * 30),
+		Expires:  expires,
 		HttpOnly: false,
 	})
 

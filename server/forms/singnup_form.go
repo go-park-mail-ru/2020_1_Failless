@@ -3,6 +3,7 @@ package forms
 import (
 	"log"
 	"regexp"
+	"sync"
 )
 
 type SignForm struct {
@@ -17,6 +18,9 @@ const (
 	MinSym   = 4
 	MinDigit = 2
 )
+
+var compileOnce = sync.Once{}
+var regExpr *regexp.Regexp = nil
 
 func (s *SignForm) ValidatePassword() bool {
 	if len(s.Password) < MinLen {
@@ -39,8 +43,10 @@ func (s *SignForm) ValidatePassword() bool {
 }
 
 func (s *SignForm) ValidateEmail() bool {
-	r, _ := regexp.Compile("[a-zA-Z0-9.]+@[a-zA-Z0-9]+[.]{1}[a-z]{2,10}")
-	if r.MatchString(s.Email) {
+	compileOnce.Do(func() {
+		regExpr, _ = regexp.Compile("[a-zA-Z0-9.]+@[a-zA-Z0-9]+[.]{1}[a-z]{2,10}")
+	})
+	if regExpr.MatchString(s.Email) {
 		log.Println("email valid")
 		return true
 	}

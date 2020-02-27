@@ -11,9 +11,9 @@ type User struct {
 }
 
 const (
-	male = iota
-	female
-	other
+	Male = iota
+	Female
+	Other
 )
 
 type LocationPoint struct {

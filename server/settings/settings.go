@@ -7,7 +7,7 @@ type ServerSettings struct {
 
 func GetSettings() ServerSettings {
 	return ServerSettings{
-		5000,
-		"0.0.0.0",
+		Port: 5000,
+		Ip:   "0.0.0.0",
 	}
 }
