@@ -1,4 +1,7 @@
 FROM golang:1.13-stretch AS lang
+ARG dbuser
+ARG dbpasswd
+RUN echo "CREATE USER ${dbuser} WITH SUPERUSER PASSWORD '${dbpasswd}';"
 WORKDIR /home/eventum
 COPY . .
 RUN go build .
@@ -29,11 +32,9 @@ RUN apt install -y postgis
 USER postgres
 ARG dbuser
 ARG dbpasswd
-ENV env_username=$dbuser
-ENV env_dbpasswd=$dbpasswd
 RUN /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER $env_dbuser WITH SUPERUSER PASSWORD '$env_dbpasswd';" &&\
-    createdb -O $env_username eventum && psql -d eventum -c "CREATE EXTENSION IF NOT EXISTS citext;" &&\
+    psql --command "CREATE USER $dbuser WITH SUPERUSER PASSWORD '$dbpasswd';" &&\
+    createdb -O $dbuser eventum && psql -d eventum -c "CREATE EXTENSION IF NOT EXISTS citext;" &&\
     psql evenum -a -f ./configs/migrations/init.sql &&\
     /etc/init.d/postgresql stop
 EXPOSE 5432
