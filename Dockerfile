@@ -1,7 +1,4 @@
 FROM golang:1.13-stretch AS lang
-ARG dbuser
-ARG dbpasswd
-RUN echo "CREATE USER ${dbuser} WITH SUPERUSER PASSWORD '${dbpasswd}';"
 WORKDIR /home/eventum
 COPY . .
 RUN go build .
@@ -33,9 +30,9 @@ USER postgres
 ARG dbuser
 ARG dbpasswd
 RUN /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER $dbuser WITH SUPERUSER PASSWORD '$dbpasswd';" &&\
+    psql --command "CREATE USER ${dbuser} WITH SUPERUSER PASSWORD '${dbpasswd}';" &&\
     createdb -O $dbuser eventum && psql -d eventum -c "CREATE EXTENSION IF NOT EXISTS citext;" &&\
-    psql evenum -a -f ./configs/migrations/init.sql &&\
+    psql eventum -a -f ./configs/migrations/init.sql &&\
     /etc/init.d/postgresql stop
 EXPOSE 5432
 EXPOSE 5000
