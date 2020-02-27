@@ -24,7 +24,6 @@ func main() {
 	server := http.Server{
 		Addr:         "0.0.0.0:" + strconv.Itoa(serverSettings.Port),
 		Handler:      router,
-		TLSConfig:    nil,
 		ReadTimeout:  time.Second * 10,
 		WriteTimeout: time.Second * 30,
 	}
