@@ -54,7 +54,7 @@ var AllowedMethods = map[string]struct{}{
 func CORS(w http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")
 	_, allowed := AllowedHosts[origin]
-	_, allowedMethod := AllowedHosts[r.Method]
+	_, allowedMethod := AllowedMethods[r.Method]
 	if allowed && allowedMethod {
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
