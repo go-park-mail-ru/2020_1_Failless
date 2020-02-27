@@ -3,10 +3,10 @@ package db
 import "time"
 
 type User struct {
-	Uid      int    `json:"uid"`
-	Name     string `json:"name"`
-	Phone    string `json:"phone"`
-	Email    string `json:"email"`
+	Uid      int    `json:"uid, omitempty"`
+	Name     string `json:"name, omitempty"`
+	Phone    string `json:"phone, omitempty"`
+	Email    string `json:"email, omitempty"`
 	Password []byte `json:"-"`
 }
 

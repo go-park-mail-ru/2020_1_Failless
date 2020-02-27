@@ -64,3 +64,19 @@ func CORS(w http.ResponseWriter, r *http.Request) {
 			"GET, POST, OPTIONS, HEAD, PUT")
 	}
 }
+
+func Jsonify(w http.ResponseWriter, object interface{}, status int) {
+	output, err := json.Marshal(object)
+	if err != nil {
+		http.Error(w, err.Error(), status)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(output)
+	if err != nil {
+		http.Error(w, err.Error(), status)
+		return
+	}
+}

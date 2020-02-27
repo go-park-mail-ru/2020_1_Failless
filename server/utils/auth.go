@@ -137,3 +137,22 @@ func IsAuth(w http.ResponseWriter, r *http.Request) (int, error) {
 	return uid, err
 }
 
+func InfoFromCookie(r *http.Request) (info db.User, err error) {
+	c, err := r.Cookie("name")
+	if err != nil {
+		log.Print(err.Error())
+		return
+	}
+	info.Name = c.Value
+	c, err = r.Cookie("uid")
+	if err != nil {
+		log.Print(err.Error())
+		return
+	}
+	info.Uid, err = strconv.Atoi(c.Value)
+	if err != nil {
+		log.Print(err.Error())
+		return
+	}
+	return info, nil
+}

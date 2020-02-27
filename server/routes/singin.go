@@ -82,5 +82,4 @@ func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 func AuthHandler(router *htmux.TreeMux) {
 	router.POST("/api/signin", SignIn)
 	router.GET("/api/logout", Logout)
-	router.OPTIONS()
 }

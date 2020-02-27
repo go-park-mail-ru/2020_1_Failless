@@ -59,7 +59,7 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	_, _ = w.Write(output)
 }
 
-func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func GetProfilePage(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	CORS(w, r)
 	log.Println("/api/profile")
 	uid, err := utils.IsAuth(w, r)
@@ -91,7 +91,25 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	_, _ = w.Write(output)
 }
 
+func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	CORS(w, r)
+	log.Println("/api/getuser")
+	uid, err := utils.IsAuth(w, r)
+	if err != nil || uid < 0 {
+		GenErrorCode(w, r, "User is not authorised", http.StatusUnauthorized)
+		return
+	}
+
+	info, err := utils.InfoFromCookie(r)
+	if err != nil {
+		GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	Jsonify(w, info, http.StatusOK)
+}
+
 func ProfileHandler(router *htmux.TreeMux) {
 	router.POST("/api/profile", UpdProfilePage)
 	router.GET("/api/profile", GetProfilePage)
+	router.GET("/api/getuser", GetUserInfo)
 }
