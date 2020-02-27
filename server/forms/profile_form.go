@@ -118,3 +118,22 @@ func (p *ProfileForm) GetDBFormat(info *db.UserInfo, user *db.User) error {
 	}
 	return nil
 }
+
+func (p *ProfileForm) FillProfile(row db.UserInfo) error {
+	// todo: take pictures from media
+	eimage := EImage{}
+	ava := ""
+	if len(row.Photos) < 1 {
+		ava = path.Join(Media, "default.png")
+	} else {
+		ava = path.Join(Media, row.Photos[0])
+	}
+	if err := eimage.GetImage(ava); err != nil {
+		return err
+	}
+	p.Avatar.ImgName = row.Photos[0]
+	p.About = row.About
+	p.Location = row.Location
+	p.Gender = row.Gender
+	return nil
+}

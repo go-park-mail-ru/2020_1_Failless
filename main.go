@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"github.com/dimfeld/httptreemux"
 	"failless/server/routes"
 	"failless/server/settings"
+	"fmt"
+	"github.com/dimfeld/httptreemux"
 	"log"
 	"net/http"
 	"strconv"
