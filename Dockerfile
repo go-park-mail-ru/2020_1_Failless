@@ -26,10 +26,14 @@ ENV PGVERSION 12
 RUN apt-get -y install postgresql-$PGVERSION postgresql-contrib
 
 USER postgres
+ARG dbuser
+ARG dbpasswd
+ENV env_username=$dbuser
+ENV env_dbpasswd=$dbpasswd
 RUN /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER eventum WITH SUPERUSER PASSWORD 'eventum';" &&\
-    createdb -O eventum eventum && psql -d eventum -c "CREATE EXTENSION IF NOT EXISTS citext;" &&\
-    psql eventum -a -f ./configs/migrations/init.sql &&\
+    psql --command "CREATE USER $env_dbuser WITH SUPERUSER PASSWORD '$env_dbpasswd';" &&\
+    createdb -O $env_username eventum && psql -d eventum -c "CREATE EXTENSION IF NOT EXISTS citext;" &&\
+    psql evenum -a -f ./configs/migrations/init.sql &&\
     /etc/init.d/postgresql stop
 EXPOSE 5432
 EXPOSE 5000

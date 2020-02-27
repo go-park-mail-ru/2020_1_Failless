@@ -28,8 +28,6 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		return
 	}
 
-	log.Println(form)
-
 	if !(form.ValidatePhone() || form.ValidateEmail()) /*|| !(form.ValidatePassword())*/ {
 		log.Println("validation error")
 		ValidationFailed(w, r)

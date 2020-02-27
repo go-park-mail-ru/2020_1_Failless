@@ -31,6 +31,7 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		ValidationFailed(w, r)
 		return
 	}
+
 	if !form.ValidationImage() {
 		GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
 	}
@@ -51,6 +52,7 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(output)
@@ -69,6 +71,7 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		GenErrorCode(w, r, "Profile not found", http.StatusNotFound)
 		return
 	}
+
 	var profile forms.ProfileForm
 	err = profile.FillProfile(row)
 	if err != nil {

@@ -3,15 +3,16 @@ package db
 import (
 	"github.com/jackc/pgx"
 	"log"
+	"os"
 	"sync"
 )
 
-const (
+var (
 	host     = "localhost"
-	port     = 5432
-	user     = "eventum"
-	password = "eventum"
-	dbname   = "eventum"
+	port     = uint16(5432)
+	user     = os.Getenv("DB_USER")
+	password = os.Getenv("DB_PASSWORD")
+	dbname   = os.Getenv("DB_NAME")
 )
 var db *pgx.ConnPool = nil
 var syncOnce = sync.Once{}
