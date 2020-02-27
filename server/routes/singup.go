@@ -50,7 +50,6 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	log.Println("user was registered")
 	form.Password = ""
 	output, err := json.Marshal(form)
 	if err != nil {
