@@ -12,6 +12,7 @@ import (
 
 func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Println("/api/signup")
+	CORS(w, r)
 	uid, err := utils.IsAuth(w, r)
 	if err != nil || uid > 0 {
 		w.Header().Set("Content-Type", "application/json")

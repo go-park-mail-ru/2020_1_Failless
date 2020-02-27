@@ -11,6 +11,7 @@ import (
 )
 
 func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	CORS(w, r)
 	log.Print("/api/profile")
 	uid, err := utils.IsAuth(w, r)
 	if err != nil || uid > 0 {
@@ -59,6 +60,7 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 }
 
 func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	CORS(w, r)
 	log.Println("/api/profile")
 	uid, err := utils.IsAuth(w, r)
 	if err != nil || uid < 0 {

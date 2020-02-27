@@ -8,6 +8,7 @@ import (
 )
 
 func FeedTags(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	CORS(w, r)
 	tags, err := db.GetAllTags(db.ConnectToDB())
 	if err != nil {
 		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)

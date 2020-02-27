@@ -11,6 +11,7 @@ import (
 )
 
 func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	CORS(w, r)
 	log.Print("/api/signin")
 	uid, err := utils.IsAuth(w, r)
 	if err != nil || uid > 0 {
@@ -19,7 +20,10 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		return
 	}
 
-	r.Header.Set("Content-Type", "application/json")
+	if r.Header.Get("Content-Type") != "application/json" {
+		GenErrorCode(w, r, "Invalid format", http.StatusBadRequest)
+		return
+	}
 	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm
 	err = decoder.Decode(&form)
@@ -58,6 +62,7 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	CORS(w, r)
 	log.Print("/api/logout")
 	uid, err := utils.IsAuth(w, r)
 	if err != nil || uid < 0 {

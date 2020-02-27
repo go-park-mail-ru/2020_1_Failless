@@ -8,6 +8,7 @@ import (
 )
 
 func FeedEvents(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	CORS(w, r)
 	events, err := db.GetAllEvents(db.ConnectToDB())
 	if err != nil {
 		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
