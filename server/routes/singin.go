@@ -5,9 +5,10 @@ import (
 	"failless/db"
 	"failless/server/forms"
 	"failless/server/utils"
-	htmux "github.com/dimfeld/httptreemux"
 	"log"
 	"net/http"
+
+	htmux "github.com/dimfeld/httptreemux"
 )
 
 func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
@@ -63,6 +64,10 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 
 func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	CORS(w, r)
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 	log.Print("/api/logout")
 	uid, err := utils.IsAuth(w, r)
 	if err != nil || uid < 0 {
@@ -74,6 +79,7 @@ func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	return
