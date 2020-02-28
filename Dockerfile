@@ -1,7 +1,7 @@
 FROM golang:1.13-stretch AS lang
 WORKDIR /home/eventum
 COPY . .
-RUN go build -o bin/evetum
+RUN go build -o bin/eventum
 
 FROM ubuntu:18.04
 MAINTAINER Failless
@@ -40,4 +40,4 @@ EXPOSE 5000
 WORKDIR /home/eventum
 COPY --from=lang /home/eventum .
 
-CMD service postgresql start && ./eventum
+CMD service postgresql start && ./bin/eventum
