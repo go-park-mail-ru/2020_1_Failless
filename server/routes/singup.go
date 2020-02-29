@@ -5,9 +5,11 @@ import (
 	"failless/db"
 	"failless/server/forms"
 	"failless/server/utils"
+	"fmt"
 	htmux "github.com/dimfeld/httptreemux"
 	"log"
 	"net/http"
+	"os"
 )
 
 func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
@@ -60,6 +62,14 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(output)
+}
+
+func UserDelete(name string) {
+	err := db.DeleteUser(db.ConnectToDB(), name)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
 
 func SignUPHandler(router *htmux.TreeMux) {

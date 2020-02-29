@@ -48,7 +48,6 @@ CREATE TABLE IF NOT EXISTS timetable
     edate     TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     message   VARCHAR(1024)               NOT NULL,
     is_edited BOOLEAN                              DEFAULT FALSE,
-    sponsor   CITEXT                               DEFAULT NULL,
     photos    VARCHAR(64)[]                        DEFAULT NULL,
     etype     ETYPE_T
 );
@@ -61,7 +60,6 @@ CREATE TABLE IF NOT EXISTS events
     edate     TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     message   VARCHAR(1024)               NOT NULL,
     is_edited BOOLEAN                              DEFAULT FALSE,
-    author    CITEXT                               DEFAULT NULL,
     etype     ETYPE_T[],
     range     SMALLINT                             DEFAULT 1
 );

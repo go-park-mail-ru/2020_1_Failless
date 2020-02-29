@@ -3,16 +3,16 @@ package db
 import (
 	"github.com/jackc/pgx"
 	"log"
-	"os"
+	_ "os"
 	"sync"
 )
 
 var (
 	host     = "localhost"
 	port     = uint16(5432)
-	user     = os.Getenv("DB_USER")
-	password = os.Getenv("DB_PASSWORD")
-	dbname   = os.Getenv("DB_NAME")
+	user = "postgres"  // user     = os.Getenv("DB_USER")
+	password = ""      // password = os.Getenv("DB_PASSWORD")
+	dbname = "eventum" // dbname   = os.Getenv("DB_NAME")
 )
 
 

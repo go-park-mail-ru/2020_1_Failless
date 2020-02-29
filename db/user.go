@@ -83,3 +83,10 @@ func GetProfileInfo(db *pgx.ConnPool, uid int) (user UserInfo, err error) {
 	}
 	return
 }
+
+// func for testing
+func DeleteUser(db *pgx.ConnPool, name string) error {
+	sqlStatement := `DELETE FROM profile WHERE name=$1;`
+	_, err := db.Exec(sqlStatement, name)
+	return err
+}
