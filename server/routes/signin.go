@@ -14,20 +14,11 @@ import (
 func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	CORS(w, r)
 	log.Print("/api/signin")
-	uid, err := utils.IsAuth(w, r)
-	if err != nil || uid > 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotModified)
-		return
-	}
+	_ = utils.CreateLogout(w)
 
-	if r.Header.Get("Content-Type") != "application/json" {
-		GenErrorCode(w, r, "Invalid format", http.StatusBadRequest)
-		return
-	}
 	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm
-	err = decoder.Decode(&form)
+	err := decoder.Decode(&form)
 	if err != nil {
 		GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
 		return
@@ -38,14 +29,14 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		ValidationFailed(w, r)
 		return
 	}
-	log.Println("validation passed")
 
-	user, err := db.GetUserByPhoneOrEmail(db.ConnectToDB(), form.Name, form.Email)
+	user, err := db.GetUserByPhoneOrEmail(db.ConnectToDB(), form.Phone, form.Email)
 	if user.Uid < 0 {
 		log.Println("user not found")
 		GenErrorCode(w, r, "User doesn't exist", http.StatusNotFound)
 		return
 	} else if err != nil {
+		log.Println("error was occurred")
 		log.Println(err.Error())
 		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
@@ -60,6 +51,12 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	} else {
 		GenErrorCode(w, r, "Passwords is not equal", http.StatusUnauthorized)
 	}
+	form.Password = ""
+	form.Name = user.Name
+	form.Email = user.Email
+	form.Phone = user.Phone
+	form.Uid = user.Uid
+	Jsonify(w, form, http.StatusOK)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
@@ -69,8 +66,8 @@ func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 	log.Print("/api/logout")
-	uid, err := utils.IsAuth(w, r)
-	if err != nil || uid < 0 {
+	err := utils.IsAuth(w, r)
+	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -80,9 +77,7 @@ func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	return
+	Jsonify(w, ErrorMessage{Message: "Successfully logout", Status: 200}, 200)
 }
 
 func AuthHandler(router *htmux.TreeMux) {

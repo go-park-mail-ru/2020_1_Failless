@@ -5,16 +5,26 @@ import (
 	"failless/db"
 	"failless/server/forms"
 	"failless/server/utils"
-	htmux "github.com/dimfeld/httptreemux"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
+
+	htmux "github.com/dimfeld/httptreemux"
 )
 
 func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	CORS(w, r)
+	if !CORS(w, r) {
+		return
+	}
 	log.Print("/api/profile")
-	uid, err := utils.IsAuth(w, r)
-	if err != nil || uid > 0 {
+	err := utils.IsAuth(w, r)
+	if err != nil {
+		GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
+		return
+	}
+	uid := 0
+	if uid = GetIdFromRequest(w, r, &ps); uid < 0 {
 		return
 	}
 
@@ -23,18 +33,48 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	var form forms.ProfileForm
 	err = decoder.Decode(&form)
 	if err != nil {
-		GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
+		form1 := forms.ProfileForm{
+			SignForm: forms.SignForm{
+				Name:     "me",
+				Phone:    "88005553535",
+				Email:    "rowbot@dev.deb",
+				Password: "root12345",
+			},
+			Avatar: forms.EImage{
+				ImgBase64: "stststst",
+				ImgName:   "name",
+			},
+			Photos: []forms.EImage{
+				{
+					ImgBase64: "stststst",
+					ImgName:   "name",
+				},
+			},
+			Gender: 0,
+			About:  "about me",
+			Rating: 0,
+			Location: db.LocationPoint{
+				Longitude: 1212.1,
+				Latitude:  1212.1,
+				Accuracy:  12121,
+			},
+			Birthday: time.Now(),
+		}
+		Jsonify(w, form1, 200)
+		//GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
 		return
 	}
 
-	if !(form.Validate() && form.ValidateGender()) {
-		log.Println("validation error")
-		ValidationFailed(w, r)
-		return
-	}
-
-	if !form.ValidationImage() {
-		GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
+	// if !(form.Validate() && form.ValidateGender()) {
+	// 	log.Println("validation error")
+	// 	ValidationFailed(w, r)
+	// 	return
+	// }
+	if form.Avatar.ImgBase64 != "" {
+		if !form.ValidationImage() {
+			GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
+			return
+		}
 	}
 	var info db.UserInfo
 	var user db.User
@@ -43,10 +83,15 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	user.Uid = uid
 	if err := db.AddUserInfo(db.ConnectToDB(), user, info); err != nil {
 		GenErrorCode(w, r, err.Error(), http.StatusNotFound)
 		return
+	}
+	form.Avatar.ImgBase64 = ""
+	for _, item := range form.Photos {
+		item.ImgBase64 = ""
+		item.Img = nil
 	}
 	output, err := json.Marshal(form)
 	if err != nil {
@@ -59,14 +104,22 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	_, _ = w.Write(output)
 }
 
-func GetProfilePage(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	CORS(w, r)
+func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	if !CORS(w, r) {
+		return
+	}
 	log.Println("/api/profile")
-	uid, err := utils.IsAuth(w, r)
-	if err != nil || uid < 0 {
+	err := utils.IsAuth(w, r)
+	if err != nil {
+		GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
+		return
+	}
+	uid := 0
+	if uid = GetIdFromRequest(w, r, &ps); uid < 0 {
 		return
 	}
 
+	log.Println(uid)
 	row, err := db.GetProfileInfo(db.ConnectToDB(), uid)
 	if err != nil {
 		log.Println(err.Error())
@@ -81,6 +134,14 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, _ map[string]string)
 		return
 	}
 
+	base, err := db.GetUserByUID(db.ConnectToDB(), uid)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	log.Println(base.Name)
+	profile.SignForm.Name = base.Name
+	profile.Password = ""
 	output, err := json.Marshal(profile)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -92,15 +153,24 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, _ map[string]string)
 }
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	CORS(w, r)
+	if !CORS(w, r) {
+		return
+	}
 	log.Println("/api/getuser")
-	uid, err := utils.IsAuth(w, r)
-	if err != nil || uid < 0 {
+	err := utils.IsAuth(w, r)
+	if err != nil {
 		GenErrorCode(w, r, "User is not authorised", http.StatusUnauthorized)
 		return
 	}
 
-	info, err := utils.InfoFromCookie(r)
+	uid, err := strconv.Atoi(ps["id"])
+	if err != nil {
+		GenErrorCode(w, r, "Incorrect id", http.StatusBadRequest)
+		return
+	}
+
+	//info, err := utils.InfoFromCookie(r)
+	info, err := db.GetUserByUID(db.ConnectToDB(), uid)
 	if err != nil {
 		GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
 		return
@@ -109,7 +179,7 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 }
 
 func ProfileHandler(router *htmux.TreeMux) {
-	router.POST("/api/profile", UpdProfilePage)
-	router.GET("/api/profile", GetProfilePage)
-	router.GET("/api/getuser", GetUserInfo)
+	router.POST("/api/profile/:id", UpdProfilePage)
+	router.GET("/api/profile/:id", GetProfilePage)
+	router.GET("/api/getuser/:id", GetUserInfo)
 }

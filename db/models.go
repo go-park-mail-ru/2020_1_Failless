@@ -19,7 +19,7 @@ const (
 type LocationPoint struct {
 	Latitude  float64 `json:"lat"`
 	Longitude float64 `json:"lng"`
-	Accuracy  int     `json:"accuracy"`
+	Accuracy  int     `json:"accuracy, omitempty"`
 }
 
 type UserInfo struct {
@@ -30,6 +30,16 @@ type UserInfo struct {
 	Gender    int           `json:"gender"`
 	LoginDate time.Time     `json:"login_date"`
 	Location  LocationPoint `json:"location"`
+}
+
+type ProfileInfo struct {
+	About     *string        `json:"about"`
+	Photos    *[]string      `json:"photos"`
+	Rating    *float32       `json:"rating"`
+	Birthday  *time.Time     `json:"birthday"`
+	Gender    *int           `json:"gender"`
+	LoginDate *time.Time     `json:"login_date"`
+	Location  *LocationPoint `json:"location"`
 }
 
 type EType []int

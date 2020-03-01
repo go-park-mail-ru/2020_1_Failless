@@ -9,9 +9,10 @@ import (
 )
 
 type SignForm struct {
-	Name     string `json:"name, omitempty"`
-	Phone    string `json:"phone, omitempty"`
-	Email    string `json:"email, omitempty"`
+	Uid      int    `json:"uid"`
+	Name     string `json:"name"`
+	Phone    string `json:"phone"`
+	Email    string `json:"email"`
 	Password string `json:"password, omitempty"`
 }
 
@@ -52,11 +53,14 @@ func (s *SignForm) ValidateEmail() bool {
 		log.Println("email valid")
 		return true
 	}
+	log.Println("email invalid")
+	s.Email = ""
 	return false
 }
 
 func (s *SignForm) ValidatePhone() bool {
 	digitCounter := 0
+	log.Println(s.Phone)
 	for _, sym := range s.Phone {
 		if '0' <= sym && sym <= '9' {
 			digitCounter++
@@ -64,11 +68,14 @@ func (s *SignForm) ValidatePhone() bool {
 			return false
 		}
 	}
-	if !(5 < digitCounter && digitCounter < 15) {
-		return false
+	log.Println(digitCounter)
+	if 5 < digitCounter && digitCounter < 15 {
+		log.Println("phone valid")
+		return true
 	}
-	log.Println("phone valid")
-	return true
+	s.Phone = ""
+	log.Println("phone invalid")
+	return false
 }
 
 func (s *SignForm) Validate() bool {
@@ -94,4 +101,3 @@ func RegisterNewUser(user SignForm) error {
 
 	return db.AddNewUser(db.ConnectToDB(), &dbUser)
 }
-

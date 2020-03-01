@@ -5,7 +5,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -23,20 +22,15 @@ type Claims struct {
 var jwtKey = []byte("removeBeforeDebug")
 
 func createJWTToken(user db.User) (string, error) {
-	// Declare the expiration time of the token
-	// here, we have kept it as 5 minutes
 	expirationTime := time.Now().Add(time.Hour * 24 * 30)
-	// Create the JWT claims, which includes the username and expiry time
 	claims := &Claims{
 		Email: user.Email,
 		StandardClaims: jwt.StandardClaims{
-			// In JWT, the expiry time is expressed as unix milliseconds
 			ExpiresAt: expirationTime.Unix(),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	// Create the JWT string
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
 		return "", err
@@ -57,51 +51,24 @@ func CreateAuth(w http.ResponseWriter, user db.User) error {
 		Expires:  expires,
 		HttpOnly: true,
 	})
-	http.SetCookie(w, &http.Cookie{
-		Name:     "name",
-		Value:    user.Name,
-		Expires:  expires,
-		HttpOnly: false,
-	})
-	http.SetCookie(w, &http.Cookie{
-		Name:     "uid",
-		Value:    strconv.Itoa(user.Uid),
-		Expires:  expires,
-		HttpOnly: false,
-	})
-
 	return nil
 }
 
 func CreateLogout(w http.ResponseWriter) error {
-
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    "-",
-		MaxAge:   0,
+		MaxAge:   -1,
 		HttpOnly: true,
 	})
-	http.SetCookie(w, &http.Cookie{
-		Name:     "name",
-		Value:    "-",
-		MaxAge:   0,
-		HttpOnly: false,
-	})
-	http.SetCookie(w, &http.Cookie{
-		Name:     "uid",
-		Value:    "-",
-		MaxAge:   0,
-		HttpOnly: false,
-	})
-
 	return nil
 }
 
-func IsAuth(w http.ResponseWriter, r *http.Request) (int, error) {
+func IsAuth(w http.ResponseWriter, r *http.Request) error {
 	c, err := r.Cookie("token")
 	if err != nil {
 		log.Print(err.Error())
-		return -1, nil
+		return err
 	}
 
 	// Get the JWT string from the cookie
@@ -116,43 +83,15 @@ func IsAuth(w http.ResponseWriter, r *http.Request) (int, error) {
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			w.WriteHeader(http.StatusUnauthorized)
-			return -1, nil
+			return err
 		}
-		w.WriteHeader(http.StatusBadRequest)
-		return -1, err
+		//w.WriteHeader(http.StatusBadRequest)
+		return err
 	}
 
 	if !tkn.Valid {
 		w.WriteHeader(http.StatusUnauthorized)
-		return -1, nil
+		return err
 	}
-	c, err = r.Cookie("uid")
-	if err != nil {
-		log.Print(err.Error())
-		return -1, nil
-	}
-
-	// Get the JWT string from the cookie
-	uid, err := strconv.Atoi(c.Value)
-	return uid, err
-}
-
-func InfoFromCookie(r *http.Request) (info db.User, err error) {
-	c, err := r.Cookie("name")
-	if err != nil {
-		log.Print(err.Error())
-		return
-	}
-	info.Name = c.Value
-	c, err = r.Cookie("uid")
-	if err != nil {
-		log.Print(err.Error())
-		return
-	}
-	info.Uid, err = strconv.Atoi(c.Value)
-	if err != nil {
-		log.Print(err.Error())
-		return
-	}
-	return info, nil
+	return nil
 }

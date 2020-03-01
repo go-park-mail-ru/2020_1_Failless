@@ -29,6 +29,7 @@ func main() {
 	}
 	log.Println("server is running on " + strconv.Itoa(serverSettings.Port))
 	err := server.ListenAndServeTLS("./configs/ssl-bundle/bundle.crt", "./configs/ssl-bundle/private.key.pem")
+	//err := server.ListenAndServe()
 	if err != nil {
 		fmt.Println(err)
 	}

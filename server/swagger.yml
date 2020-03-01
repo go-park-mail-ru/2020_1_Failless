@@ -1,10 +1,10 @@
 swagger: "2.0"
 info:
   title: Eventum
-  description: Eventum api.
-  version: 1.0.0
+  description: Eventum api
+  version: 1.0.2
 host: eventum.rowbot.dev
-basePath: /v1
+basePath: /
 schemes:
   - https
 paths:
@@ -17,84 +17,280 @@ paths:
       responses:
         200:
           description: OK
-  /profile:
-    put:
-      summary: update profile info
-      description: user profile page will updated by new data
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-        401:
-          description: Forbidden
-  /profile/{NUM}:
-    get:
-      summary: get user info
-      description: user profile page
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-        401:
-          description: Forbidden
-  /events:
-    get:
-      summary: get several events
-      description:
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-        403:
-          description: Forbidden
-  /events/{NUM}:
-    post:
-      summary: vote for event
-      description:
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-        403:
-          description: Forbidden
-  /feed:
-    post:
-      summary: likes and dislikes by user
-        description: send likes and dislikes by user
-        produces:
-          - application/json
-        responses:
-          200:
-            description: OK
 
-  /singup:
-    post:
-      summary: register
-        description: signup user in application
-        produces:
-          - application/json
-        responses:
-          200:
-            description: OK
-          409:
-            description: Conflict
-  /singin:
-    post:
-      summary: authtorize
-        description: signup user in application
-        produces:
-          - application/json
-        responses:
-          200:
-            description: OK
-          403:
-            description: Wrong password or login
-  /band/chat:
+  /api/events/feed:
     get:
-  /chat/{NUM}/page:
-    post:
+      summary: getting all events
+      description: feed of all events
+      produces:
+        - application/json
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Event"
+
+  /api/tags/feed:
     get:
+      summary: getting all tags
+      description: feed of all tags
+      produces:
+        - application/json
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Tag"
+
+  /api/profile/{uid}:
+    put:
+      summary: updates user profile
+      description: send updates to user profile
+      produces:
+        - "application/json"
+      consumes:
+        - "application/json"
+      parameters:
+        - name: "uid"
+          in: "path"
+          description: "ID of user to return"
+          required: true
+          type: "integer"
+          format: "int64"
+        - in: "body"
+          name: "body"
+          description: "Profile object that needs to be updated in database"
+          required: true
+          schema:
+            $ref: "#/definitions/Profile"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Profile"
+
+    get:
+      summary: gets profile info
+      description: get all info about gained profile
+      produces:
+        - application/json
+      parameters:
+        - name: "uid"
+          in: "path"
+          description: "ID of user to return"
+          required: true
+          type: "integer"
+          format: "int64"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Profile"
+
+  /api/getuser/{uid}:
+    get:
+      summary: gets user info
+      description: get all user info
+      produces:
+        - application/json
+      parameters:
+        - name: "uid"
+          in: "path"
+          description: "ID of user to return"
+          required: true
+          type: "integer"
+          format: "int64"
+      responses:
+        200:
+          description: OK
+        409:
+          description: Not Authorized
+
+  /api/signin:
+    post:
+      summary: login user
+      description: logins user if his data and password is valid
+      produces:
+        - "application/json"
+      consumes:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User object with its credentionals"
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        200:
+          description: "successful or unsuccessful operation"
+          schema:
+            $ref: "#/definitions/User"
+
+  /api/logout:
+    get:
+      summary: logins out user
+      description: logins out user by setting him '-1' age of cookies
+      produces:
+        - application/json
+      responses:
+        200:
+          description: "successful or unsuccessful operation"
+          schema:
+            $ref: "#/definitions/Message"
+
+  /api/signup:
+    post:
+      summary: registers user
+      description: registers user with his data, validating it and checking for conflicts
+      produces:
+        - application/json
+      consumes:
+        - application/json
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User object with its credentionals"
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        200:
+          description: "Message about success or unsuccess operation"
+          schema:
+            $ref: "#/definitions/Message"
+
+definitions:
+  User:
+    type: "object"
+    properties:
+      uid:
+        type: "integer"
+        format: "int"
+        example: 10
+      email:
+        type: "string"
+        format: "email"
+        example: "alex@example.com"
+      name:
+        type: "string"
+        format: "name"
+        example: "Alex"
+      password:
+        type: "string"
+        format: "password"
+        example: "qwerty12345"
+  Message:
+    type: "object"
+    properties:
+      message:
+        type: "string"
+        format: "string"
+        example: "User not found"
+      status:
+        type: "integer"
+        format: "int64"
+        example: 404
+  Image:
+    type: "object"
+    properties:
+      img:
+        type: "string"
+        format: "string"
+        example: "KJKJBKAKjJBKJBkjbKJBKBKJbkjbkBKbkjbbJKBKJBKb"
+      path:
+        type: "string"
+        format: "path"
+        example: "/img/defalut.png"
+  Location:
+    type: "object"
+    properties:
+      lat:
+        type: "number"
+        format: "float64"
+        example: 3000.2221
+      lng:
+        type: "number"
+        format: "float64"
+        example: 3000.2221
+      accurancy:
+        type: "number"
+        format: "float64"
+        example: 10
+  Profile:
+    type: "object"
+    properties:
+      avatar:
+        $ref: "#/definitions/Image"
+      photos:
+        type: "array"
+        items:
+          $ref: "#/definitions/Image"
+      gender:
+        type: "integer"
+        format: "int"
+        example: 1
+      about:
+        type: "string"
+        format: "text"
+        example: "I am really hot girl from far city and I'd like to find new friends"
+      rating:
+        type: "integer"
+        format: "number"
+        example: 4.5
+      location:
+        $ref: "#/definitions/Location"
+      login_date:
+        type: "string"
+        format: "date-time"
+  Tag:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        example: "bar"
+        format: "name"
+      tag_id:
+        type: "integer"
+        example: 10
+        format: "number"
+  Event:
+    type: "object"
+    properties:
+      eid:
+        type: "integer"
+        example: 10
+        format: "id"
+      author_id:
+        type: "integer"
+        format: "id"
+        example: 11
+      title:
+        type: "string"
+        format: "text"
+        example: "I wanna go to pub"
+      date:
+        type: "string"
+        format: "date-time"
+      message:
+        type: "string"
+        format: "text"
+        example: "I know really nice place for go out and I like to find a company for that"
+      author:
+        type: "string"
+        format: "name"
+        example: "Jennifer"
+      type:
+        type: "array"
+        items:
+          type: "integer"
+          format: "number"
+          example: 1
+      limit:
+        type: "integer"
+        format: "number"
+        example: 2

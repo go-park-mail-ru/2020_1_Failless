@@ -10,7 +10,7 @@ import (
 var (
 	host     = "localhost"
 	port     = uint16(5432)
-	user     = os.Getenv("DB_USER")
+	user     = os.Getenv("DB_USER")        
 	password = os.Getenv("DB_PASSWORD")
 	dbname   = os.Getenv("DB_NAME")
 )

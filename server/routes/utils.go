@@ -2,15 +2,17 @@ package routes
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 )
 
 type ErrorMessage struct {
-	Request *http.Request
-	Message string
-	status  int
+	Request *http.Request `json:"-"`
+	Message string        `json:"message"`
+	Status  int           `json:"status"`
 }
 
 func ShiftPath(p string) (head, tail string) {
@@ -22,11 +24,25 @@ func ShiftPath(p string) (head, tail string) {
 	return p[1:i], p[i:]
 }
 
+func GetIdFromRequest(w http.ResponseWriter, r *http.Request, ps *map[string]string) int {
+	uid, err := strconv.Atoi((*ps)["id"])
+	if err != nil {
+		GenErrorCode(w, r, "Incorrect id", http.StatusBadRequest)
+		return -1
+	}
+	return uid
+}
+
 func GenErrorCode(w http.ResponseWriter, r *http.Request, what string, status int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
+	w.WriteHeader(http.StatusOK)
 	page := ErrorMessage{r, what, status}
-	_ = json.NewEncoder(w).Encode(page)
+	output, err := json.Marshal(page)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("content-type", "application/json")
+	_, _ = w.Write(output)
 }
 
 func ValidationFailed(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +67,7 @@ var AllowedMethods = map[string]struct{}{
 	"PUT":     {},
 }
 
-func CORS(w http.ResponseWriter, r *http.Request) {
+func CORS(w http.ResponseWriter, r *http.Request) bool {
 	origin := r.Header.Get("Origin")
 	_, allowed := AllowedHosts[origin]
 	_, allowedMethod := AllowedMethods[r.Method]
@@ -63,6 +79,11 @@ func CORS(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Methods",
 			"GET, POST, OPTIONS, HEAD, PUT")
 	}
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return false
+	}
+	return true
 }
 
 func Jsonify(w http.ResponseWriter, object interface{}, status int) {
@@ -79,4 +100,5 @@ func Jsonify(w http.ResponseWriter, object interface{}, status int) {
 		http.Error(w, err.Error(), status)
 		return
 	}
+	log.Println("Sent json")
 }

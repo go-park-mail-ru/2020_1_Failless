@@ -8,7 +8,7 @@ import (
 //testing all profile forms
 func TestProfileFull(t *testing.T) {
 	f := ProfileForm{
-		SignForm:  nil,
+		//SignForm:  nil,
 		//ImgBase64: "?",
 		//ImgName:   "?",
 		//Img:       nil,

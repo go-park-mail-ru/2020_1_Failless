@@ -15,7 +15,7 @@ import (
 
 type EImage struct {
 	ImgBase64 string      `json:"img"`
-	ImgName   string      `json:"-"`
+	ImgName   string      `json:"path"`
 	Img       image.Image `json:"-"`
 }
 
@@ -47,7 +47,7 @@ func (pic *EImage) GetImage(name string) (err error) {
 }
 
 type ProfileForm struct {
-	*SignForm
+	SignForm
 	Avatar   EImage           `json:"avatar"`
 	Photos   []EImage         `json:"photos, omitempty"`
 	Gender   int              `json:"gender"`
@@ -95,9 +95,10 @@ func (p *ProfileForm) GetDBFormat(info *db.UserInfo, user *db.User) error {
 	}
 
 	var photos []string
-	for _, pic := range p.Photos {
-		photos = append(photos, pic.ImgName)
-	}
+	photos = append(photos, p.Avatar.ImgName)
+	//for _, pic := range p.Photos {
+	//	photos = append(photos, pic.ImgName)
+	//}
 
 	*info = db.UserInfo{
 		About:     p.About,
@@ -109,7 +110,7 @@ func (p *ProfileForm) GetDBFormat(info *db.UserInfo, user *db.User) error {
 		Location:  p.Location,
 	}
 	*user = db.User{
-		Uid:      0,
+		Uid:      -1,
 		Name:     p.Name,
 		Phone:    p.Phone,
 		Email:    p.Email,
@@ -120,17 +121,16 @@ func (p *ProfileForm) GetDBFormat(info *db.UserInfo, user *db.User) error {
 
 func (p *ProfileForm) FillProfile(row db.UserInfo) error {
 	// todo: take pictures from media
-	eimage := EImage{}
 	ava := ""
 	if len(row.Photos) < 1 {
 		ava = path.Join(Media, "default.png")
 	} else {
 		ava = path.Join(Media, row.Photos[0])
 	}
-	if err := eimage.GetImage(ava); err != nil {
-		return err
-	}
-	p.Avatar.ImgName = row.Photos[0]
+	//if err := eimage.GetImage(ava); err != nil {
+	//	return err
+	//}
+	p.Avatar.ImgName = ava//row.Photos[0]
 	p.About = row.About
 	p.Location = row.Location
 	p.Gender = row.Gender
