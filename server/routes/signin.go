@@ -66,7 +66,7 @@ func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 	log.Print("/api/logout")
-	err := utils.IsAuth(w, r)
+	_, err := utils.IsAuth(w, r)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)

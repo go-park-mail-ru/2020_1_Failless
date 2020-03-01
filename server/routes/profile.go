@@ -7,7 +7,6 @@ import (
 	"failless/server/utils"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	htmux "github.com/dimfeld/httptreemux"
@@ -18,7 +17,7 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 	log.Print("/api/profile")
-	err := utils.IsAuth(w, r)
+	_, err := utils.IsAuth(w, r)
 	if err != nil {
 		GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
 		return
@@ -37,7 +36,7 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 			SignForm: forms.SignForm{
 				Name:     "me",
 				Phone:    "88005553535",
-				Email:    "rowbot@dev.deb",
+				Email:    "rowbot@dev.dev",
 				Password: "root12345",
 			},
 			Avatar: forms.EImage{
@@ -61,7 +60,6 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 			Birthday: time.Now(),
 		}
 		Jsonify(w, form1, 200)
-		//GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
 		return
 	}
 
@@ -109,7 +107,7 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 	log.Println("/api/profile")
-	err := utils.IsAuth(w, r)
+	_, err := utils.IsAuth(w, r)
 	if err != nil {
 		GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
 		return
@@ -157,29 +155,16 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 	log.Println("/api/getuser")
-	err := utils.IsAuth(w, r)
+	data, err := utils.IsAuth(w, r)
 	if err != nil {
 		GenErrorCode(w, r, "User is not authorised", http.StatusUnauthorized)
 		return
 	}
-
-	uid, err := strconv.Atoi(ps["id"])
-	if err != nil {
-		GenErrorCode(w, r, "Incorrect id", http.StatusBadRequest)
-		return
-	}
-
-	//info, err := utils.InfoFromCookie(r)
-	info, err := db.GetUserByUID(db.ConnectToDB(), uid)
-	if err != nil {
-		GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	Jsonify(w, info, http.StatusOK)
+	Jsonify(w, data, http.StatusOK)
 }
 
 func ProfileHandler(router *htmux.TreeMux) {
 	router.POST("/api/profile/:id", UpdProfilePage)
 	router.GET("/api/profile/:id", GetProfilePage)
-	router.GET("/api/getuser/:id", GetUserInfo)
+	router.GET("/api/getuser", GetUserInfo)
 }

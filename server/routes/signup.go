@@ -18,9 +18,10 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	err := utils.IsAuth(w, r)
-	if err != nil {
-		GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
+	data, err := utils.IsAuth(w, r)
+	if data.Uid > 0 {
+		Jsonify(w, data, http.StatusNotModified)
+		//GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
 		return
 	}
 	r.Header.Set("Content-Type", "application/json")

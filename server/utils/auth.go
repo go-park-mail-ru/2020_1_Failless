@@ -2,6 +2,7 @@ package utils
 
 import (
 	"failless/db"
+	"failless/server/forms"
 	"github.com/dgrijalva/jwt-go"
 	"log"
 	"net/http"
@@ -14,6 +15,7 @@ type Claims struct {
 	Name  string `json:"name"`
 	Phone string `json:"phone"`
 	Email string `json:"email"`
+	Uid   int    `json:"uid"`
 	jwt.StandardClaims
 }
 
@@ -25,6 +27,9 @@ func createJWTToken(user db.User) (string, error) {
 	expirationTime := time.Now().Add(time.Hour * 24 * 30)
 	claims := &Claims{
 		Email: user.Email,
+		Phone: user.Phone,
+		Name:  user.Name,
+		Uid:   user.Uid,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
@@ -64,11 +69,11 @@ func CreateLogout(w http.ResponseWriter) error {
 	return nil
 }
 
-func IsAuth(w http.ResponseWriter, r *http.Request) error {
+func IsAuth(w http.ResponseWriter, r *http.Request) (forms.SignForm, error) {
 	c, err := r.Cookie("token")
 	if err != nil {
 		log.Print(err.Error())
-		return err
+		return forms.SignForm{}, err
 	}
 
 	// Get the JWT string from the cookie
@@ -79,19 +84,24 @@ func IsAuth(w http.ResponseWriter, r *http.Request) error {
 	tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
+	log.Println(claims.Name, claims.Phone, claims.Email)
 
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			w.WriteHeader(http.StatusUnauthorized)
-			return err
+			return forms.SignForm{}, err
 		}
 		//w.WriteHeader(http.StatusBadRequest)
-		return err
+		return forms.SignForm{}, err
 	}
 
 	if !tkn.Valid {
 		w.WriteHeader(http.StatusUnauthorized)
-		return err
+		return forms.SignForm{}, err
 	}
-	return nil
+	return forms.SignForm{
+		Uid: claims.Uid,
+		Phone: claims.Phone,
+		Email: claims.Email,
+		Name: claims.Name}, nil
 }
