@@ -1,10 +1,10 @@
-package routes
+package delivery
 
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"failless/server/forms"
+	"fmt"
 	// "io"
 	"net/http"
 	"net/http/httptest"
@@ -18,8 +18,8 @@ type TestCaseSignUp struct {
 }
 
 func TestSignUp(t *testing.T) {
-	url := "http://localhost:5000"
-	badForm := forms.SignForm {
+	url := "network://localhost:5000"
+	badForm := forms.SignForm{
 		Name:     "SergeyRof12",
 		Phone:    "28005553535",
 		Email:    "faker2@mail.ru",
@@ -33,27 +33,27 @@ func TestSignUp(t *testing.T) {
 	defer UserDelete(badForm.Email)
 
 	cases := []TestCaseSignUp{
-		TestCaseSignUp {
-			RegForm:     badForm,
-			StatusCode:  http.StatusConflict,  // gets ok
+		TestCaseSignUp{
+			RegForm:    badForm,
+			StatusCode: http.StatusConflict, // gets ok
 		},
-		TestCaseSignUp {
-			RegForm:     forms.SignForm {
+		TestCaseSignUp{
+			RegForm: forms.SignForm{
 				Name:     "SergeyM1an",
 				Phone:    "89929052501",
 				Email:    "kerc2h@yndex.ru",
 				Password: "full12fill",
 			},
-			StatusCode:  http.StatusOK,
+			StatusCode: http.StatusOK,
 		},
-		TestCaseSignUp {
-			RegForm:     forms.SignForm {
+		TestCaseSignUp{
+			RegForm: forms.SignForm{
 				Name:     "F",
 				Phone:    "F",
 				Email:    "F",
 				Password: "full12fill",
 			},
-			StatusCode:  http.StatusForbidden,  // gets ok?
+			StatusCode: http.StatusForbidden, // gets ok?
 		},
 	}
 	for caseNum, item := range cases {
@@ -62,7 +62,7 @@ func TestSignUp(t *testing.T) {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		url := "http://localhost:5000"
+		url := "network://localhost:5000"
 		req := httptest.NewRequest("POST", url, bytes.NewBufferString(string(result)))
 		w := httptest.NewRecorder()
 		SignUp(w, req, ps)

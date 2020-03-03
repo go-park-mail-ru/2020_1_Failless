@@ -1,7 +1,7 @@
 package forms
 
 import (
-	"failless/db"
+	"failless/internal/pkg/db"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"regexp"

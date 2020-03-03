@@ -1,8 +1,6 @@
-package routes
+package security
 
-import (
-	"golang.org/x/crypto/bcrypt"
-)
+import "golang.org/x/crypto/bcrypt"
 
 func ComparePasswords(hash []byte, p string) bool {
 	err := bcrypt.CompareHashAndPassword(hash, []byte(p))
@@ -11,4 +9,3 @@ func ComparePasswords(hash []byte, p string) bool {
 	}
 	return true
 }
-

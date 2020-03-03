@@ -1,8 +1,8 @@
-package utils
+package security
 
 import (
-	"failless/db"
-	"failless/server/forms"
+	"failless/internal/pkg/db"
+	"failless/internal/pkg/forms"
 	"github.com/dgrijalva/jwt-go"
 	"log"
 	"net/http"
@@ -91,7 +91,7 @@ func IsAuth(w http.ResponseWriter, r *http.Request) (forms.SignForm, error) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return forms.SignForm{}, err
 		}
-		//w.WriteHeader(http.StatusBadRequest)
+		//w.WriteHeader(network.StatusBadRequest)
 		return forms.SignForm{}, err
 	}
 

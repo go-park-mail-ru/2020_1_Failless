@@ -1,19 +1,21 @@
-package routes
+package delivery
 
 import (
 	"encoding/json"
-	"failless/db"
-	htmux "github.com/dimfeld/httptreemux"
+	"failless/internal/pkg/db"
+	"failless/internal/pkg/network"
 	"net/http"
+
+	htmux "github.com/dimfeld/httptreemux"
 )
 
-func FeedTags(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if !CORS(w, r) {
+func FeedTags(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	if !network.CORS(w, r) {
 		return
 	}
 	tags, err := db.GetAllTags(db.ConnectToDB())
 	if err != nil {
-		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	output, err := json.Marshal(tags)

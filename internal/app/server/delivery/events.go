@@ -1,19 +1,21 @@
-package routes
+package delivery
 
 import (
 	"encoding/json"
-	"failless/db"
-	htmux "github.com/dimfeld/httptreemux"
+	"failless/internal/pkg/db"
+	"failless/internal/pkg/network"
 	"net/http"
+
+	htmux "github.com/dimfeld/httptreemux"
 )
 
 func FeedEvents(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if !CORS(w, r) {
+	if !network.CORS(w, r) {
 		return
 	}
 	events, err := db.GetAllEvents(db.ConnectToDB())
 	if err != nil {
-		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	output, err := json.Marshal(events)
@@ -26,8 +28,6 @@ func FeedEvents(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	_, _ = w.Write(output)
 }
 
-
 func EventHandler(router *htmux.TreeMux) {
 	router.GET("/api/events/feed", FeedEvents)
 }
-

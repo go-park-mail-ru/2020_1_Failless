@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/base64"
-	"failless/db"
+	"failless/internal/pkg/db"
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
 	"image"
@@ -42,7 +42,7 @@ func (pic *EImage) Encode() error {
 
 func (pic *EImage) GetImage(name string) (err error) {
 	pic.ImgName = name
-	pic.Img, err = imaging.Open(path.Join(Media, name))
+	pic.Img, err = imaging.Open(name)
 	return
 }
 
@@ -123,14 +123,16 @@ func (p *ProfileForm) FillProfile(row db.UserInfo) error {
 	// todo: take pictures from media
 	ava := ""
 	if len(row.Photos) < 1 {
-		ava = path.Join(Media, "default.png")
+		ava = "default.png"
+		//ava = path.Join(Media, "default.png")
 	} else {
-		ava = path.Join(Media, row.Photos[0])
+		ava = row.Photos[0]
+		//ava = path.Join(Media, row.Photos[0])
 	}
 	//if err := eimage.GetImage(ava); err != nil {
 	//	return err
 	//}
-	p.Avatar.ImgName = ava//row.Photos[0]
+	p.Avatar.ImgName = ava //row.Photos[0]
 	p.About = row.About
 	p.Location = row.Location
 	p.Gender = row.Gender

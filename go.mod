@@ -13,7 +13,7 @@ require (
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/lib/pq v1.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/shopspring/decimal v0.0.0-20200226005030-a08b92da27ed // indirect
+	github.com/shopspring/decimal v0.0.0-20200227202807-02e2044944cc // indirect
 	github.com/stretchr/testify v1.5.1
-	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d
+	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
 )

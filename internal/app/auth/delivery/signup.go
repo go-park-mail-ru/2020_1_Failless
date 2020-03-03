@@ -1,27 +1,29 @@
-package routes
+package delivery
 
 import (
 	"encoding/json"
-	"failless/db"
-	"failless/server/forms"
-	"failless/server/utils"
+	"failless/internal/pkg/db"
+	"failless/internal/pkg/forms"
+	"failless/internal/pkg/network"
+	"failless/internal/pkg/security"
 	"fmt"
-	htmux "github.com/dimfeld/httptreemux"
 	"log"
 	"net/http"
 	"os"
+
+	htmux "github.com/dimfeld/httptreemux"
 )
 
 func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Println("/api/signup")
-	if !CORS(w, r) {
+	if !network.CORS(w, r) {
 		return
 	}
 
-	data, err := utils.IsAuth(w, r)
+	data, err := security.IsAuth(w, r)
 	if data.Uid > 0 {
-		Jsonify(w, data, http.StatusNotModified)
-		//GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
+		network.Jsonify(w, data, http.StatusNotModified)
+		//GenErrorCode(w, r, err.Error(), network.StatusUnauthorized)
 		return
 	}
 	r.Header.Set("Content-Type", "application/json")
@@ -29,35 +31,35 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	var form forms.SignForm
 	err = decoder.Decode(&form)
 	if err != nil {
-		GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
+		network.GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
 		return
 	}
 
 	log.Println("decoded signup form")
 	ok := form.Validate()
 	if !ok {
-		ValidationFailed(w, r)
-		GenErrorCode(w, r, "Data Error", http.StatusForbidden)
+		network.ValidationFailed(w, r)
+		network.GenErrorCode(w, r, "Data Error", http.StatusForbidden)
 		return
 	}
 	log.Println("validate signup form")
 
 	user, err := db.GetUserByPhoneOrEmail(db.ConnectToDB(), form.Phone, form.Email)
 	if err != nil {
-		GenErrorCode(w, r, "DB error", http.StatusInternalServerError)
+		network.GenErrorCode(w, r, "DB error", http.StatusInternalServerError)
 		return
 	}
 
 	log.Println(user)
 	if user.Uid > 0 {
-		GenErrorCode(w, r, "User with this information already exist", http.StatusConflict)
+		network.GenErrorCode(w, r, "User with this information already exist", http.StatusConflict)
 		return
 	}
 
 	err = forms.RegisterNewUser(form)
 	if err != nil {
 		log.Println("user wasn't registered")
-		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -73,7 +75,7 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 }
 
 func OptionsReq(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if !CORS(w, r) {
+	if !network.CORS(w, r) {
 		return
 	}
 }

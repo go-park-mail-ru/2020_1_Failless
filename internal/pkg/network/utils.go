@@ -1,4 +1,4 @@
-package routes
+package network
 
 import (
 	"encoding/json"
@@ -50,12 +50,12 @@ func ValidationFailed(w http.ResponseWriter, r *http.Request) {
 }
 
 var AllowedHosts = map[string]struct{}{
-	"http://localhost":           {},
-	"http://localhost:8080":      {},
-	"http://localhost:5000":      {},
-	"http://127.0.0.1":           {},
-	"http://127.0.0.1:8080":      {},
-	"http://127.0.0.1:5000":      {},
+	"network://localhost":           {},
+	"network://localhost:8080":      {},
+	"network://localhost:5000":      {},
+	"network://127.0.0.1":           {},
+	"network://127.0.0.1:8080":      {},
+	"network://127.0.0.1:5000":      {},
 	"https://eventum.rowbot.dev": {},
 }
 

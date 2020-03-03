@@ -1,10 +1,11 @@
-package routes
+package delivery
 
 import (
 	"encoding/json"
-	"failless/db"
-	"failless/server/forms"
-	"failless/server/utils"
+	"failless/internal/pkg/db"
+	"failless/internal/pkg/forms"
+	"failless/internal/pkg/network"
+	"failless/internal/pkg/security"
 	"log"
 	"net/http"
 	"time"
@@ -13,17 +14,17 @@ import (
 )
 
 func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if !CORS(w, r) {
+	if !network.CORS(w, r) {
 		return
 	}
 	log.Print("/api/profile")
-	_, err := utils.IsAuth(w, r)
+	_, err := security.IsAuth(w, r)
 	if err != nil {
-		GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
+		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
 		return
 	}
 	uid := 0
-	if uid = GetIdFromRequest(w, r, &ps); uid < 0 {
+	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
 		return
 	}
 
@@ -59,7 +60,7 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 			},
 			Birthday: time.Now(),
 		}
-		Jsonify(w, form1, 200)
+		network.Jsonify(w, form1, 200)
 		return
 	}
 
@@ -70,7 +71,7 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	// }
 	if form.Avatar.ImgBase64 != "" {
 		if !form.ValidationImage() {
-			GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
+			network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
 			return
 		}
 	}
@@ -78,14 +79,15 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	var user db.User
 
 	if err := form.GetDBFormat(&info, &user); err != nil {
-		GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	user.Uid = uid
 	if err := db.AddUserInfo(db.ConnectToDB(), user, info); err != nil {
-		GenErrorCode(w, r, err.Error(), http.StatusNotFound)
+		network.GenErrorCode(w, r, err.Error(), http.StatusNotFound)
 		return
 	}
+
 	form.Avatar.ImgBase64 = ""
 	for _, item := range form.Photos {
 		item.ImgBase64 = ""
@@ -103,17 +105,17 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 }
 
 func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if !CORS(w, r) {
+	if !network.CORS(w, r) {
 		return
 	}
 	log.Println("/api/profile")
-	_, err := utils.IsAuth(w, r)
+	_, err := security.IsAuth(w, r)
 	if err != nil {
-		GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
+		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
 		return
 	}
 	uid := 0
-	if uid = GetIdFromRequest(w, r, &ps); uid < 0 {
+	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
 		return
 	}
 
@@ -121,7 +123,7 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	row, err := db.GetProfileInfo(db.ConnectToDB(), uid)
 	if err != nil {
 		log.Println(err.Error())
-		GenErrorCode(w, r, "Profile not found", http.StatusNotFound)
+		network.GenErrorCode(w, r, "Profile not found", http.StatusNotFound)
 		return
 	}
 
@@ -151,16 +153,16 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 }
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if !CORS(w, r) {
+	if !network.CORS(w, r) {
 		return
 	}
 	log.Println("/api/getuser")
-	data, err := utils.IsAuth(w, r)
+	data, err := security.IsAuth(w, r)
 	if err != nil {
-		GenErrorCode(w, r, "User is not authorised", http.StatusUnauthorized)
+		network.GenErrorCode(w, r, "User is not authorised", http.StatusUnauthorized)
 		return
 	}
-	Jsonify(w, data, http.StatusOK)
+	network.Jsonify(w, data, http.StatusOK)
 }
 
 func ProfileHandler(router *htmux.TreeMux) {
