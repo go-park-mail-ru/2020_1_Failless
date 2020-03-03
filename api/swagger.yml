@@ -91,19 +91,12 @@ paths:
           schema:
             $ref: "#/definitions/Profile"
 
-  /api/getuser/{uid}:
+  /api/getuser:
     get:
       summary: gets user info
       description: get all user info
       produces:
         - application/json
-      parameters:
-        - name: "uid"
-          in: "path"
-          description: "ID of user to return"
-          required: true
-          type: "integer"
-          format: "int64"
       responses:
         200:
           description: OK
