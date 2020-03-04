@@ -1,30 +1,23 @@
 package settings
 
-import "net/http"
+import (
+	"github.com/dimfeld/httptreemux"
+	"log"
+	"net/http"
+)
 
-type handlerFunc func(http.ResponseWriter, *http.Request, map[string]string)
-
-// Basic router interface
-type RouterInterface interface {
-	NotFoundHandler(http.ResponseWriter, *http.Request)
-	OptionsHandler() handlerFunc
-	POST(string, handlerFunc)
-	GET(string, handlerFunc)
-	PUT(string, handlerFunc)
-	DELETE(string, handlerFunc)
-	OPTIONS(string, handlerFunc)
-}
+type HandlerFunc func(http.ResponseWriter, *http.Request, map[string]string)
 
 type MapHandler struct {
 	Type    string
-	Handler handlerFunc
+	Handler HandlerFunc
 }
 
 type ServerSettings struct {
 	Port   int
 	Ip     string
 	Routes map[string][]MapHandler
-	router RouterInterface
+	Router http.Handler
 }
 
 // return this pointer
@@ -33,24 +26,44 @@ func (s *ServerSettings) GetSettings() ServerSettings {
 }
 
 // Set new route
-func (s *ServerSettings) SetRoute(reqType, url string, handler handlerFunc) {
+func (s *ServerSettings) SetRoute(reqType, url string, handler HandlerFunc) {
 	s.Routes[url] = append(s.Routes[url], MapHandler{Type: reqType, Handler: handler})
 }
 
+func (s *ServerSettings) SetRouter(handler http.Handler) {
+	s.Router = handler
+}
+
+// Basic Router interface
+type RouterInterface interface {
+	http.Handler
+	POST(path string, handler HandlerFunc)
+	GET(path string, handler HandlerFunc)
+	PUT(path string, handler HandlerFunc)
+	DELETE(path string, handler HandlerFunc)
+	OPTIONS(path string, handler HandlerFunc)
+}
+
 // Parse route map and return configured Router
-func (s *ServerSettings) GetRouter() *RouterInterface {
-	var optionsHandler handlerFunc = nil
+func (s *ServerSettings) InitRouter1(router *httptreemux.TreeMux) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Fatal("Error was occurred", r)
+		}
+	}()
+	var optionsHandler HandlerFunc = nil
 	for key, list := range s.Routes {
+		log.Println(key)
 		for _, pack := range list {
 			switch pack.Type {
 			case "GET":
-				s.router.GET(key, pack.Handler)
+				(*router).GET(key, httptreemux.HandlerFunc(pack.Handler))
 			case "PUT":
-				s.router.PUT(key, pack.Handler)
+				(*router).PUT(key, httptreemux.HandlerFunc(pack.Handler))
 			case "POST":
-				s.router.POST(key, pack.Handler)
+				(*router).POST(key, httptreemux.HandlerFunc(pack.Handler))
 			case "DELETE":
-				s.router.DELETE(key, pack.Handler)
+				(*router).DELETE(key, httptreemux.HandlerFunc(pack.Handler))
 			case "OPTIONS":
 				optionsHandler = pack.Handler
 			}
@@ -59,8 +72,12 @@ func (s *ServerSettings) GetRouter() *RouterInterface {
 
 	if optionsHandler != nil {
 		for key, _ := range s.Routes {
-			s.router.OPTIONS(key, optionsHandler)
+			(*router).OPTIONS(key, httptreemux.HandlerFunc(optionsHandler))
 		}
 	}
-	return &s.router
+	s.Router = router
+}
+
+func (s *ServerSettings) GetRouter() http.Handler {
+	return s.Router
 }

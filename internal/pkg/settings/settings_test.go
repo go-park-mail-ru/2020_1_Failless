@@ -1,4 +1,4 @@
-package server
+package settings
 
 import (
 	"github.com/stretchr/testify/assert"
