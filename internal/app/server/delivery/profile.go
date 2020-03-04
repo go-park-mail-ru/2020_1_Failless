@@ -152,7 +152,7 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	_, _ = w.Write(output)
 }
 
-func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	if !network.CORS(w, r) {
 		return
 	}

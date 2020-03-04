@@ -19,9 +19,7 @@ type EImage struct {
 	Img       image.Image `json:"-"`
 }
 
-const (
-	Media = "media/images/"
-)
+const Media = "media/images/"
 
 func (pic *EImage) SaveImage() error {
 	err := imaging.Save(pic.Img, path.Join(Media, pic.ImgName))

@@ -1,24 +1,16 @@
-package main
+package server
 
 import (
-	"failless/configs/server"
 	"fmt"
-	"github.com/dimfeld/httptreemux"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
 
-	aroutes "failless/internal/app/auth/delivery"
 	sroutes "failless/internal/app/server/delivery"
 )
 
-func main() {
-	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
-	serverSettings := server.GetSettings()
-	router := httptreemux.New()
-	aroutes.AuthHandler(router)
-	aroutes.SignUPHandler(router)
+func Start() {
 	sroutes.ProfileHandler(router)
 	sroutes.TagHandler(router)
 	sroutes.EventHandler(router)
