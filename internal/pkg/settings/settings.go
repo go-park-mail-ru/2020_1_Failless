@@ -1,8 +1,6 @@
 package settings
 
 import (
-	"github.com/dimfeld/httptreemux"
-	"log"
 	"net/http"
 )
 
@@ -59,50 +57,6 @@ type RouterInterface interface {
 	PUT(path string, handler HandlerFunc)
 	DELETE(path string, handler HandlerFunc)
 	OPTIONS(path string, handler HandlerFunc)
-}
-
-// Parse route map and return configured Router
-func (s *ServerSettings) InitRouter1(router *httptreemux.TreeMux) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Fatal("Error was occurred", r)
-		}
-	}()
-	var optionsHandler HandlerFunc = nil
-	for key, list := range s.Routes {
-		log.Println(key)
-		for _, pack := range list {
-			switch pack.Type {
-			case "GET":
-				(*router).GET(key, httptreemux.HandlerFunc(pack.Handler))
-			case "PUT":
-				(*router).PUT(key, httptreemux.HandlerFunc(pack.Handler))
-			case "POST":
-				(*router).POST(key, httptreemux.HandlerFunc(pack.Handler))
-			case "DELETE":
-				(*router).DELETE(key, httptreemux.HandlerFunc(pack.Handler))
-			case "OPTIONS":
-				optionsHandler = pack.Handler
-			}
-			if pack.CORS {
-				s.Secure.CORSMap[pack.Type] = struct{}{}
-			}
-		}
-	}
-
-	if optionsHandler != nil {
-		for key, _ := range s.Routes {
-			(*router).OPTIONS(key, httptreemux.HandlerFunc(optionsHandler))
-		}
-	}
-	// generate "GET, POST, OPTIONS, HEAD, PUT" string
-	for key, _ := range s.Secure.CORSMap {
-		s.Secure.CORSMethods += key + ", "
-	}
-	// remove extra comma
-	s.Secure.CORSMethods = s.Secure.CORSMethods[:len(s.Secure.CORSMethods)-2]
-	log.Println(s.Secure.CORSMethods)
-	s.Router = router
 }
 
 func (s *ServerSettings) GetRouter() http.Handler {

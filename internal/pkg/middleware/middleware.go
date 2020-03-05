@@ -1,15 +1,11 @@
 package middleware
 
 import (
-	//"failless/configs/server"
 	"failless/internal/pkg/settings"
 	"net/http"
 )
 
-type Middleware struct {
-}
-
-func (m *Middleware) CORS(next settings.HandlerFunc) settings.HandlerFunc {
+func CORS(next settings.HandlerFunc) settings.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		origin := r.Header.Get("Origin")
 		_, allowed := settings.SecureSettings.AllowedHosts[origin]
@@ -27,4 +23,3 @@ func (m *Middleware) CORS(next settings.HandlerFunc) settings.HandlerFunc {
 		next(w, r, ps)
 	}
 }
-

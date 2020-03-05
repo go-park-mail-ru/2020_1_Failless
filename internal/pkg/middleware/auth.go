@@ -25,7 +25,7 @@ type authError struct {
 
 // Auth middleware checks is user authorized
 // If user is not authorized it write failed checker to the authError structure
-func (m *Middleware) Auth(next settings.HandlerFunc) settings.HandlerFunc {
+func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		var errMsg authError
 		ctx := context.Background()
