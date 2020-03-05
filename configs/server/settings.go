@@ -14,37 +14,37 @@ var routesMap = map[string][]settings.MapHandler{
 	"/api/getuser": {{
 		Type:         "GET",
 		Handler:      delivery.GetUserInfo,
-		CORS:         false,
+		CORS:         true,
 		AuthRequired: true,
 	}},
 	"/api/logout": {{
 		Type:         "GET",
 		Handler:      delivery2.Logout,
-		CORS:         false,
+		CORS:         true,
 		AuthRequired: true,
 	}},
 	"/api/signin": {{
 		Type:         "POST",
 		Handler:      delivery2.SignIn,
-		CORS:         false,
+		CORS:         true,
 		AuthRequired: false,
 	}},
 	"/api/signup": {{
 		Type:         "POST",
 		Handler:      delivery2.SignUp,
-		CORS:         false,
+		CORS:         true,
 		AuthRequired: false,
 	}},
 	"/api/events/feed": {{
 		Type:         "GET",
 		Handler:      delivery.FeedEvents,
-		CORS:         false,
+		CORS:         true,
 		AuthRequired: false,
 	}},
 	"/api/tags/feed": {{
 		Type:         "GET",
 		Handler:      delivery.FeedTags,
-		CORS:         false,
+		CORS:         true,
 		AuthRequired: false,
 	}},
 	"/api/profile/:id": {
@@ -57,9 +57,15 @@ var routesMap = map[string][]settings.MapHandler{
 		{
 			Type:         "GET",
 			Handler:      delivery.GetProfilePage,
-			CORS:         false,
+			CORS:         true,
 			AuthRequired: false,
-		},},
+		}},
+	"/api": {{
+		Type:         "OPTIONS",
+		Handler:      delivery.OptionsReq,
+		CORS:         true,
+		AuthRequired: false,
+	}},
 }
 
 var Secrets = []string{
@@ -81,8 +87,8 @@ func GetConfig() *settings.ServerSettings {
 			Routes: routesMap,
 		}
 		settings.SecureSettings = settings.GlobalSecure{
-			CORSMethods:  "",
-			CORSMap:      map[string]struct{}{},
+			CORSMethods: "",
+			CORSMap:     map[string]struct{}{},
 			AllowedHosts: map[string]struct{}{
 				"http://localhost":           {},
 				"http://localhost:8080":      {},
@@ -111,6 +117,7 @@ func InitRouter(s *settings.ServerSettings, router *httptreemux.TreeMux) {
 		log.Println(key)
 		for _, pack := range list {
 			handler := pack.Handler
+			log.Println(pack.Type)
 			if pack.CORS {
 				s.Secure.CORSMap[pack.Type] = struct{}{}
 				handler = middleware.CORS(handler)
@@ -143,6 +150,8 @@ func InitRouter(s *settings.ServerSettings, router *httptreemux.TreeMux) {
 	for key, _ := range s.Secure.CORSMap {
 		s.Secure.CORSMethods += key + ", "
 	}
+
+	log.Println("____________")
 	// remove extra comma
 	s.Secure.CORSMethods = s.Secure.CORSMethods[:len(s.Secure.CORSMethods)-2]
 	log.Println(s.Secure.CORSMethods)
