@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
-	"failless/internal/pkg/network"
+	"failless/internal/pkg/middleware"
 	"failless/internal/pkg/security"
 	"fmt"
 	"log"
@@ -16,14 +16,14 @@ import (
 
 func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Println("/api/signup")
-	if !network.CORS(w, r) {
+	if !middleware.CORS(w, r) {
 		return
 	}
 
 	data, err := security.IsAuth(w, r)
 	if data.Uid > 0 {
-		network.Jsonify(w, data, http.StatusNotModified)
-		//GenErrorCode(w, r, err.Error(), network.StatusUnauthorized)
+		middleware.Jsonify(w, data, http.StatusNotModified)
+		//GenErrorCode(w, r, err.Error(), middleware.StatusUnauthorized)
 		return
 	}
 	r.Header.Set("Content-Type", "application/json")
@@ -31,35 +31,35 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	var form forms.SignForm
 	err = decoder.Decode(&form)
 	if err != nil {
-		network.GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
+		middleware.GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
 		return
 	}
 
 	log.Println("decoded signup form")
 	ok := form.Validate()
 	if !ok {
-		network.ValidationFailed(w, r)
-		network.GenErrorCode(w, r, "Data Error", http.StatusForbidden)
+		middleware.ValidationFailed(w, r)
+		middleware.GenErrorCode(w, r, "Data Error", http.StatusForbidden)
 		return
 	}
 	log.Println("validate signup form")
 
 	user, err := db.GetUserByPhoneOrEmail(db.ConnectToDB(), form.Phone, form.Email)
 	if err != nil {
-		network.GenErrorCode(w, r, "DB error", http.StatusInternalServerError)
+		middleware.GenErrorCode(w, r, "DB error", http.StatusInternalServerError)
 		return
 	}
 
 	log.Println(user)
 	if user.Uid > 0 {
-		network.GenErrorCode(w, r, "User with this information already exist", http.StatusConflict)
+		middleware.GenErrorCode(w, r, "User with this information already exist", http.StatusConflict)
 		return
 	}
 
 	err = forms.RegisterNewUser(form)
 	if err != nil {
 		log.Println("user wasn't registered")
-		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		middleware.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -75,7 +75,7 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 }
 
 func OptionsReq(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if !network.CORS(w, r) {
+	if !middleware.CORS(w, r) {
 		return
 	}
 }

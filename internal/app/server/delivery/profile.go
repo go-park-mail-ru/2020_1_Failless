@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
-	"failless/internal/pkg/network"
+	"failless/internal/pkg/middleware"
 	"failless/internal/pkg/security"
 	"log"
 	"net/http"
@@ -14,17 +14,17 @@ import (
 )
 
 func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if !network.CORS(w, r) {
+	if !middleware.CORS(w, r) {
 		return
 	}
 	log.Print("/api/profile")
 	_, err := security.IsAuth(w, r)
 	if err != nil {
-		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
+		middleware.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
 		return
 	}
 	uid := 0
-	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
+	if uid = middleware.GetIdFromRequest(w, r, &ps); uid < 0 {
 		return
 	}
 
@@ -60,7 +60,7 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 			},
 			Birthday: time.Now(),
 		}
-		network.Jsonify(w, form1, 200)
+		middleware.Jsonify(w, form1, 200)
 		return
 	}
 
@@ -71,7 +71,7 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	// }
 	if form.Avatar.ImgBase64 != "" {
 		if !form.ValidationImage() {
-			network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
+			middleware.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
 			return
 		}
 	}
@@ -79,12 +79,12 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	var user db.User
 
 	if err := form.GetDBFormat(&info, &user); err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		middleware.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	user.Uid = uid
 	if err := db.AddUserInfo(db.ConnectToDB(), user, info); err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusNotFound)
+		middleware.GenErrorCode(w, r, err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -105,17 +105,17 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 }
 
 func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if !network.CORS(w, r) {
+	if !middleware.CORS(w, r) {
 		return
 	}
 	log.Println("/api/profile")
 	_, err := security.IsAuth(w, r)
 	if err != nil {
-		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
+		middleware.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
 		return
 	}
 	uid := 0
-	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
+	if uid = middleware.GetIdFromRequest(w, r, &ps); uid < 0 {
 		return
 	}
 
@@ -123,7 +123,7 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	row, err := db.GetProfileInfo(db.ConnectToDB(), uid)
 	if err != nil {
 		log.Println(err.Error())
-		network.GenErrorCode(w, r, "Profile not found", http.StatusNotFound)
+		middleware.GenErrorCode(w, r, "Profile not found", http.StatusNotFound)
 		return
 	}
 
@@ -153,16 +153,16 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 }
 
 	func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if !network.CORS(w, r) {
+	if !middleware.CORS(w, r) {
 		return
 	}
 	log.Println("/api/getuser")
 	data, err := security.IsAuth(w, r)
 	if err != nil {
-		network.GenErrorCode(w, r, "User is not authorised", http.StatusUnauthorized)
+		middleware.GenErrorCode(w, r, "User is not authorised", http.StatusUnauthorized)
 		return
 	}
-	network.Jsonify(w, data, http.StatusOK)
+	middleware.Jsonify(w, data, http.StatusOK)
 }
 
 func ProfileHandler(router *htmux.TreeMux) {

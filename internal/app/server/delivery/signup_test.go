@@ -18,7 +18,7 @@ type TestCaseSignUp struct {
 }
 
 func TestSignUp(t *testing.T) {
-	url := "network://localhost:5000"
+	url := "middleware://localhost:5000"
 	badForm := forms.SignForm{
 		Name:     "SergeyRof12",
 		Phone:    "28005553535",
@@ -62,7 +62,7 @@ func TestSignUp(t *testing.T) {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		url := "network://localhost:5000"
+		url := "middleware://localhost:5000"
 		req := httptest.NewRequest("POST", url, bytes.NewBufferString(string(result)))
 		w := httptest.NewRecorder()
 		SignUp(w, req, ps)

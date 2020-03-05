@@ -3,19 +3,19 @@ package delivery
 import (
 	"encoding/json"
 	"failless/internal/pkg/db"
-	"failless/internal/pkg/network"
+	"failless/internal/pkg/middleware"
 	"net/http"
 
 	htmux "github.com/dimfeld/httptreemux"
 )
 
 func FeedTags(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	if !network.CORS(w, r) {
+	if !middleware.CORS(w, r) {
 		return
 	}
 	tags, err := db.GetAllTags(db.ConnectToDB())
 	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		middleware.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	output, err := json.Marshal(tags)

@@ -9,20 +9,37 @@ import (
 type HandlerFunc func(http.ResponseWriter, *http.Request, map[string]string)
 
 type MapHandler struct {
-	Type    string
-	Handler HandlerFunc
+	Type         string
+	Handler      HandlerFunc
+	AuthRequired bool
+	CORS         bool
+	CSRF         bool
 }
+
+type GlobalSecure struct {
+	CORSMethods  string
+	CORSMap      map[string]struct{}
+	AllowedHosts map[string]struct{}
+}
+
+var SecureSettings GlobalSecure
 
 type ServerSettings struct {
 	Port   int
 	Ip     string
 	Routes map[string][]MapHandler
 	Router http.Handler
+	Secure *GlobalSecure
 }
 
-// return this pointer
+// Return this pointer
 func (s *ServerSettings) GetSettings() ServerSettings {
 	return *s
+}
+
+// Initialization of the global object with secure configurations
+func (s *ServerSettings) InitSecure(secure *GlobalSecure) {
+	s.Secure = secure
 }
 
 // Set new route
@@ -67,6 +84,9 @@ func (s *ServerSettings) InitRouter1(router *httptreemux.TreeMux) {
 			case "OPTIONS":
 				optionsHandler = pack.Handler
 			}
+			if pack.CORS {
+				s.Secure.CORSMap[pack.Type] = struct{}{}
+			}
 		}
 	}
 
@@ -75,6 +95,13 @@ func (s *ServerSettings) InitRouter1(router *httptreemux.TreeMux) {
 			(*router).OPTIONS(key, httptreemux.HandlerFunc(optionsHandler))
 		}
 	}
+	// generate "GET, POST, OPTIONS, HEAD, PUT" string
+	for key, _ := range s.Secure.CORSMap {
+		s.Secure.CORSMethods += key + ", "
+	}
+	// remove extra comma
+	s.Secure.CORSMethods = s.Secure.CORSMethods[:len(s.Secure.CORSMethods)-2]
+	log.Println(s.Secure.CORSMethods)
 	s.Router = router
 }
 

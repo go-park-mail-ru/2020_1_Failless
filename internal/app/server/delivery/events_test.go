@@ -19,7 +19,7 @@ func TestFeedEvents(t *testing.T) {
 		},
 	}
 	for caseNum, item := range cases {
-		url := "network://localhost:5000"
+		url := "middleware://localhost:5000"
 		req := httptest.NewRequest("GET", url, nil)
 		w := httptest.NewRecorder()
 
