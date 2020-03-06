@@ -36,30 +36,22 @@ func getUser(db *pgx.ConnPool, sqlStatement string, args... interface{}) (user U
 
 
 func AddNewUser(db *pgx.ConnPool, user *User) error {
+	uid := 0
 	sqlStatement := `INSERT INTO profile VALUES (default, $1, $2, LOWER($3), $4) RETURNING uid;`
-	uid := int(0)
-	// todo: check is transaction needed
-	//trans, err := db.Begin()
-	//if err != nil {
-	//	return err
-	//}
-
 	err := db.QueryRow(sqlStatement, user.Name, user.Phone, user.Email, user.Password).Scan(&uid)
 	if err != nil {
-		//_ = trans.Rollback()
 		log.Println(err.Error())
 		return err
 	}
+
 	log.Println(sqlStatement, user.Name, uid)
 	user.Uid = uid
 	sqlStatement = `INSERT INTO profile_info VALUES ( $1 , 'Расскажите о себе' , default , default , default , default , default , default ) ;`
 	_, err = db.Exec(sqlStatement, user.Uid)
 	if err != nil {
 		log.Println(sqlStatement, user.Uid)
-		//_ = trans.Rollback()
 		return err
 	}
-	//err = trans.Commit()
 	return nil
 }
 

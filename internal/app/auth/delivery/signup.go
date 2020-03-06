@@ -2,8 +2,10 @@ package delivery
 
 import (
 	"encoding/json"
+	"failless/internal/app/auth/usecase"
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
+	"failless/internal/pkg/middleware"
 	"failless/internal/pkg/network"
 	"fmt"
 	"log"
@@ -13,23 +15,13 @@ import (
 
 func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Println("/api/signup")
-	//if !middleware.CORS(w, r) {
-	//	return
-	//}
-
-	//data, err := security.IsAuth(w, r)
-	//if data.Uid > 0 {
-	//	middleware.Jsonify(w, data, http.StatusNotModified)
-	//	return
-	//}
-	var key int
-	data, ok := r.Context().Value(key).(*network.Claims)
-	if data == nil || !ok || data.Uid > 0 {
+	data := r.Context().Value(middleware.CtxUserKey)
+	if data != nil {
 		network.Jsonify(w, data, http.StatusNotModified)
 		return
 	}
 
-	r.Header.Set("Content-Type", "application/json")
+	//r.Header.Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm
 	err := decoder.Decode(&form)
@@ -39,7 +31,7 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 
 	log.Println("decoded signup form")
-	ok = form.Validate()
+	ok := form.Validate()
 	if !ok {
 		network.ValidationFailed(w, r)
 		network.GenErrorCode(w, r, "Data Error", http.StatusForbidden)
@@ -59,7 +51,7 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	err = forms.RegisterNewUser(form)
+	err = usecase.RegisterNewUser(form)
 	if err != nil {
 		log.Println("user wasn't registered")
 		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
@@ -68,21 +60,7 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 	form.Password = ""
 	network.Jsonify(w, form, http.StatusOK)
-	//output, err := json.Marshal(form)
-	//if err != nil {
-	//	http.Error(w, err.Error(), http.StatusInternalServerError)
-	//	return
-	//}
-	//w.Header().Set("content-type", "application/json")
-	//w.WriteHeader(http.StatusOK)
-	//_, _ = w.Write(output)
 }
-//
-//func OptionsReq(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-//	//if !middleware.CORS(w, r) {
-//	//	return
-//	//}
-//}
 
 // debug&test func
 func UserDelete(mail string) {
@@ -93,8 +71,3 @@ func UserDelete(mail string) {
 	}
 	log.Println("Success 'UserDelete'")
 }
-
-//func SignUPHandler(router *htmux.TreeMux) {
-//	router.POST("/api/signup", SignUp)
-//	router.OptionsHandler = OptionsReq
-//}

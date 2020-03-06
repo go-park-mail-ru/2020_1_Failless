@@ -11,7 +11,6 @@ import (
 )
 
 func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	//middleware.CORS(w, r)
 	log.Print("/api/signin")
 	_ = network.CreateLogout(w)
 
@@ -59,18 +58,7 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	//middleware.CORS(w, r)
-	//if r.Method == "OPTIONS" {
-	//	w.WriteHeader(http.StatusOK)
-	//	return
-	//}
 	log.Print("/api/logout")
-	//_, err := security.IsAuth(w, r)
-	//if err != nil {
-	//	w.Header().Set("Content-Type", "application/json")
-	//	w.WriteHeader(http.StatusUnauthorized)
-	//	return
-	//}
 	if err := network.CreateLogout(w); err != nil {
 		network.GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
 		return
@@ -78,8 +66,3 @@ func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 	network.Jsonify(w, network.Message{Message: "Successfully logout", Status: 200}, 200)
 }
-
-//func AuthHandler(router *htmux.TreeMux) {
-//	router.POST("/api/signin", SignIn)
-//	router.GET("/api/logout", Logout)
-//}

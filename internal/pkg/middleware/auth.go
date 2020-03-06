@@ -23,17 +23,24 @@ type authError struct {
 	code int
 }
 
+type UserKey string
+
+// Context variable for pushing credentials through middleware to handlers
+const CtxUserKey UserKey = "auth"
+
 // Auth middleware checks is user authorized
 // If user is not authorized it write failed checker to the authError structure
 func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+		log.Print(r.URL, r.Method)
+		log.Print(" Auth middleware\n")
 		var errMsg authError
 		ctx := context.Background()
 		c, err := r.Cookie("token")
 
 		// error - no cookie was found
 		if err != nil {
-			ctx = context.WithValue(ctx, "auth", nil)
+			ctx = context.WithValue(ctx, CtxUserKey, nil)
 			errMsg.code = 1
 			errMsg.msg = err.Error()
 			log.Print(err.Error())
@@ -49,6 +56,7 @@ func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 			if err != nil {
 				if err == jwt.ErrSignatureInvalid {
 					errMsg.code = 3
+					ctx = context.WithValue(ctx, CtxUserKey, nil)
 					w.WriteHeader(http.StatusUnauthorized)
 				} else {
 					errMsg.code = 5
@@ -58,6 +66,7 @@ func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 
 			if errMsg.code == 0 {
 				if !tkn.Valid {
+					ctx = context.WithValue(ctx, "auth", nil)
 					w.WriteHeader(http.StatusUnauthorized)
 					errMsg.code = 5
 					errMsg.msg = "Token invalid"
@@ -68,11 +77,11 @@ func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 						Email: claims.Email,
 						Name:  claims.Name,
 					}
-					ctx = context.WithValue(ctx, "auth", form)
+					log.Println("User was found")
+					ctx = context.WithValue(ctx, CtxUserKey, form)
 				}
 			}
 		}
-		r.WithContext(ctx)
-		next(w, r, ps)
+		next(w, r.WithContext(ctx), ps)
 	}
 }

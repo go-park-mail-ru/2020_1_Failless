@@ -20,6 +20,6 @@ func CORS(next settings.HandlerFunc) settings.HandlerFunc {
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 		}
-		next(w, r, ps)
+		next(w, r.WithContext(r.Context()), ps)
 	}
 }

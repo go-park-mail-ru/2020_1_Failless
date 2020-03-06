@@ -17,7 +17,6 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-
 // Create the JWT key used to create the signature
 // todo: rewrite to env variables
 var JwtKey = []byte("removeAfterDebug")

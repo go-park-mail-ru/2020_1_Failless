@@ -68,6 +68,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 }
 
+// Env variables which must to be set before running server
 var Secrets = []string{
 	"DB_NAME",
 	"DB_PASSWORD",
@@ -112,12 +113,11 @@ func InitRouter(s *settings.ServerSettings, router *httptreemux.TreeMux) {
 			log.Fatal("Error was occurred", r)
 		}
 	}()
+
 	var optionsHandler settings.HandlerFunc = nil
 	for key, list := range s.Routes {
-		log.Println(key)
 		for _, pack := range list {
 			handler := pack.Handler
-			log.Println(pack.Type)
 			if pack.CORS {
 				s.Secure.CORSMap[pack.Type] = struct{}{}
 				handler = middleware.CORS(handler)
@@ -151,9 +151,7 @@ func InitRouter(s *settings.ServerSettings, router *httptreemux.TreeMux) {
 		s.Secure.CORSMethods += key + ", "
 	}
 
-	log.Println("____________")
 	// remove extra comma
 	s.Secure.CORSMethods = s.Secure.CORSMethods[:len(s.Secure.CORSMethods)-2]
-	log.Println(s.Secure.CORSMethods)
 	s.Router = router
 }
