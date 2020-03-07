@@ -2,13 +2,6 @@ package user
 
 import "failless/internal/pkg/models"
 
-// Gender types
-const (
-	Male = iota
-	Female
-	Other
-)
-
 // Storage interface, which works with user's data
 // It can be in-memory realization or database realization
 type Repository interface {

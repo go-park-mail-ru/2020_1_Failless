@@ -2,6 +2,13 @@ package models
 
 import "time"
 
+// Gender types
+const (
+	Male = iota
+	Female
+	Other
+)
+
 // Base user struct for storage user data
 // It has a difference with the User struct into delivery package
 // which contains in password filed.

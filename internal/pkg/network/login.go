@@ -1,7 +1,7 @@
 package network
 
 import (
-	"failless/internal/pkg/db"
+	"failless/internal/pkg/models"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"time"
@@ -21,7 +21,7 @@ type Claims struct {
 // todo: rewrite to env variables
 var JwtKey = []byte("removeAfterDebug")
 
-func createJWTToken(user db.User) (string, error) {
+func createJWTToken(user models.User) (string, error) {
 	expirationTime := time.Now().Add(time.Hour * 24 * 30)
 	claims := &Claims{
 		Email: user.Email,
@@ -41,7 +41,7 @@ func createJWTToken(user db.User) (string, error) {
 	return tokenString, nil
 }
 
-func CreateAuth(w http.ResponseWriter, user db.User) error {
+func CreateAuth(w http.ResponseWriter, user models.User) error {
 	token, err := createJWTToken(user)
 	if err != nil {
 		return err

@@ -3,7 +3,7 @@ package forms
 import (
 	"bytes"
 	"encoding/base64"
-	"failless/internal/pkg/db"
+	"failless/internal/pkg/models"
 	"failless/internal/pkg/security"
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
@@ -12,17 +12,17 @@ import (
 
 type ProfileForm struct {
 	SignForm
-	Avatar   EImage           `json:"avatar"`
-	Photos   []EImage         `json:"photos, omitempty"`
-	Gender   int              `json:"gender"`
-	About    string           `json:"about"`
-	Rating   float32          `json:"rating, omitempty"`
-	Location db.LocationPoint `json:"location, omitempty"`
-	Birthday time.Time        `json:"birthday, omitempty"`
+	Avatar   EImage               `json:"avatar"`
+	Photos   []EImage             `json:"photos, omitempty"`
+	Gender   int                  `json:"gender"`
+	About    string               `json:"about"`
+	Rating   float32              `json:"rating, omitempty"`
+	Location models.LocationPoint `json:"location, omitempty"`
+	Birthday time.Time            `json:"birthday, omitempty"`
 }
 
 func (p *ProfileForm) ValidateGender() bool {
-	return db.Male == p.Gender || p.Gender == db.Female || p.Gender == db.Other
+	return models.Male == p.Gender || p.Gender == models.Female || p.Gender == models.Other
 }
 
 func (p *ProfileForm) ValidationImage() bool {
@@ -50,7 +50,7 @@ func (p *ProfileForm) ValidationImage() bool {
 	return true
 }
 
-func (p *ProfileForm) GetDBFormat(info *db.UserInfo, user *db.User) error {
+func (p *ProfileForm) GetDBFormat(info *models.JsonInfo, user *models.User) error {
 	encPass, err := security.EncryptPassword(p.Password)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func (p *ProfileForm) GetDBFormat(info *db.UserInfo, user *db.User) error {
 	//	photos = append(photos, pic.ImgName)
 	//}
 
-	*info = db.UserInfo{
+	*info = models.JsonInfo{
 		About:     p.About,
 		Photos:    photos,
 		Rating:    p.Rating,
@@ -71,7 +71,8 @@ func (p *ProfileForm) GetDBFormat(info *db.UserInfo, user *db.User) error {
 		LoginDate: time.Time{},
 		Location:  p.Location,
 	}
-	*user = db.User{
+
+	*user = models.User{
 		Uid:      -1,
 		Name:     p.Name,
 		Phone:    p.Phone,
@@ -81,7 +82,7 @@ func (p *ProfileForm) GetDBFormat(info *db.UserInfo, user *db.User) error {
 	return nil
 }
 
-func (p *ProfileForm) FillProfile(row db.UserInfo) error {
+func (p *ProfileForm) FillProfile(row models.JsonInfo) error {
 	// todo: take pictures from media
 	ava := ""
 	if len(row.Photos) < 1 {
@@ -91,6 +92,7 @@ func (p *ProfileForm) FillProfile(row db.UserInfo) error {
 		ava = row.Photos[0]
 		//ava = path.Join(Media, row.Photos[0])
 	}
+
 	p.Avatar.ImgName = ava //row.Photos[0]
 	p.About = row.About
 	p.Location = row.Location

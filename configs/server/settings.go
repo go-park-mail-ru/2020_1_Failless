@@ -1,69 +1,69 @@
 package server
 
 import (
-	"failless/internal/app/server/delivery"
-	delivery2 "failless/internal/pkg/event/delivery"
 	"failless/internal/pkg/router"
 	"failless/internal/pkg/settings"
-	delivery4 "failless/internal/pkg/tag/delivery"
-	delivery3 "failless/internal/pkg/user/delivery"
 	"github.com/dimfeld/httptreemux"
 	"sync"
+
+	eventDelivery "failless/internal/pkg/event/delivery"
+	tagDelivery "failless/internal/pkg/tag/delivery"
+	userDelivery "failless/internal/pkg/user/delivery"
 )
 
 var routesMap = map[string][]settings.MapHandler{
 	"/api/getuser": {{
 		Type:         "GET",
-		Handler:      delivery.GetUserInfo,
+		Handler:      userDelivery.GetUserInfo,
 		CORS:         true,
 		AuthRequired: true,
 	}},
 	"/api/logout": {{
 		Type:         "GET",
-		Handler:      delivery3.Logout,
+		Handler:      userDelivery.Logout,
 		CORS:         true,
 		AuthRequired: true,
 	}},
 	"/api/signin": {{
 		Type:         "POST",
-		Handler:      delivery3.SignIn,
+		Handler:      userDelivery.SignIn,
 		CORS:         true,
 		AuthRequired: false,
 	}},
 	"/api/signup": {{
 		Type:         "POST",
-		Handler:      delivery3.SignUp,
+		Handler:      userDelivery.SignUp,
 		CORS:         true,
 		AuthRequired: false,
 	}},
 	"/api/events/feed": {{
 		Type:         "GET",
-		Handler:      delivery2.FeedEvents,
+		Handler:      eventDelivery.FeedEvents,
 		CORS:         true,
 		AuthRequired: false,
 	}},
 	"/api/tags/feed": {{
 		Type:         "GET",
-		Handler:      delivery4.FeedTags,
+		Handler:      tagDelivery.FeedTags,
 		CORS:         true,
 		AuthRequired: false,
 	}},
 	"/api/profile/:id": {
 		{
 			Type:         "PUT",
-			Handler:      delivery.UpdProfilePage,
+			Handler:      userDelivery.UpdProfilePage,
 			CORS:         true,
 			AuthRequired: true,
 		},
 		{
 			Type:         "GET",
-			Handler:      delivery.GetProfilePage,
+			Handler:      userDelivery.GetProfilePage,
 			CORS:         true,
 			AuthRequired: false,
 		}},
 	"/api": {{
 		Type:         "OPTIONS",
-		Handler:      delivery.OptionsReq,
+		Handler:      router.OptionsReq,
 		CORS:         true,
 		AuthRequired: false,
 	}},

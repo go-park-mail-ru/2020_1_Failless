@@ -1,12 +1,13 @@
 package user
 
+import "failless/internal/pkg/models"
 
 // Get gender string by int id
 func GenderById(genderId int) string {
 	switch genderId {
-	case Male:
+	case models.Male:
 		return "male"
-	case Female:
+	case models.Female:
 		return "female"
 	}
 	return "other"
@@ -16,11 +17,11 @@ func GenderById(genderId int) string {
 func GenderByStr(gender string) int {
 	switch gender {
 	case "male":
-		return Male
+		return models.Male
 	case "female":
-		return Female
+		return models.Female
 	}
 
 	// Other gender
-	return Other
+	return models.Other
 }
