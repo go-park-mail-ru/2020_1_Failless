@@ -8,6 +8,7 @@ import (
 )
 
 func (uc *UseCase) FillFormIfExist(cred *models.User) (int, error) {
+	log.Println(*cred)
 	user, err := uc.rep.GetUserByPhoneOrEmail(cred.Phone, cred.Email)
 	if err == nil && user.Uid < 0 {
 		log.Println("user not found")

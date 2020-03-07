@@ -28,7 +28,10 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		return
 	}
 
-	var user models.User
+	user := models.User{
+		Phone: form.Phone,
+		Email: form.Email,
+	}
 	uc := usecase.GetUseCase()
 	if code, err := uc.FillFormIfExist(&user); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)

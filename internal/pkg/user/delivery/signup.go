@@ -37,7 +37,10 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Println("validate signup form")
 
 	uc := usecase.GetUseCase()
-	var user models.User
+	user := models.User{
+		Phone: form.Phone,
+		Email: form.Email,
+	}
 	if code, err := uc.FillFormIfExist(&user); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
