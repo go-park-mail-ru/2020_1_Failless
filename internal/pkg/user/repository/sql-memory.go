@@ -16,18 +16,18 @@ func NewSqlUserRepository(db *pgx.ConnPool) user.Repository {
 	return &sqlUserRepository{db: db}
 }
 
-func (um *sqlUserRepository) GetUserByUID(uid int) (models.User, error) {
+func (ur *sqlUserRepository) GetUserByUID(uid int) (models.User, error) {
 	sqlStatement := `SELECT uid, name, phone, email, password FROM profile WHERE uid = $1;`
-	return um.getUser(sqlStatement, uid)
+	return ur.getUser(sqlStatement, uid)
 }
 
-func (um *sqlUserRepository) GetUserByPhoneOrEmail(phone string, email string) (models.User, error) {
+func (ur *sqlUserRepository) GetUserByPhoneOrEmail(phone string, email string) (models.User, error) {
 	sqlStatement := `SELECT uid, name, phone, email, password FROM profile WHERE phone = $1 OR email = LOWER($2);`
-	return um.getUser(sqlStatement, phone, email)
+	return ur.getUser(sqlStatement, phone, email)
 }
 
-func (um *sqlUserRepository) getUser(sqlStatement string, args ...interface{}) (user models.User, err error) {
-	row := um.db.QueryRow(sqlStatement, args...)
+func (ur *sqlUserRepository) getUser(sqlStatement string, args ...interface{}) (user models.User, err error) {
+	row := ur.db.QueryRow(sqlStatement, args...)
 	err = row.Scan(
 		&user.Uid,
 		&user.Name,
@@ -43,10 +43,10 @@ func (um *sqlUserRepository) getUser(sqlStatement string, args ...interface{}) (
 	return user, nil
 }
 
-func (um *sqlUserRepository) AddNewUser(user *models.User) error {
+func (ur *sqlUserRepository) AddNewUser(user *models.User) error {
 	uid := 0
 	sqlStatement := `INSERT INTO profile VALUES (default, $1, $2, LOWER($3), $4) RETURNING uid;`
-	err := um.db.QueryRow(sqlStatement, user.Name, user.Phone, user.Email, user.Password).Scan(&uid)
+	err := ur.db.QueryRow(sqlStatement, user.Name, user.Phone, user.Email, user.Password).Scan(&uid)
 	if err != nil {
 		log.Println(err.Error())
 		return err
@@ -55,7 +55,7 @@ func (um *sqlUserRepository) AddNewUser(user *models.User) error {
 	log.Println(sqlStatement, user.Name, uid)
 	user.Uid = uid
 	sqlStatement = `INSERT INTO profile_info VALUES ( $1 , 'Расскажите о себе' , default , default , default , default , default , default ) ;`
-	_, err = um.db.Exec(sqlStatement, user.Uid)
+	_, err = ur.db.Exec(sqlStatement, user.Uid)
 	if err != nil {
 		log.Println(sqlStatement, user.Uid)
 		return err
@@ -63,10 +63,10 @@ func (um *sqlUserRepository) AddNewUser(user *models.User) error {
 	return nil
 }
 
-func (um *sqlUserRepository) AddUserInfo(credentials models.User, info models.JsonInfo) error {
+func (ur *sqlUserRepository) AddUserInfo(credentials models.User, info models.JsonInfo) error {
 	if credentials.Uid < 0 {
 		sqlStatement := `SELECT uid FROM profile WHERE LOWER(email) = LOWER($1) OR phone = $2;`
-		row := um.db.QueryRow(sqlStatement, credentials.Email, credentials.Phone)
+		row := ur.db.QueryRow(sqlStatement, credentials.Email, credentials.Phone)
 		err := row.Scan(&credentials.Uid)
 		if err == pgx.ErrNoRows {
 			return errors.New("User " + credentials.Email + "doesn't exist")
@@ -79,7 +79,7 @@ func (um *sqlUserRepository) AddUserInfo(credentials models.User, info models.Js
 	gender := user.GenderById(info.Gender)
 
 	sqlStatement := `UPDATE profile_info SET about = $1, photos = array_append(photos, $2), birthday = $3, gender = $4 WHERE pid = $5;`
-	_, err := um.db.Exec(sqlStatement, info.About, info.Photos[0], info.Birthday, gender, credentials.Uid)
+	_, err := ur.db.Exec(sqlStatement, info.About, info.Photos[0], info.Birthday, gender, credentials.Uid)
 	if err != nil {
 		log.Println(sqlStatement, info.About, info.Photos[0], info.Birthday, info.Gender, credentials.Uid)
 		log.Println(err.Error())
@@ -88,24 +88,24 @@ func (um *sqlUserRepository) AddUserInfo(credentials models.User, info models.Js
 	return nil
 }
 
-func (um *sqlUserRepository) SetUserLocation(uid int, point models.LocationPoint) error {
+func (ur *sqlUserRepository) SetUserLocation(uid int, point models.LocationPoint) error {
 	sqlStatement := `UPDATE profile_info SET location = ST_POINT($1, $2) WHERE pid = $3;`
-	_, err := um.db.Exec(sqlStatement, point.Latitude, point.Longitude, uid)
+	_, err := ur.db.Exec(sqlStatement, point.Latitude, point.Longitude, uid)
 	return err
 }
 
-func (um *sqlUserRepository) UpdateUserRating(uid int, rating float32) error {
+func (ur *sqlUserRepository) UpdateUserRating(uid int, rating float32) error {
 	sqlStatement := `UPDATE profile_info SET rating = $1 WHERE pid = $2;`
-	_, err := um.db.Exec(sqlStatement, rating, uid)
+	_, err := ur.db.Exec(sqlStatement, rating, uid)
 	return err
 }
 
-func (um *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err error) {
+func (ur *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err error) {
 	var profile ProfileInfo
 	sqlStatement := `SELECT about, photos, rating, birthday, gender FROM profile_info WHERE pid = $1 ;`
 	gender := ""
 	genPtr := &gender
-	err = um.db.QueryRow(sqlStatement, uid).Scan(
+	err = ur.db.QueryRow(sqlStatement, uid).Scan(
 		&profile.About,
 		&profile.Photos,
 		&profile.Rating,
@@ -136,8 +136,8 @@ func (um *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err 
 }
 
 // func for testing
-func (um *sqlUserRepository) DeleteUser(mail string) error {
+func (ur *sqlUserRepository) DeleteUser(mail string) error {
 	sqlStatement := `DELETE FROM profile WHERE email=$1;`
-	_, err := um.db.Exec(sqlStatement, mail)
+	_, err := ur.db.Exec(sqlStatement, mail)
 	return err
 }
