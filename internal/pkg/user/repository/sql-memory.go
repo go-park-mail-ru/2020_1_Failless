@@ -34,6 +34,7 @@ func (ur *sqlUserRepository) getUser(sqlStatement string, args ...interface{}) (
 		&user.Phone,
 		&user.Email,
 		&user.Password)
+
 	if err == pgx.ErrNoRows {
 		return models.User{Uid: -1, Password: []byte{}}, nil
 	} else if err != nil {
@@ -52,7 +53,6 @@ func (ur *sqlUserRepository) AddNewUser(user *models.User) error {
 		return err
 	}
 
-	log.Println(sqlStatement, user.Name, uid)
 	user.Uid = uid
 	sqlStatement = `INSERT INTO profile_info VALUES ( $1 , 'Расскажите о себе' , default , default , default , default , default , default ) ;`
 	_, err = ur.db.Exec(sqlStatement, user.Uid)

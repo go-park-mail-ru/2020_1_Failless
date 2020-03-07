@@ -18,7 +18,6 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	//r.Header.Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm
 	err := decoder.Decode(&form)
@@ -27,14 +26,11 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	log.Println("decoded signup form")
 	ok := form.Validate()
 	if !ok {
 		network.ValidationFailed(w, r)
-		network.GenErrorCode(w, r, "Data Error", http.StatusForbidden)
 		return
 	}
-	log.Println("validate signup form")
 
 	uc := usecase.GetUseCase()
 	user := models.User{
@@ -46,7 +42,6 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	log.Println(user)
 	if user.Uid > 0 {
 		network.GenErrorCode(w, r, "User with this information already exist", http.StatusConflict)
 		return

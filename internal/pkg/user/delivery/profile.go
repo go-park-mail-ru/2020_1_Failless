@@ -11,9 +11,8 @@ import (
 )
 
 func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	var key int
-	data, ok := r.Context().Value(key).(*network.Claims)
-	if data == nil || !ok || data.Uid > 0 {
+	data := r.Context().Value(middleware.CtxUserKey)
+	if data == nil {
 		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
 		return
 	}
@@ -64,13 +63,11 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	log.Println(profile)
 	network.Jsonify(w, profile, http.StatusOK)
 }
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	data := r.Context().Value(middleware.CtxUserKey)
-	log.Println(data)
 	if data == nil {
 		log.Println("data wasn't found")
 		network.GenErrorCode(w, r, "User is not authorised", http.StatusUnauthorized)

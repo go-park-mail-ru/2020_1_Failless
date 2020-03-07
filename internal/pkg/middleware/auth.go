@@ -32,8 +32,6 @@ const CtxUserKey UserKey = "auth"
 // If user is not authorized it write failed checker to the authError structure
 func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-		log.Print(r.URL, r.Method)
-		log.Print(" Auth middleware\n")
 		var errMsg authError
 		ctx := context.Background()
 		c, err := r.Cookie("token")
@@ -77,7 +75,6 @@ func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 						Email: claims.Email,
 						Name:  claims.Name,
 					}
-					log.Println("User was found")
 					ctx = context.WithValue(ctx, CtxUserKey, form)
 				}
 			}

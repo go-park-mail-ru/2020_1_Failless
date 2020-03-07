@@ -4,5 +4,5 @@ const (
 	MinLen   = 6
 	MinSym   = 4
 	MinDigit = 2
-	Media    = "media/images/"
+	Media    = "../../media/images/"
 )

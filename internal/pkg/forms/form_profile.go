@@ -7,6 +7,7 @@ import (
 	"failless/internal/pkg/security"
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
+	"log"
 	"time"
 )
 
@@ -28,11 +29,13 @@ func (p *ProfileForm) ValidateGender() bool {
 func (p *ProfileForm) ValidationImage() bool {
 	imgBytes, err := base64.StdEncoding.DecodeString(p.Avatar.ImgBase64)
 	if err != nil {
+		log.Println(err.Error())
 		return false
 	}
 
 	img, err := imaging.Decode(bytes.NewReader(imgBytes))
 	if err != nil {
+		log.Println(err.Error())
 		return false
 	}
 
@@ -43,6 +46,8 @@ func (p *ProfileForm) ValidationImage() bool {
 	p.Avatar.ImgName = uuid.New().String() + ".jpg"
 	err = p.Avatar.SaveImage()
 	if err != nil {
+		log.Println("Can't save image")
+		log.Println(err.Error())
 		return false
 	}
 
