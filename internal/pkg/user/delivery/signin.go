@@ -11,7 +11,6 @@ import (
 )
 
 func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	log.Print("/api/signin")
 	_ = network.CreateLogout(w)
 
 	decoder := json.NewDecoder(r.Body)

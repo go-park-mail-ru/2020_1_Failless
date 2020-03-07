@@ -6,12 +6,12 @@ import (
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/middleware"
 	"failless/internal/pkg/network"
+	"failless/internal/pkg/user/usecase"
 	"log"
 	"net/http"
 )
 
 func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	log.Print("/api/profile")
 	var key int
 	data, ok := r.Context().Value(key).(*network.Claims)
 	if data == nil || !ok || data.Uid > 0 {
@@ -34,30 +34,36 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
+	form.Uid = uid
 	if form.Avatar.ImgBase64 != "" {
 		if !form.ValidationImage() {
 			network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
 			return
 		}
 	}
-	var info db.UserInfo
-	var user db.User
-
-	if err := form.GetDBFormat(&info, &user); err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+	uc := usecase.GetUseCase()
+	if err, code := uc.UpdateUserInfo(&form); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
-	user.Uid = uid
-	if err := db.AddUserInfo(db.ConnectToDB(), user, info); err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	form.Avatar.ImgBase64 = ""
-	for _, item := range form.Photos {
-		item.ImgBase64 = ""
-		item.Img = nil
-	}
+	//var info db.UserInfo
+	//var user db.User
+	//
+	//if err := form.GetDBFormat(&info, &user); err != nil {
+	//	network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+	//	return
+	//}
+	//user.Uid = uid
+	//if err := db.AddUserInfo(db.ConnectToDB(), user, info); err != nil {
+	//	network.GenErrorCode(w, r, err.Error(), http.StatusNotFound)
+	//	return
+	//}
+	//
+	//form.Avatar.ImgBase64 = ""
+	//for _, item := range form.Photos {
+	//	item.ImgBase64 = ""
+	//	item.Img = nil
+	//}
 	network.Jsonify(w, form, http.StatusOK)
 }
 

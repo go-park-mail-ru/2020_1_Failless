@@ -1,12 +1,13 @@
 package server
 
 import (
-	delivery2 "failless/internal/app/auth/delivery"
 	"failless/internal/app/server/delivery"
-	"failless/internal/pkg/middleware"
+	delivery2 "failless/internal/pkg/event/delivery"
+	"failless/internal/pkg/router"
 	"failless/internal/pkg/settings"
+	delivery4 "failless/internal/pkg/tag/delivery"
+	delivery3 "failless/internal/pkg/user/delivery"
 	"github.com/dimfeld/httptreemux"
-	"log"
 	"sync"
 )
 
@@ -19,31 +20,31 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/api/logout": {{
 		Type:         "GET",
-		Handler:      delivery2.Logout,
+		Handler:      delivery3.Logout,
 		CORS:         true,
 		AuthRequired: true,
 	}},
 	"/api/signin": {{
 		Type:         "POST",
-		Handler:      delivery2.SignIn,
+		Handler:      delivery3.SignIn,
 		CORS:         true,
 		AuthRequired: false,
 	}},
 	"/api/signup": {{
 		Type:         "POST",
-		Handler:      delivery2.SignUp,
+		Handler:      delivery3.SignUp,
 		CORS:         true,
 		AuthRequired: false,
 	}},
 	"/api/events/feed": {{
 		Type:         "GET",
-		Handler:      delivery.FeedEvents,
+		Handler:      delivery2.FeedEvents,
 		CORS:         true,
 		AuthRequired: false,
 	}},
 	"/api/tags/feed": {{
 		Type:         "GET",
-		Handler:      delivery.FeedTags,
+		Handler:      delivery4.FeedTags,
 		CORS:         true,
 		AuthRequired: false,
 	}},
@@ -101,57 +102,7 @@ func GetConfig() *settings.ServerSettings {
 			},
 		}
 		conf.InitSecure(&settings.SecureSettings)
-		InitRouter(&conf, httptreemux.New())
+		router.InitRouter(&conf, httptreemux.New())
 	})
 	return &conf
-}
-
-// Parse route map and return configured Router
-func InitRouter(s *settings.ServerSettings, router *httptreemux.TreeMux) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Fatal("Error was occurred", r)
-		}
-	}()
-
-	var optionsHandler settings.HandlerFunc = nil
-	for key, list := range s.Routes {
-		for _, pack := range list {
-			handler := pack.Handler
-			if pack.CORS {
-				s.Secure.CORSMap[pack.Type] = struct{}{}
-				handler = middleware.CORS(handler)
-			}
-			if pack.AuthRequired {
-				handler = middleware.Auth(handler)
-			}
-			switch pack.Type {
-			case "GET":
-				(*router).GET(key, httptreemux.HandlerFunc(handler))
-			case "PUT":
-				(*router).PUT(key, httptreemux.HandlerFunc(handler))
-			case "POST":
-				(*router).POST(key, httptreemux.HandlerFunc(handler))
-			case "DELETE":
-				(*router).DELETE(key, httptreemux.HandlerFunc(handler))
-			case "OPTIONS":
-				optionsHandler = handler
-			}
-
-		}
-	}
-
-	if optionsHandler != nil {
-		for key, _ := range s.Routes {
-			(*router).OPTIONS(key, httptreemux.HandlerFunc(optionsHandler))
-		}
-	}
-	// generate "GET, POST, OPTIONS, HEAD, PUT" string
-	for key, _ := range s.Secure.CORSMap {
-		s.Secure.CORSMethods += key + ", "
-	}
-
-	// remove extra comma
-	s.Secure.CORSMethods = s.Secure.CORSMethods[:len(s.Secure.CORSMethods)-2]
-	s.Router = router
 }

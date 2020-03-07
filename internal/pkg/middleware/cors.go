@@ -2,11 +2,13 @@ package middleware
 
 import (
 	"failless/internal/pkg/settings"
+	"log"
 	"net/http"
 )
 
 func CORS(next settings.HandlerFunc) settings.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+		log.Print(r.Method, ": ", r.URL, "\n")
 		origin := r.Header.Get("Origin")
 		_, allowed := settings.SecureSettings.AllowedHosts[origin]
 		_, allowedMethod := settings.SecureSettings.CORSMap[r.Method]
