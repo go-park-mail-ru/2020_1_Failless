@@ -2,10 +2,11 @@ package delivery
 
 import (
 	"encoding/json"
-	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
+	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
+	"failless/internal/pkg/user/usecase"
 	"log"
 	"net/http"
 )
@@ -27,15 +28,10 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		return
 	}
 
-	user, err := db.GetUserByPhoneOrEmail(db.ConnectToDB(), form.Phone, form.Email)
-	if user.Uid < 0 {
-		log.Println("user not found")
-		network.GenErrorCode(w, r, "User doesn't exist", http.StatusNotFound)
-		return
-	} else if err != nil {
-		log.Println("error was occurred")
-		log.Println(err.Error())
-		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+	var user models.User
+	uc := usecase.GetUseCase()
+	if code, err := uc.FillFormIfExist(&user); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
 
@@ -48,16 +44,12 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	} else {
 		network.GenErrorCode(w, r, "Passwords is not equal", http.StatusUnauthorized)
 	}
-	form.Password = ""
-	form.Name = user.Name
-	form.Email = user.Email
-	form.Phone = user.Phone
-	form.Uid = user.Uid
+
+	form.FillFromModel(&user)
 	network.Jsonify(w, form, http.StatusOK)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	log.Print("/api/logout")
 	if err := network.CreateLogout(w); err != nil {
 		network.GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
 		return

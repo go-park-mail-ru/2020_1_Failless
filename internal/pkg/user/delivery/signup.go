@@ -2,19 +2,16 @@ package delivery
 
 import (
 	"encoding/json"
-	"failless/internal/app/auth/usecase"
-	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/middleware"
+	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
-	"fmt"
+	"failless/internal/pkg/user/usecase"
 	"log"
 	"net/http"
-	"os"
 )
 
 func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	log.Println("/api/signup")
 	data := r.Context().Value(middleware.CtxUserKey)
 	if data != nil {
 		network.Jsonify(w, data, http.StatusNotModified)
@@ -39,9 +36,10 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 	log.Println("validate signup form")
 
-	user, err := db.GetUserByPhoneOrEmail(db.ConnectToDB(), form.Phone, form.Email)
-	if err != nil {
-		network.GenErrorCode(w, r, "DB error", http.StatusInternalServerError)
+	uc := usecase.GetUseCase()
+	var user models.User
+	if code, err := uc.FillFormIfExist(&user); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
 
@@ -51,8 +49,7 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	err = usecase.RegisterNewUser(form)
-	if err != nil {
+	if err := uc.RegisterNewUser(&form); err != nil {
 		log.Println("user wasn't registered")
 		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
@@ -64,10 +61,10 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 // debug&test func
 func UserDelete(mail string) {
-	err := db.DeleteUser(db.ConnectToDB(), mail)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	log.Println("Success 'UserDelete'")
+	//err := db.DeleteUser(db.ConnectToDB(), mail)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//log.Println("Success 'UserDelete'")
 }

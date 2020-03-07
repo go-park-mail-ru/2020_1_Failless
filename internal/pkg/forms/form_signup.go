@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"failless/internal/pkg/models"
 	"log"
 	"regexp"
 	"sync"
@@ -72,4 +73,12 @@ func (s *SignForm) ValidatePhone() bool {
 
 func (s *SignForm) Validate() bool {
 	return s.ValidateEmail() && s.ValidatePassword() && s.ValidatePhone()
+}
+
+func (s *SignForm) FillFromModel(user *models.User) {
+	s.Password = ""
+	s.Name = user.Name
+	s.Email = user.Email
+	s.Phone = user.Phone
+	s.Uid = user.Uid
 }

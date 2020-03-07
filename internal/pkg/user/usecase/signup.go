@@ -1,23 +1,23 @@
 package usecase
 
 import (
-	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
+	"failless/internal/pkg/models"
 	"failless/internal/pkg/security"
 )
 
-func RegisterNewUser(user forms.SignForm) error {
+func (uc *UseCase) RegisterNewUser(user *forms.SignForm) error {
 	bPass, err := security.EncryptPassword(user.Password)
 	if err != nil {
 		return err
 	}
 
-	dbUser := db.User{
+	dbUser := models.User{
 		Name:     user.Name,
 		Phone:    user.Phone,
 		Email:    user.Email,
 		Password: bPass,
 	}
 
-	return db.AddNewUser(db.ConnectToDB(), &dbUser)
+	return uc.rep.AddNewUser(&dbUser)
 }

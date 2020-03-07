@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"encoding/json"
-	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/middleware"
 	"failless/internal/pkg/network"
@@ -42,66 +41,34 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		}
 	}
 	uc := usecase.GetUseCase()
-	if err, code := uc.UpdateUserInfo(&form); err != nil {
+	if code, err := uc.UpdateUserInfo(&form); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
-	//var info db.UserInfo
-	//var user db.User
-	//
-	//if err := form.GetDBFormat(&info, &user); err != nil {
-	//	network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
-	//	return
-	//}
-	//user.Uid = uid
-	//if err := db.AddUserInfo(db.ConnectToDB(), user, info); err != nil {
-	//	network.GenErrorCode(w, r, err.Error(), http.StatusNotFound)
-	//	return
-	//}
-	//
-	//form.Avatar.ImgBase64 = ""
-	//for _, item := range form.Photos {
-	//	item.ImgBase64 = ""
-	//	item.Img = nil
-	//}
+
 	network.Jsonify(w, form, http.StatusOK)
 }
 
 func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	log.Println("GET: /api/profile")
 	uid := 0
 	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
 		network.GenErrorCode(w, r, "Uid is incorrect", http.StatusInternalServerError)
 		return
 	}
 
-	row, err := db.GetProfileInfo(db.ConnectToDB(), uid)
-	if err != nil {
-		log.Println(err.Error())
-		network.GenErrorCode(w, r, "Profile not found", http.StatusNotFound)
-		return
-	}
-
 	var profile forms.ProfileForm
-	err = profile.FillProfile(row)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	profile.Uid = uid
+	uc := usecase.GetUseCase()
+	if code, err := uc.GetUserInfo(&profile); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
 
-	base, err := db.GetUserByUID(db.ConnectToDB(), uid)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	profile.SignForm.Name = base.Name
-	profile.Password = ""
 	log.Println(profile)
 	network.Jsonify(w, profile, http.StatusOK)
 }
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	log.Println("/api/getuser")
 	data := r.Context().Value(middleware.CtxUserKey)
 	log.Println(data)
 	if data == nil {
@@ -109,5 +76,6 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		network.GenErrorCode(w, r, "User is not authorised", http.StatusUnauthorized)
 		return
 	}
+
 	network.Jsonify(w, data, http.StatusOK)
 }
