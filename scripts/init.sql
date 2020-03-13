@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS events
     message   VARCHAR(1024)               NOT NULL,
     is_edited BOOLEAN                              DEFAULT FALSE,
     author    CITEXT                               DEFAULT NULL,
-    etype     ETYPE_T[],
+    etype     INTEGER REFERENCES tag (tag_id),
     range     SMALLINT                             DEFAULT 1
 );
 
@@ -120,3 +120,22 @@ GRANT ALL PRIVILEGES ON DATABASE eventum TO eventum;
 GRANT USAGE ON SCHEMA public TO eventum;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO eventum;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO eventum;
+
+
+INSERT INTO tag (name)
+VALUES ('хочувБАР'),
+       ('хочувКИНО'),
+       ('хочувТЕАТР'),
+       ('хочувКЛУБ'),
+       ('хочунаКОНЦЕРТ'),
+       ('хочуГУЛЯТЬ'),
+       ('хочунаКАТОК'),
+       ('хочунаВЫСТАВКУ'),
+       ('хочуСПАТЬ'),
+       ('хочунаСАЛЮТ'),
+       ('хочувСПОРТ'),
+       ('хочувМУЗЕЙ'),
+       ('хочунаЛЕКЦИЮ'),
+       ('хочуБОТАТЬ'),
+       ('хочувПАРК')
+;

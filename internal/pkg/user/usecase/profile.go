@@ -45,6 +45,21 @@ func (uc *UseCase) GetUserInfo(profile *forms.ProfileForm) (int, error) {
 	}
 
 	profile.SignForm.Name = base.Name
-	profile.Password = ""
+	profile.Phone = base.Phone
+	profile.Email = base.Email
+	profile.Uid = base.Uid
+
+	profile.Events, err = uc.rep.GetUserEvents(base.Uid)
+	if err != nil {
+		log.Println("error in get user events. Not fatal")
+		log.Println(err.Error())
+	}
+
+	profile.Tags, err = uc.rep.GetUserTags(base.Uid)
+	if err != nil {
+		log.Println("error in get user tags. Not fatal")
+		log.Println(err.Error())
+	}
+
 	return http.StatusOK, nil
 }

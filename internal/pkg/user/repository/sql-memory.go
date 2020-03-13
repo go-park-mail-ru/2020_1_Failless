@@ -26,6 +26,7 @@ func (ur *sqlUserRepository) GetUserByPhoneOrEmail(phone string, email string) (
 	return ur.getUser(sqlStatement, phone, email)
 }
 
+// Private method
 func (ur *sqlUserRepository) getUser(sqlStatement string, args ...interface{}) (user models.User, err error) {
 	row := ur.db.QueryRow(sqlStatement, args...)
 	err = row.Scan(
@@ -44,6 +45,39 @@ func (ur *sqlUserRepository) getUser(sqlStatement string, args ...interface{}) (
 	return user, nil
 }
 
+// Private method
+func (ur *sqlUserRepository) getEvents(sqlStatement string, args ...interface{}) ([]models.Event, error) {
+	rows, err := ur.db.Query(sqlStatement, args...)
+	if err != nil && rows != nil && !rows.Next() {
+		log.Println(sqlStatement)
+		log.Println("user has no events")
+		return nil, nil
+	} else if err != nil || rows == nil {
+		return nil, err
+	}
+
+	var events []models.Event
+	for rows.Next() {
+		event := models.Event{}
+		err = rows.Scan(
+			&event.EId,
+			&event.AuthorId,
+			&event.Title,
+			&event.EDate,
+			&event.Message,
+			&event.Edited,
+			&event.Author,
+			&event.Type,
+			&event.Limit)
+		if err != nil {
+			log.Println("Error while getting events")
+			return nil, err
+		}
+		events = append(events, event)
+	}
+	return events, nil
+}
+
 func (ur *sqlUserRepository) AddNewUser(user *models.User) error {
 	uid := 0
 	sqlStatement := `INSERT INTO profile VALUES (default, $1, $2, LOWER($3), $4) RETURNING uid;`
@@ -54,7 +88,7 @@ func (ur *sqlUserRepository) AddNewUser(user *models.User) error {
 	}
 
 	user.Uid = uid
-	sqlStatement = `INSERT INTO profile_info VALUES ( $1 , 'Расскажите о себе' , default , default , default , default , default , default ) ;`
+	sqlStatement = `INSERT INTO profile_info VALUES ( $1 , '' , default , default , default , default , default , default ) ;`
 	_, err = ur.db.Exec(sqlStatement, user.Uid)
 	if err != nil {
 		log.Println(sqlStatement, user.Uid)
@@ -140,4 +174,43 @@ func (ur *sqlUserRepository) DeleteUser(mail string) error {
 	sqlStatement := `DELETE FROM profile WHERE email=$1;`
 	_, err := ur.db.Exec(sqlStatement, mail)
 	return err
+}
+
+
+// TODO: move it to event pkg
+func (ur *sqlUserRepository) GetUserEvents(uid int) ([]models.Event, error) {
+	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events WHERE uid = $1 ;`
+	return ur.getEvents(sqlStatement, uid)
+}
+
+// TODO: move it to event pkg
+func (ur *sqlUserRepository) GetEventsByTag(tag string) ([]models.Event, error) {
+	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events WHERE etype = $1 ;`
+	return ur.getEvents(sqlStatement, tag)
+}
+
+
+func (ur *sqlUserRepository) GetUserTags(uid int) ([]models.Tag, error) {
+	sqlStatement := `SELECT tag_id, name FROM user_tag NATURAL JOIN tag WHERE uid = $1 ;`
+	rows, err := ur.db.Query(sqlStatement, uid)
+	if err != nil && rows != nil && !rows.Next() {
+		log.Println(sqlStatement)
+		log.Println("user has no tags")
+		return nil, nil
+	} else if err != nil || rows == nil {
+		return nil, err
+	}
+
+	var tags []models.Tag
+	for rows.Next() {
+		tag := models.Tag{}
+		err = rows.Scan(&tag.TagId, &tag.Name)
+		if err != nil {
+			log.Println("Error while getting tags")
+			return nil, err
+		}
+		tags = append(tags, tag)
+	}
+
+	return tags, nil
 }

@@ -13,6 +13,8 @@ import (
 
 type ProfileForm struct {
 	SignForm
+	Events   []models.Event       `json:"events"`
+	Tags     []models.Tag         `json:"tags"`
 	Avatar   EImage               `json:"avatar"`
 	Photos   []EImage             `json:"photos, omitempty"`
 	Gender   int                  `json:"gender"`

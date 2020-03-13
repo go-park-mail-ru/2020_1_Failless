@@ -36,8 +36,10 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	user := models.User{
 		Phone: form.Phone,
 		Email: form.Email,
+		Uid: -1,
 	}
-	if code, err := uc.FillFormIfExist(&user); err != nil {
+	code, err := uc.FillFormIfExist(&user)
+	if code != http.StatusNotFound && err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
