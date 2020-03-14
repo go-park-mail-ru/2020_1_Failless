@@ -8,18 +8,18 @@ import (
 	"net/http"
 )
 
-type UseCase struct {
+type userUseCase struct {
 	rep event.Repository
 }
 
-func GetUseCase() UseCase {
-	return UseCase{
+func GetUseCase() event.UseCase {
+	return &userUseCase{
 		rep: repository.NewSqlEventRepository(db.ConnectToDB()),
 	}
 }
 
 
-func (uc *UseCase) InitEventsByTime(events []models.Event) (int, error) {
+func (uc *userUseCase) InitEventsByTime(events []models.Event) (int, error) {
 	events, err := uc.rep.GetAllEvents()
 	if err != nil {
 		//network.GenErrorCode(w, r, err.Error(), )

@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (uc *UseCase) UpdateUserInfo(form *forms.ProfileForm) (int, error) {
+func (uc *userUseCase) UpdateUserInfo(form *forms.ProfileForm) (int, error) {
 	var info models.JsonInfo
 	var user models.User
 
@@ -27,7 +27,7 @@ func (uc *UseCase) UpdateUserInfo(form *forms.ProfileForm) (int, error) {
 	return http.StatusOK, nil
 }
 
-func (uc *UseCase) GetUserInfo(profile *forms.ProfileForm) (int, error) {
+func (uc *userUseCase) GetUserInfo(profile *forms.ProfileForm) (int, error) {
 	row, err := uc.rep.GetProfileInfo(profile.Uid)
 	if err != nil {
 		log.Println(err.Error())

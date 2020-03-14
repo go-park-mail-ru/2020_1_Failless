@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (uc *UseCase) FillFormIfExist(cred *models.User) (int, error) {
+func (uc *userUseCase) FillFormIfExist(cred *models.User) (int, error) {
 	log.Println(*cred)
 	user, err := uc.rep.GetUserByPhoneOrEmail(cred.Phone, cred.Email)
 	if err == nil && user.Uid < 0 {

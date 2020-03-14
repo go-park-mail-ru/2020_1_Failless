@@ -3,7 +3,7 @@ package delivery
 import (
 	"bytes"
 	"encoding/json"
-	"failless/server/forms"
+	"failless/internal/pkg/forms"
 	"fmt"
 	// "io"
 	"net/http"

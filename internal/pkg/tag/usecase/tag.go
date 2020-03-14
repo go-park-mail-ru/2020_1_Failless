@@ -8,17 +8,17 @@ import (
 	"net/http"
 )
 
-type UseCase struct {
+type tagUseCase struct {
 	rep tag.Repository
 }
 
-func GetUseCase() UseCase {
-	return UseCase{
+func GetUseCase() tag.UseCase {
+	return &tagUseCase{
 		rep: repository.NewSqlTagRepository(db.ConnectToDB()),
 	}
 }
 
-func (uc *UseCase) InitEventsByTime(tags []models.Tag) (int, error) {
+func (uc *tagUseCase) InitEventsByTime(tags []models.Tag) (int, error) {
 	tags, err := uc.rep.GetAllTags()
 	if err != nil {
 		return http.StatusInternalServerError, err

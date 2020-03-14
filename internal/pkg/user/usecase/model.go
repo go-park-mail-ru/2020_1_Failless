@@ -6,12 +6,12 @@ import (
 	"failless/internal/pkg/user/repository"
 )
 
-type UseCase struct {
+type userUseCase struct {
 	rep user.Repository
 }
 
-func GetUseCase() UseCase {
-	return UseCase{
+func GetUseCase() user.UseCase {
+	return &userUseCase{
 		rep: repository.NewSqlUserRepository(db.ConnectToDB()),
 	}
 }
