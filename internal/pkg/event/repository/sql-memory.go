@@ -39,7 +39,8 @@ func (er *sqlEventsRepository) getEvents(sqlStatement string, args ...interface{
 			&eventInfo.Edited,
 			&eventInfo.Author,
 			&eventInfo.Type,
-			&eventInfo.Limit)
+			&eventInfo.Limit,
+			&eventInfo.Photos)
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +89,7 @@ func (er *sqlEventsRepository) GetNameByID(uid int) (string, error) {
 
 // Get all events without key words ordered by date
 func (er *sqlEventsRepository) GetAllEvents() ([]models.Event, error) {
-	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events ORDER BY edate ;`
+	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range, photos FROM events ORDER BY edate ;`
 	return er.getEvents(sqlStatement)
 }
 
@@ -103,6 +104,7 @@ func (qg *queryGenerator) genAndQuery(keys string) ([]string, bool) {
 	qg.once.Do(func() {
 		qg.exp, err = regexp.Compile(`[,.;:\+\-&|~%@^$*(){}\[\]\\\/#<>"'` + "`" + `]`)
 	})
+
 	if err != nil {
 		log.Println(err.Error())
 		return nil, false
@@ -130,25 +132,28 @@ func (qg *queryGenerator) generateSql(itemNum int, operator string) string {
 }
 
 func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page int) ([]models.Event, error) {
+	log.Println(keyWordsString)
+	log.Println(page)
 	if page < 1 {
 		return nil, errors.New("Page number can't be less than 1\n")
 	}
 
 	// TODO: check for sql injections
-	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events
+	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range, photos FROM events
 							WHERE edate >= current_timestamp `
 	var keys []string
 	itemsNum := 0
 	if keyWordsString != "" {
-		sqlStatement += ` AND title_tsv @@ to_tsquery (' `
+		sqlStatement += ` AND title_tsv @@ to_tsquery ( `
 		var generator queryGenerator
-		keys, ok := generator.genAndQuery(keyWordsString)
+		ok := true
+		keys, ok = generator.genAndQuery(keyWordsString)
 		if !ok {
 			return nil, errors.New("Incorrect symbols in the query\n")
 		}
 		itemsNum = len(keys)
 		query := generator.generateSql(itemsNum, "&")
-		sqlStatement += query + ` ')`
+		sqlStatement += query + ` )`
 	}
 
 	sqlStatement += ` ORDER BY edate ASC LIMIT $` + strconv.Itoa(itemsNum+1) + ` OFFSET $` + strconv.Itoa(itemsNum+2) + `;`

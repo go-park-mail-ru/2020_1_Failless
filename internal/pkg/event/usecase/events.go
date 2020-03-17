@@ -20,8 +20,9 @@ func GetUseCase() event.UseCase {
 	}
 }
 
-func (uc *userUseCase) InitEventsByTime(events []models.Event) (status int, err error) {
-	events, err = uc.rep.GetAllEvents()
+
+func (uc *userUseCase) InitEventsByTime(events *[]models.Event) (status int, err error) {
+	*events, err = uc.rep.GetAllEvents()
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

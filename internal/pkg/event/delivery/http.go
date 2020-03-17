@@ -16,7 +16,7 @@ import (
 func FeedEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	uc := usecase.GetUseCase()
 	var events []models.Event
-	if code, err := uc.InitEventsByTime(events); err != nil {
+	if code, err := uc.InitEventsByTime(&events); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
@@ -61,6 +61,7 @@ func GetEventsByKeyWords(w http.ResponseWriter, r *http.Request, _ map[string]st
 		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
 		return
 	}
+	log.Println(searchRequest)
 
 	if searchRequest.Page < 1 {
 		searchRequest.Page = 1
@@ -72,7 +73,6 @@ func GetEventsByKeyWords(w http.ResponseWriter, r *http.Request, _ map[string]st
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
-	log.Println(events)
 
 	network.Jsonify(w, events, http.StatusOK)
 }
