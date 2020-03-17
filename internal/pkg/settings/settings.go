@@ -20,7 +20,12 @@ type GlobalSecure struct {
 	AllowedHosts map[string]struct{}
 }
 
+type GlobalConfig struct {
+	PageLimit int
+}
+
 var SecureSettings GlobalSecure
+var UseCaseConf GlobalConfig
 
 type ServerSettings struct {
 	Port   int
@@ -28,6 +33,7 @@ type ServerSettings struct {
 	Routes map[string][]MapHandler
 	Router http.Handler
 	Secure *GlobalSecure
+	Config *GlobalConfig
 }
 
 // Return this pointer
@@ -38,6 +44,11 @@ func (s *ServerSettings) GetSettings() ServerSettings {
 // Initialization of the global object with secure configurations
 func (s *ServerSettings) InitSecure(secure *GlobalSecure) {
 	s.Secure = secure
+}
+
+// Initialization of the global object with use case configurations
+func (s *ServerSettings) InitConf(conf *GlobalConfig) {
+	s.Config = conf
 }
 
 // Set new route

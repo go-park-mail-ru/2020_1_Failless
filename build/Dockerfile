@@ -34,6 +34,13 @@ RUN /etc/init.d/postgresql start &&\
     createdb -O $dbuser eventum && psql -d eventum -c "CREATE EXTENSION IF NOT EXISTS citext;" &&\
     psql eventum -a -f ./configs/migrations/init.sql &&\
     /etc/init.d/postgresql stop
+RUN apt install myspell-ru
+RUN cd /usr/share/postgresql/$PGVERSION/tsearch_data
+RUN ls
+RUN DICT=/usr/share/hunspell/ru_RU
+RUN iconv -f koi8-r -t utf-8 -o russian.affix $DICT.aff &&\
+    iconv -f koi8-r -t utf-8 -o russian.dict  $DICT.dic
+
 EXPOSE 5432
 EXPOSE 5000
 

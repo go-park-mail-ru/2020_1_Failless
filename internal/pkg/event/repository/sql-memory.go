@@ -4,8 +4,13 @@ import (
 	"errors"
 	"failless/internal/pkg/event"
 	"failless/internal/pkg/models"
+	"failless/internal/pkg/settings"
 	"github.com/jackc/pgx"
 	"log"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 type sqlEventsRepository struct {
@@ -16,9 +21,9 @@ func NewSqlEventRepository(db *pgx.ConnPool) event.Repository {
 	return &sqlEventsRepository{db: db}
 }
 
-func (er *sqlEventsRepository) GetAllEvents() ([]models.Event, error) {
-	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events ORDER BY edate ;`
-	rows, err := er.db.Query(sqlStatement)
+func (er *sqlEventsRepository) getEvents(sqlStatement string, args ...interface{}) ([]models.Event, error) {
+	log.Println(sqlStatement, args)
+	rows, err := er.db.Query(sqlStatement, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -79,4 +84,80 @@ func (er *sqlEventsRepository) GetNameByID(uid int) (string, error) {
 	}
 
 	return *namePtr, nil
+}
+
+// Get all events without key words ordered by date
+func (er *sqlEventsRepository) GetAllEvents() ([]models.Event, error) {
+	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events ORDER BY edate ;`
+	return er.getEvents(sqlStatement)
+}
+
+// Struct for user query parsing
+type queryGenerator struct {
+	once sync.Once
+	exp  *regexp.Regexp
+}
+
+func (qg *queryGenerator) genAndQuery(keys string) ([]string, bool) {
+	var err error
+	qg.once.Do(func() {
+		qg.exp, err = regexp.Compile(`[,.;:\+\-&|~%@^$*(){}\[\]\\\/#<>"'` + "`" + `]`)
+	})
+	if err != nil {
+		log.Println(err.Error())
+		return nil, false
+	}
+
+	keys = qg.exp.ReplaceAllString(keys, " ")
+	result := strings.FieldsFunc(keys, func(r rune) bool {
+		if r == ' ' {
+			return true
+		}
+		return false
+	})
+	return result, true
+}
+
+func (qg *queryGenerator) generateSql(itemNum int, operator string) string {
+	valuesStr := ``
+	for i := 1; i <= itemNum; i++ {
+		valuesStr += `$` + strconv.Itoa(i)
+		if i != itemNum {
+			valuesStr += operator
+		}
+	}
+	return valuesStr
+}
+
+func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page int) ([]models.Event, error) {
+	if page < 1 {
+		return nil, errors.New("Page number can't be less than 1\n")
+	}
+
+	// TODO: check for sql injections
+	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events
+							WHERE edate >= current_timestamp `
+	var keys []string
+	itemsNum := 0
+	if keyWordsString != "" {
+		sqlStatement += ` AND title_tsv @@ to_tsquery (' `
+		var generator queryGenerator
+		keys, ok := generator.genAndQuery(keyWordsString)
+		if !ok {
+			return nil, errors.New("Incorrect symbols in the query\n")
+		}
+		itemsNum = len(keys)
+		query := generator.generateSql(itemsNum, "&")
+		sqlStatement += query + ` ')`
+	}
+
+	sqlStatement += ` ORDER BY edate ASC LIMIT $` + strconv.Itoa(itemsNum+1) + ` OFFSET $` + strconv.Itoa(itemsNum+2) + `;`
+
+	keys = append(keys, strconv.Itoa(settings.UseCaseConf.PageLimit))
+	keys = append(keys, strconv.Itoa(settings.UseCaseConf.PageLimit*(page-1)))
+	args := make([]interface{}, len(keys))
+	for i, v := range keys {
+		args[i] = v
+	}
+	return er.getEvents(sqlStatement, args...)
 }

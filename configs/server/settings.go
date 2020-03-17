@@ -48,6 +48,12 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 	}},
+	"/api/search/events": {{
+		Type:         "POST",
+		Handler:      eventDelivery.GetEventsByKeyWords,
+		CORS:         true,
+		AuthRequired: false,
+	}},
 	"/api/tags/feed": {{
 		Type:         "GET",
 		Handler:      tagDelivery.FeedTags,
@@ -107,7 +113,11 @@ func GetConfig() *settings.ServerSettings {
 				"https://eventum.rowbot.dev": {},
 			},
 		}
+		settings.UseCaseConf = settings.GlobalConfig{
+			PageLimit: 10,
+		}
 		conf.InitSecure(&settings.SecureSettings)
+		conf.InitConf(&settings.UseCaseConf)
 		router.InitRouter(&conf, httptreemux.New())
 	})
 	return &conf

@@ -21,7 +21,21 @@ paths:
   /api/events/feed:
     get:
       summary: getting all events
-      description: feed of all events
+      description: feed of all events sorted by date
+      produces:
+        - application/json
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Event"
+
+  /api/events:
+    get:
+      summary: getting events by key-words
+      description: events sorted by date by key-words in the title and description
       produces:
         - application/json
       responses:

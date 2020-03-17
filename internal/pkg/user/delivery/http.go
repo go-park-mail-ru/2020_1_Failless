@@ -27,7 +27,6 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	r.Header.Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(r.Body)
 	var form forms.ProfileForm
 	err := decoder.Decode(&form)
