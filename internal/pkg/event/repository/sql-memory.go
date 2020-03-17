@@ -123,9 +123,9 @@ func (qg *queryGenerator) genAndQuery(keys string) ([]string, bool) {
 func (qg *queryGenerator) generateSql(itemNum int, operator string) string {
 	valuesStr := ``
 	for i := 1; i <= itemNum; i++ {
-		valuesStr += `$` + strconv.Itoa(i)
+		valuesStr += `$` + strconv.Itoa(i) + ` `
 		if i != itemNum {
-			valuesStr += operator
+			valuesStr += operator + ` `
 		}
 	}
 	return valuesStr
@@ -141,22 +141,21 @@ func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page in
 	// TODO: check for sql injections
 	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range, photos FROM events
 							WHERE edate >= current_timestamp `
+
 	var keys []string
-	itemsNum := 0
+	clean := ""
 	if keyWordsString != "" {
-		sqlStatement += ` AND title_tsv @@ to_tsquery ( `
+		sqlStatement += ` AND title_tsv @@ phraseto_tsquery('russian', $1 ) ORDER BY edate ASC LIMIT $2 OFFSET $3 ;`
 		var generator queryGenerator
-		ok := true
-		keys, ok = generator.genAndQuery(keyWordsString)
+		vector, ok := generator.genAndQuery(keyWordsString)
 		if !ok {
 			return nil, errors.New("Incorrect symbols in the query\n")
 		}
-		itemsNum = len(keys)
-		query := generator.generateSql(itemsNum, "&")
-		sqlStatement += query + ` )`
+		clean = strings.Join(vector, " ")
+		keys = append(keys, clean)
+	} else {
+		sqlStatement += ` ORDER BY edate ASC LIMIT $1 OFFSET $2 ;`
 	}
-
-	sqlStatement += ` ORDER BY edate ASC LIMIT $` + strconv.Itoa(itemsNum+1) + ` OFFSET $` + strconv.Itoa(itemsNum+2) + `;`
 
 	keys = append(keys, strconv.Itoa(settings.UseCaseConf.PageLimit))
 	keys = append(keys, strconv.Itoa(settings.UseCaseConf.PageLimit*(page-1)))
@@ -164,5 +163,6 @@ func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page in
 	for i, v := range keys {
 		args[i] = v
 	}
+
 	return er.getEvents(sqlStatement, args...)
 }
