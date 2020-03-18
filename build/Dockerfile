@@ -1,7 +1,7 @@
 FROM golang:1.13-stretch AS lang
 WORKDIR /home/eventum
 COPY . .
-RUN go build -o bin/eventum
+RUN go build -o bin/eventum ./cmd/server/main.go
 
 FROM ubuntu:18.04
 MAINTAINER Failless
