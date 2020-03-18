@@ -25,6 +25,12 @@ RUN apt-get -y update
 ENV PGVERSION 12
 RUN apt-get -y install postgresql-$PGVERSION postgresql-contrib
 RUN apt install -y postgis
+RUN apt install -y myspell-ru
+#RUN cd /usr/share/postgresql/$PGVERSION/tsearch_data
+RUN ls
+ENV DICT /usr/share/hunspell/ru_RU
+RUN iconv -f koi8-r -t utf-8 -o /usr/share/postgresql/$PGVERSION/tsearch_data/russian.affix $DICT.aff &&\
+    iconv -f koi8-r -t utf-8 -o /usr/share/postgresql/$PGVERSION/tsearch_data/russian.dict  $DICT.dic
 
 USER postgres
 ARG dbuser
@@ -32,14 +38,8 @@ ARG dbpasswd
 RUN /etc/init.d/postgresql start &&\
     psql --command "CREATE USER ${dbuser} WITH SUPERUSER PASSWORD '${dbpasswd}';" &&\
     createdb -O $dbuser eventum && psql -d eventum -c "CREATE EXTENSION IF NOT EXISTS citext;" &&\
-    psql eventum -a -f ./configs/migrations/init.sql &&\
+    psql eventum -a -f ./scripts/init.sql &&\
     /etc/init.d/postgresql stop
-RUN apt install myspell-ru
-RUN cd /usr/share/postgresql/$PGVERSION/tsearch_data
-RUN ls
-RUN DICT=/usr/share/hunspell/ru_RU
-RUN iconv -f koi8-r -t utf-8 -o russian.affix $DICT.aff &&\
-    iconv -f koi8-r -t utf-8 -o russian.dict  $DICT.dic
 
 EXPOSE 5432
 EXPOSE 5000
