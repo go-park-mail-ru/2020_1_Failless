@@ -42,6 +42,12 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: false,
 	}},
+	"/api/event/new": {{
+		Type:         "POST",
+		Handler:      eventDelivery.CreateNewEvent,
+		CORS:         true,
+		AuthRequired: true,
+	}},
 	"/api/tags/feed": {{
 		Type:         "GET",
 		Handler:      tagDelivery.FeedTags,
