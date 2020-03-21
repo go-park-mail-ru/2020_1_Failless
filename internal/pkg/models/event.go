@@ -15,4 +15,5 @@ type Event struct {
 	Type     int       `json:"type, omitempty"`
 	Limit    int       `json:"limit, omitempty"`
 	Photos   []string  `json:"photos, omitempty"`
+	Public   bool      `json:"public, omitempty"`
 }

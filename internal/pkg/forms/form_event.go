@@ -90,7 +90,7 @@ func (ef *EventForm) Validate() bool {
 		ef.CheckTextFields() && ef.ValidationImages()
 }
 
-func (ef *EventForm) GetDBFormat(info *models.Event) error {
+func (ef *EventForm) GetDBFormat(info *models.Event) {
 
 	for _, photo := range ef.Photos {
 		info.Photos = append(info.Photos, photo.ImgName)
@@ -103,6 +103,4 @@ func (ef *EventForm) GetDBFormat(info *models.Event) error {
 		Type:     ef.Type,
 		Limit:    ef.Limit,
 	}
-
-	return nil
 }

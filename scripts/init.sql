@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS events
     edate     TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     message   VARCHAR(1024)               NOT NULL,
     is_edited BOOLEAN                              DEFAULT FALSE,
+    is_public BOOLEAN                              DEFAULT FALSE,
     author    CITEXT                               DEFAULT NULL,
     etype     INTEGER REFERENCES tag (tag_id),
     range     SMALLINT                             DEFAULT 1,
@@ -141,7 +142,8 @@ CREATE OR REPLACE FUNCTION make_tsvector()
 $$
 BEGIN
     IF (TG_OP = 'INSERT') THEN
-        UPDATE events SET title_tsv = setweight(to_tsvector('russian', title),'A')
+        UPDATE events
+        SET title_tsv = setweight(to_tsvector('russian', title), 'A')
             || setweight(to_tsvector('russian', message), 'B')
         WHERE eid = NEW.eid;
         RETURN NULL;

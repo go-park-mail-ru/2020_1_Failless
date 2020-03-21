@@ -36,6 +36,13 @@ func CreateNewEvent(w http.ResponseWriter, r *http.Request, _ map[string]string)
 		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
 		return
 	}
+	if !form.Validate() {
+		// TODO: add error code from error code table
+		network.GenErrorCode(w, r, "incorrect data", http.StatusBadRequest)
+		return
+	}
+	uc := usecase.GetUseCase()
+
 
 	network.Jsonify(w, events, http.StatusOK)
 }
