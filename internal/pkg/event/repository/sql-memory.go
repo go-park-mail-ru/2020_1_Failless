@@ -78,6 +78,5 @@ func (er *sqlEventsRepository) GetNameByID(uid int) (string, error) {
 		return "", errors.New("User not found\n")
 	}
 
-	//TODO: check is it works
-	return name, nil
+	return *namePtr, nil
 }

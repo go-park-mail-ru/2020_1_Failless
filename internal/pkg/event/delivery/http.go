@@ -42,7 +42,11 @@ func CreateNewEvent(w http.ResponseWriter, r *http.Request, _ map[string]string)
 		return
 	}
 	uc := usecase.GetUseCase()
+	event, err := uc.CreateEvent(form)
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-
-	network.Jsonify(w, events, http.StatusOK)
+	network.Jsonify(w, event, http.StatusOK)
 }
