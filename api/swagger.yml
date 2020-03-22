@@ -2,21 +2,60 @@ openapi: 3.0.0
 info:
   title: Eventum
   description: Eventum api
-  version: "1.0.3-oas3"
+  version: "1.0.4-oas3"
 paths:
-  /api/events/feed:
-    get:
-      summary: getting all events
-      description: feed of all events sorted by date
+  /api/event/new:
+    post:
+      summary: create new event
+      description: send json with event description which will be validate on the backend and it will be added to the service database
       responses:
         '200':
           description: successful operation
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Event'
+                $ref: '#/components/schemas/Event'
+      requestBody:
+        $ref: '#/components/requestBodies/EventForm'
+  '/api/event/{eid}':
+    put:
+      summary: updates event info
+      description: send new json with event info for update event which already exist
+      parameters:
+        - name: eid
+          in: path
+          description: ID of event to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+      requestBody:
+        $ref: '#/components/requestBodies/EventForm'
+    get:
+      summary: gets event info
+      description: get all info about event
+      parameters:
+        - name: eid
+          in: path
+          description: ID of event to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
   /api/search/events:
     post:
       summary: getting events by key-words
@@ -168,7 +207,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/User'
 servers:
-  - url: 'https://eventum.rowbot.dev:5000/'
+  - url: 'https://eventum.rowbot.dev:3000/'
 components:
   requestBodies:
     QueryObject:
@@ -185,6 +224,11 @@ components:
             $ref: '#/components/schemas/User'
       description: User object with its credentionals
       required: true
+    EventForm:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EventForm'
   schemas:
     User:
       type: object
@@ -374,3 +418,43 @@ components:
           example: 1
         location:
           $ref: '#/components/schemas/Location'
+    EventForm:
+      type: object
+      properties:
+        author_id:
+          type: integer
+          format: id
+          example: 11
+        title:
+          type: string
+          format: text
+          example: I wanna go to pub
+        date:
+          type: string
+          format: date-time
+        message:
+          type: string
+          format: text
+          example: >-
+            I know really nice place for go out and I like to find a company for
+            that
+        type:
+          type: integer
+          format: number
+          example: 1
+        tag:
+          type: integer
+          format: number
+          example: 1
+        is_public:
+          type: boolean
+          format: boolean
+          example: true
+        limit:
+          type: integer
+          format: number
+          example: 2
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
