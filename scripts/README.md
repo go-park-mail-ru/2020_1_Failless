@@ -1,4 +1,4 @@
-# Как накатить базу локально  
+# Как развернуть базу данных  
 
 1. Скачать postgresql-12  
 Если у вас Ubuntu 16+, запустить скрипт [./install.sh](https://github.com/go-park-mail-ru/2020_1_Failless/blob/feature/users-search/scripts/install.sh)  
