@@ -12,6 +12,8 @@ type Event struct {
 	Message  string    `json:"description"`
 	Edited   bool      `json:"edited, omitempty"`
 	Author   string    `json:"author, omitempty"`
-	Type     EType     `json:"type, omitempty"`
+	Type     int       `json:"type, omitempty"`
 	Limit    int       `json:"limit, omitempty"`
+	Photos   []string  `json:"photos, omitempty"`
+	Public   bool      `json:"public, omitempty"`
 }

@@ -2,6 +2,7 @@ package server
 
 import (
 	"failless/configs/server"
+	"failless/internal/pkg/settings"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,6 +11,10 @@ import (
 )
 
 func Start() {
+	if ok := settings.CheckSecretes(server.Secrets); !ok {
+		log.Println("Can't find variables ", server.Secrets)
+		log.Fatal("Environment variables don't set")
+	}
 	serverSettings := server.GetConfig()
 	serve := http.Server{
 		Addr:         serverSettings.Ip + ":" + strconv.Itoa(serverSettings.Port),

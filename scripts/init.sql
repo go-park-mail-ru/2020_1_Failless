@@ -8,6 +8,22 @@ CREATE EXTENSION IF NOT EXISTS postgis_topology;
 CREATE TYPE SEX_T AS ENUM ('male', 'female', 'other');
 CREATE TYPE ETYPE_T AS ENUM ('concert', 'museum', 'bar', 'theater', 'walk', 'tour');
 
+CREATE TEXT SEARCH DICTIONARY russian_ispell
+(
+    TEMPLATE = ispell,
+    DictFile = russian,
+    AffFile = russian,
+    StopWords = russian
+);
+
+CREATE TEXT SEARCH CONFIGURATION ru (COPY =russian);
+
+ALTER TEXT SEARCH CONFIGURATION ru
+    ALTER MAPPING FOR hword, hword_part, word
+        WITH russian_ispell, russian_stem;
+
+SET default_text_search_config = 'ru';
+
 CREATE TABLE IF NOT EXISTS profile
 (
     uid      SERIAL PRIMARY KEY,
@@ -61,9 +77,12 @@ CREATE TABLE IF NOT EXISTS events
     edate     TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     message   VARCHAR(1024)               NOT NULL,
     is_edited BOOLEAN                              DEFAULT FALSE,
+    is_public BOOLEAN                              DEFAULT FALSE,
     author    CITEXT                               DEFAULT NULL,
     etype     INTEGER REFERENCES tag (tag_id),
-    range     SMALLINT                             DEFAULT 1
+    range     SMALLINT                             DEFAULT 1,
+    title_tsv TSVECTOR,
+    photos    VARCHAR(64)[]                        DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS event_vote
@@ -115,6 +134,30 @@ BEGIN
     COMMIT;
 END;
 $$;
+
+CREATE INDEX IF NOT EXISTS event_title_idx ON events USING GIN (title);
+
+CREATE OR REPLACE FUNCTION make_tsvector()
+    RETURNS TRIGGER AS
+$$
+BEGIN
+    IF (TG_OP = 'INSERT') THEN
+        UPDATE events
+        SET title_tsv = setweight(to_tsvector('russian', title), 'A')
+            || setweight(to_tsvector('russian', message), 'B')
+        WHERE eid = NEW.eid;
+        RETURN NULL;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_add_event
+    AFTER INSERT
+    ON events
+    FOR EACH ROW
+EXECUTE FUNCTION make_tsvector();
+
 
 GRANT ALL PRIVILEGES ON DATABASE eventum TO eventum;
 GRANT USAGE ON SCHEMA public TO eventum;
