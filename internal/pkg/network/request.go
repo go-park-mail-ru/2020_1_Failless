@@ -13,3 +13,11 @@ func GetIdFromRequest(w http.ResponseWriter, r *http.Request, ps *map[string]str
 	}
 	return uid
 }
+
+func GetPageFromRequest(w http.ResponseWriter, r *http.Request, ps *map[string]string) int {
+	page, err := strconv.Atoi((*ps)["page"])
+	if err != nil {
+		return 1
+	}
+	return page
+}

@@ -17,3 +17,12 @@ type Event struct {
 	Photos   []string  `json:"photos, omitempty"`
 	Public   bool      `json:"public, omitempty"`
 }
+
+type EventRequest struct {
+	Uid      int           `json:"uid, omitempty"`
+	Page     int           `json:"page"`
+	Limit    int           `json:"limit"`
+	Query    string        `json:"query"`
+	Tag     int           `json:"tag, omitempty"`
+	Location LocationPoint `json:"location, omitempty"`
+}

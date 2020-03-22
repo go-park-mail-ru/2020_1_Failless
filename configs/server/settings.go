@@ -48,6 +48,12 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 	}},
+	"/api/search/events": {{
+		Type:         "POST",
+		Handler:      eventDelivery.GetEventsByKeyWords,
+		CORS:         true,
+		AuthRequired: false,
+	}},
 	"/api/tags/feed": {{
 		Type:         "GET",
 		Handler:      tagDelivery.FeedTags,
@@ -90,7 +96,7 @@ var conf settings.ServerSettings
 func GetConfig() *settings.ServerSettings {
 	doOnce.Do(func() {
 		conf = settings.ServerSettings{
-			Port:   5000,
+			Port:   3001,
 			Ip:     "0.0.0.0",
 			Routes: routesMap,
 		}
@@ -100,14 +106,18 @@ func GetConfig() *settings.ServerSettings {
 			AllowedHosts: map[string]struct{}{
 				"http://localhost":           {},
 				"http://localhost:8080":      {},
-				"http://localhost:5000":      {},
+				"http://localhost:3000":      {},
 				"http://127.0.0.1":           {},
 				"http://127.0.0.1:8080":      {},
-				"http://127.0.0.1:5000":      {},
+				"http://127.0.0.1:3000":      {},
 				"https://eventum.rowbot.dev": {},
 			},
 		}
+		settings.UseCaseConf = settings.GlobalConfig{
+			PageLimit: 10,
+		}
 		conf.InitSecure(&settings.SecureSettings)
+		conf.InitConf(&settings.UseCaseConf)
 		router.InitRouter(&conf, httptreemux.New())
 	})
 	return &conf
