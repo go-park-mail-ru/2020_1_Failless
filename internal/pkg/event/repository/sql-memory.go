@@ -21,12 +21,77 @@ func NewSqlEventRepository(db *pgx.ConnPool) event.Repository {
 	return &sqlEventsRepository{db: db}
 }
 
+// Struct for user query parsing
+type queryGenerator struct {
+	once   sync.Once
+	exp    *regexp.Regexp
+	vector []string
+}
+
+func (qg *queryGenerator) remove3PSymbols(keys string) bool {
+	var err error
+	qg.once.Do(func() {
+		qg.exp, err = regexp.Compile(`[,.;:\+\-&|~%@^$*(){}\[\]\\\/#<>"'` + "`" + `]`)
+	})
+
+	if err != nil {
+		log.Println(err.Error())
+		qg.vector = nil
+		return false
+	}
+
+	keys = qg.exp.ReplaceAllString(keys, " ")
+	qg.vector = strings.FieldsFunc(keys, func(r rune) bool {
+		if r == ' ' {
+			return true
+		}
+		return false
+	})
+	return true
+}
+
+func (qg *queryGenerator) getVector() []string {
+	return qg.vector
+}
+
+func (qg *queryGenerator) generateArgsSql(itemNum int, operator string) string {
+	valuesStr := ``
+	for i := 1; i <= itemNum; i++ {
+		valuesStr += `$` + strconv.Itoa(i) + ` `
+		if i != itemNum {
+			valuesStr += operator + ` `
+		}
+	}
+	return valuesStr
+}
+
+// Generate args slice from words vector, using limit and page number,
+// for reusing getEvents method from sqlEventsRepository struct
+func (qg *queryGenerator) generateArgSlice(limit int, page int) []interface{} {
+	keys := []string{
+		strings.Join(qg.vector, " "),
+		strconv.Itoa(limit),
+		strconv.Itoa(limit * (page - 1)),
+	}
+
+	args := make([]interface{}, 3)
+	for i, v := range keys {
+		args[i] = v
+	}
+	return args
+}
+
+// +/- universal method for getting events array by condition (aka sqlStatement)
+// and parameters in args (interface array)
 func (er *sqlEventsRepository) getEvents(sqlStatement string, args ...interface{}) ([]models.Event, error) {
-	log.Println(sqlStatement, args)
-	rows, err := er.db.Query(sqlStatement, args...)
+	baseSql := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range, photos FROM events `
+	baseSql += sqlStatement
+	log.Println(baseSql, args)
+	rows, err := er.db.Query(baseSql , args...)
 	if err != nil {
 		return nil, err
 	}
+
 	var events []models.Event
 	for rows.Next() {
 		eventInfo := models.Event{}
@@ -87,48 +152,23 @@ func (er *sqlEventsRepository) GetNameByID(uid int) (string, error) {
 	return *namePtr, nil
 }
 
-// Get all events without key words ordered by date
+// Getting all events without key words ordered by date
+// Deprecated: DO NOT USE IN THE PRODUCTION MODE
 func (er *sqlEventsRepository) GetAllEvents() ([]models.Event, error) {
-	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range, photos FROM events ORDER BY edate ;`
-	return er.getEvents(sqlStatement)
+	sqlCondition := ` ORDER BY edate ;`
+	return er.getEvents(sqlCondition)
 }
 
-// Struct for user query parsing
-type queryGenerator struct {
-	once sync.Once
-	exp  *regexp.Regexp
-}
-
-func (qg *queryGenerator) genAndQuery(keys string) ([]string, bool) {
-	var err error
-	qg.once.Do(func() {
-		qg.exp, err = regexp.Compile(`[,.;:\+\-&|~%@^$*(){}\[\]\\\/#<>"'` + "`" + `]`)
-	})
-
-	if err != nil {
-		log.Println(err.Error())
-		return nil, false
+// Getting feed events. For now feed mean that this events ordered by date
+// Thus it's closest events
+func (er *sqlEventsRepository) GetFeedEvents(limit int, page int) ([]models.Event, error) {
+	if page < 1 || limit < 1 {
+		return nil, errors.New("Page number can't be less than 1\n")
 	}
 
-	keys = qg.exp.ReplaceAllString(keys, " ")
-	result := strings.FieldsFunc(keys, func(r rune) bool {
-		if r == ' ' {
-			return true
-		}
-		return false
-	})
-	return result, true
-}
-
-func (qg *queryGenerator) generateSql(itemNum int, operator string) string {
-	valuesStr := ``
-	for i := 1; i <= itemNum; i++ {
-		valuesStr += `$` + strconv.Itoa(i) + ` `
-		if i != itemNum {
-			valuesStr += operator + ` `
-		}
-	}
-	return valuesStr
+	sqlCondition := ` WHERE edate >= current_timestamp ORDER BY edate ASC LIMIT $1 OFFSET $2 ;`
+	// TODO: add cool feed algorithm (aka select)
+	return er.getEvents(sqlCondition, limit, page)
 }
 
 func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page int) ([]models.Event, error) {
@@ -138,31 +178,15 @@ func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page in
 		return nil, errors.New("Page number can't be less than 1\n")
 	}
 
-	// TODO: check for sql injections
-	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range, photos FROM events
-							WHERE edate >= current_timestamp `
+	sqlCondition := ` WHERE edate >= current_timestamp AND title_tsv @@ phraseto_tsquery('russian', $1 )
+							ORDER BY edate ASC LIMIT $2 OFFSET $3 ;`
 
-	var keys []string
-	clean := ""
-	if keyWordsString != "" {
-		sqlStatement += ` AND title_tsv @@ phraseto_tsquery('russian', $1 ) ORDER BY edate ASC LIMIT $2 OFFSET $3 ;`
-		var generator queryGenerator
-		vector, ok := generator.genAndQuery(keyWordsString)
-		if !ok {
-			return nil, errors.New("Incorrect symbols in the query\n")
-		}
-		clean = strings.Join(vector, " ")
-		keys = append(keys, clean)
-	} else {
-		sqlStatement += ` ORDER BY edate ASC LIMIT $1 OFFSET $2 ;`
+	var generator queryGenerator
+	ok := generator.remove3PSymbols(keyWordsString)
+	if !ok {
+		return nil, errors.New("Incorrect symbols in the query\n")
 	}
 
-	keys = append(keys, strconv.Itoa(settings.UseCaseConf.PageLimit))
-	keys = append(keys, strconv.Itoa(settings.UseCaseConf.PageLimit*(page-1)))
-	args := make([]interface{}, len(keys))
-	for i, v := range keys {
-		args[i] = v
-	}
-
-	return er.getEvents(sqlStatement, args...)
+	args := generator.generateArgSlice(settings.UseCaseConf.PageLimit, page)
+	return er.getEvents(sqlCondition, args...)
 }

@@ -12,7 +12,7 @@ import (
 )
 
 // Get ALL events ordered by date.
-// DO NOT USE IN THE PRODUCTION MODE
+// Deprecated: DO NOT USE IN THE PRODUCTION MODE
 func FeedEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	uc := usecase.GetUseCase()
 	var events []models.Event
