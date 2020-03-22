@@ -96,7 +96,7 @@ var conf settings.ServerSettings
 func GetConfig() *settings.ServerSettings {
 	doOnce.Do(func() {
 		conf = settings.ServerSettings{
-			Port:   5000,
+			Port:   3001,
 			Ip:     "0.0.0.0",
 			Routes: routesMap,
 		}
