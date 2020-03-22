@@ -40,6 +40,13 @@ func CreateNewEvent(w http.ResponseWriter, r *http.Request, _ map[string]string)
 		network.GenErrorCode(w, r, "incorrect data", http.StatusBadRequest)
 		return
 	}
+
+	cred := data.(forms.SignForm)
+	if cred.Uid != form.UId {
+		log.Println("form uid is not equal to uid from token")
+		form.UId = cred.Uid
+	}
+
 	uc := usecase.GetUseCase()
 	event, err := uc.CreateEvent(form)
 	if err != nil {

@@ -27,6 +27,11 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
+	cred := data.(forms.SignForm)
+	if cred.Uid != uid {
+		network.GenErrorCode(w, r, "forbidden", http.StatusForbidden)
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	var form forms.ProfileForm
 	err := decoder.Decode(&form)
