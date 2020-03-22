@@ -42,7 +42,7 @@ RUN /etc/init.d/postgresql start &&\
     /etc/init.d/postgresql stop
 
 EXPOSE 5432
-EXPOSE 5000
+EXPOSE 3001
 
 WORKDIR /home/eventum
 COPY --from=lang /home/eventum .
