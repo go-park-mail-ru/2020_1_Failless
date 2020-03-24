@@ -2,15 +2,12 @@ package aws
 
 import (
 	"failless/internal/pkg/forms"
-	"github.com/stretchr/testify/assert"
-	"os"
-
-	//"failless/internal/pkg/forms"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/stretchr/testify/assert"
 	"log"
-	//"os"
+	"os"
 	"testing"
 )
 
