@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	testImageName = "bmth.jpeg"
+	testImageName = "default.png"
 	testFolder = "test"
 )
 
@@ -73,30 +73,15 @@ func TestUploadToAWS(t *testing.T) {
 
 	err = UploadToAWS(sess, &tempImg, testFolder)
 	if err != nil {
-   	log.Printf("Unable to upload item %q, %v", tempImg.ImgName, err)
-   	t.Fail()
-   }
-
-	result, _ := ListObjects(sess, testFolder, 2)
-	if len(result.Contents) < 2 {
-		log.Println("Impossible.\nPerhaps the archives are incomplete.")
+		log.Printf("Unable to upload item %q, %v", tempImg.ImgName, err)
 		t.Fail()
-	}
-	assert.Equal(t, testFolder + "/" + testImageName, *result.Contents[1].Key)
-}
-
-func TestDownloadFromAWS(t *testing.T) {
-	tempImg := forms.EImage{}
-	sess, _ := StartAWS()
-
-	err := DownloadFromAWS(sess, &tempImg, testFolder)
-	if err != nil {
-        log.Printf("Unable to download item %q, %v", tempImg.ImgName, err)
-    	t.Fail()
 	} else {
-		_ = tempImg.Encode()
-		correctImg := correctImage("../" + forms.Media + testImageName, testImageName)
-		assert.Equal(t, correctImg.ImgBase64, tempImg.ImgBase64)
+		result, _ := ListObjects(sess, testFolder, 2)
+		if len(result.Contents) < 2 {
+			log.Println("Impossible.\nPerhaps the archives are incomplete.")
+			t.Fail()
+		}
+		assert.Equal(t, testFolder + "/" + testImageName, *result.Contents[1].Key)
 	}
 }
 

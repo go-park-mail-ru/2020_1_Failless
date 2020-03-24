@@ -7,21 +7,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"image"
 )
+
+/*
+	README
+
+	Set next environmental variables:
+		AWS_ACCESS_KEY_ID
+		AWS_SECRET_ACCESS_KEY
+		AWS_REGION=eu-north-1
+*/
 
 const (
 	S3Region = "eu-north-1"
 	S3Bucket = "eventum"
-	// AWS_PROFILE=test-account
 )
 
 func StartAWS() (*session.Session, error) {
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{
 			Region: aws.String(S3Region),
-			Credentials: credentials.NewSharedCredentials("", "test-account"),
+			Credentials: credentials.NewEnvCredentials(),
 		},
 	})
 
@@ -38,20 +44,6 @@ func UploadToAWS(sess *session.Session, pic *forms.EImage, folder string) error 
         ACL: 				  aws.String("private"),
         ContentDisposition:   aws.String("attachment"),
     })
-
-    return err
-}
-
-func DownloadFromAWS(sess *session.Session, pic *forms.EImage, folder string) error {
-	downloader := s3manager.NewDownloader(sess)
-
-	buf := aws.NewWriteAtBuffer([]byte{})
-    _, err := downloader.Download(buf, &s3.GetObjectInput{
-		Bucket: aws.String(S3Bucket),
-		Key:    aws.String(folder + "/" + pic.ImgName),
-	})
-
-    pic.Img, _, err = image.Decode(bytes.NewReader(buf.Bytes()))
 
     return err
 }
