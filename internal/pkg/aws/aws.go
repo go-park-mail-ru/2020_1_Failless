@@ -4,72 +4,70 @@ import (
 	"bytes"
 	"failless/internal/pkg/forms"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"image"
-	"log"
 )
 
 const (
 	S3Region = "eu-north-1"
-	S3Bucket = "https://eventum.s3.eu-north-1.amazonaws.com"
+	S3Bucket = "eventum"
+	// AWS_PROFILE=test-account
 )
 
-func startAWS() *session.Session {
+func StartAWS() (*session.Session, error) {
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{
 			Region: aws.String(S3Region),
-			Endpoint: aws.String(S3Bucket),
+			Credentials: credentials.NewSharedCredentials("", "test-account"),
 		},
 	})
 
-	if err != nil {
-		log.Printf("Unable to start session %v", err)
-		return nil
-	}
-
-	return sess
+	return sess, err
 }
 
-func UploadToAWS(s *session.Session, pic *forms.EImage, folder string) error {
+func UploadToAWS(sess *session.Session, pic *forms.EImage, folder string) error {
 	// Config settings: this is where you choose the bucket, filename,
 	// content-type etc of the file you're uploading.
-    numBytes, err := s3.New(s).PutObject(&s3.PutObjectInput{
+    _, err := s3.New(sess).PutObject(&s3.PutObjectInput{
         Bucket:               aws.String(S3Bucket),
-        Key:                  aws.String("/" + folder + "/" + pic.ImgName),
+        Key:                  aws.String(folder + "/" + pic.ImgName),
         Body:                 bytes.NewReader(bytes.NewBufferString(pic.ImgBase64).Bytes()),
         ACL: 				  aws.String("private"),
         ContentDisposition:   aws.String("attachment"),
     })
 
-    if err != nil {
-    	log.Printf("Unable to upload item %q, %v", pic.ImgName, err)
-        return err
-    } else {
-    	log.Printf("Uploaded %q bytes", numBytes)
-	}
+    return err
+}
+
+func DownloadFromAWS(sess *session.Session, pic *forms.EImage, folder string) error {
+	downloader := s3manager.NewDownloader(sess)
+
+	buf := aws.NewWriteAtBuffer([]byte{})
+    _, err := downloader.Download(buf, &s3.GetObjectInput{
+		Bucket: aws.String(S3Bucket),
+		Key:    aws.String(folder + "/" + pic.ImgName),
+	})
+
+    pic.Img, _, err = image.Decode(bytes.NewReader(buf.Bytes()))
 
     return err
 }
 
-func DownloadFromAWS(s *session.Session, pic *forms.EImage, folder string) error {
-	downloader := s3manager.NewDownloader(s)
-
-	buf := aws.NewWriteAtBuffer([]byte{})
-    numBytes, err := downloader.Download(buf, &s3.GetObjectInput{
-		Bucket: aws.String(S3Bucket),
-		Key:    aws.String("/" + folder + "/" + pic.ImgName),
-	})
-
-    pic.Img, _, _ = image.Decode(bytes.NewReader(buf.Bytes()))
-
-    if err != nil {
-        log.Printf("Unable to download item %q, %v", pic.ImgName, err)
-        return err
-    } else {
-    	log.Printf("Donwloaded %q bytes", numBytes)
+func ListObjects(sess *session.Session, folder string, limit int64) (*s3.ListObjectsV2Output, error) {
+	input := &s3.ListObjectsV2Input{
+		Bucket:  aws.String(S3Bucket),
+		MaxKeys: aws.Int64(limit),
+		Prefix:  aws.String(folder + "/"),
 	}
 
-    return err
+	result, err := s3.New(sess).ListObjectsV2(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, err
 }

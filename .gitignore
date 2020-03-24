@@ -2,3 +2,4 @@
 bin/*
 configs/ssl-bundle
 media/images/*
+.DS_Store
