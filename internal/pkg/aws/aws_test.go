@@ -52,7 +52,7 @@ func TestListObjects(t *testing.T) {
 
 func TestUploadToAWS(t *testing.T) {
 	path := "../" + forms.Media + testImageName
-	sess, _ := StartAWS()
+	s3, _ := StartAWS()
 
 	_, err := os.Stat(path)
 	if err != nil {
@@ -68,7 +68,7 @@ func TestUploadToAWS(t *testing.T) {
 
 	tempImg := correctImage(path, testImageName)
 
-	err = UploadToAWS(&tempImg, testFolder)
+	err = s3.UploadToAWS(&tempImg, testFolder)
 	if err != nil {
 		log.Printf("Unable to upload item %q, %v", tempImg.ImgName, err)
 		t.Fail()

@@ -1,11 +1,11 @@
 package aws
 
 import (
-	"bytes"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"io"
 )
 
 /*
@@ -37,13 +37,13 @@ func StartAWS() (*S3Storage, error) {
 	return &S3Storage{sess: sess}, err
 }
 
-func (s *S3Storage) UploadToAWS(imgBase64 *string, folder string, name string) error {
+func (s *S3Storage) UploadToAWS(r io.ReadSeeker, folder string, name string) error {
 	// Config settings: this is where you choose the bucket, filename,
 	// content-type etc of the file you're uploading.
 	_, err := s3.New(s.sess).PutObject(&s3.PutObjectInput{
 		Bucket:             aws.String(S3Bucket),
 		Key:                aws.String(folder + "/" + name),
-		Body:               bytes.NewReader(bytes.NewBufferString(*imgBase64).Bytes()),
+		Body:               r,
 		ACL:                aws.String("private"),
 		ContentDisposition: aws.String("attachment"),
 	})

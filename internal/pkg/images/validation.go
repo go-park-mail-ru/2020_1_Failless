@@ -28,11 +28,14 @@ func ValidateImage(image *forms.EImage, folder string) bool {
 		return false
 	}
 
+	// TODO: add normal resize
 	// Resize srcImage to size = 128x128px using the Lanczos filter.
-	dstImage128 := imaging.Resize(img, 128, 128, imaging.Lanczos)
+	//dstImage128 := imaging.Fill(img, 256, 256, imaging.Center, imaging.Lanczos)
+	//dstImage128 = imaging.Resize(dstImage128, 256, 256, imaging.Lanczos)
 	// Resize and crop the srcImage to fill the 100x100px area.
-	image.Img = imaging.Fill(dstImage128, 100, 100, imaging.Center, imaging.Lanczos)
+	image.Img = img // imaging.Fill(dstImage128, 100, 100, imaging.Center, imaging.Lanczos)
 	image.ImgName = uuid.New().String() + ".jpg"
+
 	err = image.SaveImage(folder)
 	if err != nil {
 		log.Println("Can't save image")

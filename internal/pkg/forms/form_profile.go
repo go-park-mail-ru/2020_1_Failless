@@ -90,7 +90,6 @@ func (p *ProfileForm) GetDBFormat(info *models.JsonInfo, user *models.User) erro
 }
 
 func (p *ProfileForm) FillProfile(row models.JsonInfo) error {
-	// todo: take pictures from media
 	ava := ""
 	if len(row.Photos) < 1 {
 		ava = "default.png"
@@ -104,5 +103,8 @@ func (p *ProfileForm) FillProfile(row models.JsonInfo) error {
 	p.About = row.About
 	p.Location = row.Location
 	p.Gender = row.Gender
+	for _, photo := range row.Photos {
+		p.Photos = append(p.Photos, EImage{ImgName: photo})
+	}
 	return nil
 }
