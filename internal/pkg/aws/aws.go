@@ -2,7 +2,6 @@ package aws
 
 import (
 	"bytes"
-	"failless/internal/pkg/forms"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -23,39 +22,43 @@ const (
 	S3Bucket = "eventum"
 )
 
-func StartAWS() (*session.Session, error) {
+type S3Storage struct {
+	sess *session.Session
+}
+
+func StartAWS() (*S3Storage, error) {
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{
-			Region: aws.String(S3Region),
+			Region:      aws.String(S3Region),
 			Credentials: credentials.NewEnvCredentials(),
 		},
 	})
 
-	return sess, err
+	return &S3Storage{sess: sess}, err
 }
 
-func UploadToAWS(sess *session.Session, pic *forms.EImage, folder string) error {
+func (s *S3Storage) UploadToAWS(imgBase64 *string, folder string, name string) error {
 	// Config settings: this is where you choose the bucket, filename,
 	// content-type etc of the file you're uploading.
-    _, err := s3.New(sess).PutObject(&s3.PutObjectInput{
-        Bucket:               aws.String(S3Bucket),
-        Key:                  aws.String(folder + "/" + pic.ImgName),
-        Body:                 bytes.NewReader(bytes.NewBufferString(pic.ImgBase64).Bytes()),
-        ACL: 				  aws.String("private"),
-        ContentDisposition:   aws.String("attachment"),
-    })
+	_, err := s3.New(s.sess).PutObject(&s3.PutObjectInput{
+		Bucket:             aws.String(S3Bucket),
+		Key:                aws.String(folder + "/" + name),
+		Body:               bytes.NewReader(bytes.NewBufferString(*imgBase64).Bytes()),
+		ACL:                aws.String("private"),
+		ContentDisposition: aws.String("attachment"),
+	})
 
-    return err
+	return err
 }
 
-func ListObjects(sess *session.Session, folder string, limit int64) (*s3.ListObjectsV2Output, error) {
+func (s *S3Storage) ListObjects(folder string, limit int64) (*s3.ListObjectsV2Output, error) {
 	input := &s3.ListObjectsV2Input{
 		Bucket:  aws.String(S3Bucket),
 		MaxKeys: aws.Int64(limit),
 		Prefix:  aws.String(folder + "/"),
 	}
 
-	result, err := s3.New(sess).ListObjectsV2(input)
+	result, err := s3.New(s.sess).ListObjectsV2(input)
 
 	if err != nil {
 		return nil, err

@@ -60,6 +60,12 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: false,
 	}},
+	"/api/profile/:id/upload": {{
+		Type:         "PUT",
+		Handler:      userDelivery.UploadNewImage,
+		CORS:         true,
+		AuthRequired: true,
+	}},
 	"/api/profile/:id": {
 		{
 			Type:         "PUT",
@@ -86,8 +92,10 @@ var Secrets = []string{
 	"DB_NAME",
 	"DB_PASSWORD",
 	"DB_USER",
+	"AWS_ACCESS_KEY_ID",
+	"AWS_SECRET_ACCESS_KEY",
+	"AWS_REGION",
 	//"JWT_KEY",
-	//"AWS_TOKEN",
 }
 
 var doOnce sync.Once

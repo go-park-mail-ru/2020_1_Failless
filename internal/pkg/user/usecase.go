@@ -10,6 +10,7 @@ type UseCase interface {
 	GetUserInfo(profile *forms.ProfileForm) (int, error)
 	FillFormIfExist(cred *models.User) (int, error)
 	RegisterNewUser(user *forms.SignForm) error
+	AddImageToProfile(uid int, name string) error
 }
 
 // Get gender string by int id

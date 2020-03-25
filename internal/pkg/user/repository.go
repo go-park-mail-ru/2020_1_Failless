@@ -7,6 +7,7 @@ import "failless/internal/pkg/models"
 type Repository interface {
 	GetUserByUID(uid int) (models.User, error)
 	UpdateUserRating(uid int, rating float32) error
+	UpdateUserPhotos(uid int, name string) error
 	SetUserLocation(uid int, point models.LocationPoint) error
 	AddUserInfo(user models.User, info models.JsonInfo) error
 	AddNewUser(user *models.User) error

@@ -46,7 +46,7 @@ func (p *ProfileForm) ValidationImage() bool {
 	// Resize and crop the srcImage to fill the 100x100px area.
 	p.Avatar.Img = imaging.Fill(dstImage128, 100, 100, imaging.Center, imaging.Lanczos)
 	p.Avatar.ImgName = uuid.New().String() + ".jpg"
-	err = p.Avatar.SaveImage()
+	err = p.Avatar.SaveImage("users")
 	if err != nil {
 		log.Println("Can't save image")
 		log.Println(err.Error())

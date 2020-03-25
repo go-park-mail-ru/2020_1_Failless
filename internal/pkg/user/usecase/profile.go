@@ -63,3 +63,8 @@ func (uc *userUseCase) GetUserInfo(profile *forms.ProfileForm) (int, error) {
 
 	return http.StatusOK, nil
 }
+
+func (uc *userUseCase) AddImageToProfile(uid int, name string) error {
+	err := uc.rep.UpdateUserPhotos(uid, name)
+	return err
+}

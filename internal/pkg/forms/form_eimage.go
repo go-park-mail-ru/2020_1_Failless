@@ -4,11 +4,17 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/base64"
+	"failless/internal/pkg/aws"
 	"github.com/disintegration/imaging"
 	"image"
 	"image/jpeg"
-	"path"
 )
+
+// Type for encode request for image upload
+type UploadedImage struct {
+	Uid      int    `json:"uid"`
+	Uploaded EImage `json:"uploaded"`
+}
 
 type EImage struct {
 	ImgBase64 string      `json:"img"`
@@ -16,9 +22,13 @@ type EImage struct {
 	Img       image.Image `json:"-"`
 }
 
-func (pic *EImage) SaveImage() error {
-	err := imaging.Save(pic.Img, path.Join(Media, pic.ImgName))
-	return err
+func (pic *EImage) SaveImage(folder string) error {
+	//err := imaging.Save(pic.Img, path.Join(Media, pic.ImgName))
+	s3, err := aws.StartAWS()
+	if err != nil {
+		return err
+	}
+	return s3.UploadToAWS(&pic.ImgBase64, folder, pic.ImgName)
 }
 
 func (pic *EImage) Encode() error {
@@ -38,4 +48,3 @@ func (pic *EImage) GetImage(name string) (err error) {
 	pic.Img, err = imaging.Open(name)
 	return
 }
-

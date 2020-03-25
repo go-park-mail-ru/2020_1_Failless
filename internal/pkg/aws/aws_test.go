@@ -34,7 +34,7 @@ func TestStartAWS(t *testing.T) {
 
 func TestListObjects(t *testing.T) {
 	sess, _ := StartAWS()
-	_, err := ListObjects(sess, "event", 10)
+	_, err := ListObjects("event", 10)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -68,12 +68,12 @@ func TestUploadToAWS(t *testing.T) {
 
 	tempImg := correctImage(path, testImageName)
 
-	err = UploadToAWS(sess, &tempImg, testFolder)
+	err = UploadToAWS(&tempImg, testFolder)
 	if err != nil {
 		log.Printf("Unable to upload item %q, %v", tempImg.ImgName, err)
 		t.Fail()
 	} else {
-		result, _ := ListObjects(sess, testFolder, 2)
+		result, _ := ListObjects(testFolder, 2)
 		if len(result.Contents) < 2 {
 			log.Println("Impossible.\nPerhaps the archives are incomplete.")
 			t.Fail()
