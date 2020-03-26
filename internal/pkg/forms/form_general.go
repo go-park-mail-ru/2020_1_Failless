@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type ProfileForm struct {
+type GeneralForm struct {
 	SignForm
 	Events   []models.Event       `json:"events"`
 	Tags     []models.Tag         `json:"tags"`
@@ -24,11 +24,11 @@ type ProfileForm struct {
 	Birthday time.Time            `json:"birthday, omitempty"`
 }
 
-func (p *ProfileForm) ValidateGender() bool {
+func (p *GeneralForm) ValidateGender() bool {
 	return models.Male == p.Gender || p.Gender == models.Female || p.Gender == models.Other
 }
 
-func (p *ProfileForm) ValidationImage() bool {
+func (p *GeneralForm) ValidationImage() bool {
 	imgBytes, err := base64.StdEncoding.DecodeString(p.Avatar.ImgBase64)
 	if err != nil {
 		log.Println(err.Error())
@@ -57,7 +57,7 @@ func (p *ProfileForm) ValidationImage() bool {
 	return true
 }
 
-func (p *ProfileForm) GetDBFormat(info *models.JsonInfo, user *models.User) error {
+func (p *GeneralForm) GetDBFormat(info *models.JsonInfo, user *models.User) error {
 	encPass, err := security.EncryptPassword(p.Password)
 	if err != nil {
 		return err
@@ -89,7 +89,7 @@ func (p *ProfileForm) GetDBFormat(info *models.JsonInfo, user *models.User) erro
 	return nil
 }
 
-func (p *ProfileForm) FillProfile(row models.JsonInfo) error {
+func (p *GeneralForm) FillProfile(row models.JsonInfo) error {
 	ava := ""
 	if len(row.Photos) < 1 {
 		ava = "default.png"

@@ -6,8 +6,9 @@ import (
 )
 
 type UseCase interface {
-	UpdateUserInfo(form *forms.ProfileForm) (int, error)
-	GetUserInfo(profile *forms.ProfileForm) (int, error)
+	UpdateUserMeta(form *forms.MetaForm) (int, error)
+	UpdateUserInfo(form *forms.GeneralForm) (int, error)
+	GetUserInfo(profile *forms.GeneralForm) (int, error)
 	FillFormIfExist(cred *models.User) (int, error)
 	RegisterNewUser(user *forms.SignForm) error
 	AddImageToProfile(uid int, name string) error

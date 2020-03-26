@@ -135,6 +135,18 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE PROCEDURE update_tag(user_id INT, tid INT)
+    LANGUAGE plpgsql AS
+$$
+BEGIN
+    IF EXISTS (SELECT * FROM user_tag WHERE uid = user_id AND tag_id = tid) THEN
+        DELETE FROM user_tag WHERE uid = user_id AND tag_id = tid;
+    ELSE
+        INSERT INTO user_tag (tag_id, uid) VALUES (tid, user_id);
+    END IF;
+END;
+$$;
+
 CREATE INDEX IF NOT EXISTS event_title_idx ON events USING GIN (title);
 
 CREATE OR REPLACE FUNCTION make_tsvector()

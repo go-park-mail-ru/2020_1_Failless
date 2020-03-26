@@ -15,6 +15,44 @@ import (
 
 ////////////// profile part //////////////////
 
+func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	data := r.Context().Value(middleware.CtxUserKey)
+	if data == nil {
+		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
+		return
+	}
+
+	uid := 0
+	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
+		network.GenErrorCode(w, r, "Uid is incorrect", http.StatusInternalServerError)
+		return
+	}
+
+	cred := data.(forms.SignForm)
+	if cred.Uid != uid {
+		network.GenErrorCode(w, r, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var form forms.MetaForm
+	err := decoder.Decode(&form)
+	if err != nil {
+		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		return
+	}
+
+	form.Uid = uid
+	uc := usecase.GetUseCase()
+	if code, err := uc.UpdateUserInfo(&form); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
+		return
+	}
+
+	network.Jsonify(w, form, http.StatusOK)
+}
+
+
 func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	data := r.Context().Value(middleware.CtxUserKey)
 	if data == nil {
@@ -35,7 +73,7 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var form forms.ProfileForm
+	var form forms.GeneralForm
 	err := decoder.Decode(&form)
 	if err != nil {
 		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
@@ -109,7 +147,7 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	var profile forms.ProfileForm
+	var profile forms.GeneralForm
 	profile.Uid = uid
 	uc := usecase.GetUseCase()
 	if code, err := uc.GetUserInfo(&profile); err != nil {

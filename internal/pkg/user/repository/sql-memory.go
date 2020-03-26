@@ -134,6 +134,18 @@ func (ur *sqlUserRepository) UpdateUserRating(uid int, rating float32) error {
 	return err
 }
 
+func (ur *sqlUserRepository) UpdateUserTags(uid int, tagId int) error {
+	sqlStatement := `CALL update_tag($1, $2);`
+	_, err := ur.db.Exec(sqlStatement, uid, tagId)
+	return err
+}
+
+func (ur *sqlUserRepository) UpdateUserSimple(uid int, rating float32) error {
+	sqlStatement := `UPDATE profile_info SET rating = $1 WHERE pid = $2;`
+	_, err := ur.db.Exec(sqlStatement, rating, uid)
+	return err
+}
+
 func (ur *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err error) {
 	var profile ProfileInfo
 	sqlStatement := `SELECT about, photos, rating, birthday, gender FROM profile_info WHERE pid = $1 ;`
