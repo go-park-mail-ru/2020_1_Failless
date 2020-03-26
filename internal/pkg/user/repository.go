@@ -6,9 +6,14 @@ import "failless/internal/pkg/models"
 // It can be in-memory realization or database realization
 type Repository interface {
 	GetUserByUID(uid int) (models.User, error)
+	UpdateUserTags(uid int, tagId int) error
+	UpdateUserSimple(uid int, social []string, about *string) error
 	UpdateUserRating(uid int, rating float32) error
 	UpdateUserPhotos(uid int, name string) error
 	SetUserLocation(uid int, point models.LocationPoint) error
+
+	// Deprecated: use UpdateUserTags, UpdateUserSimple,
+	// UpdateUserPhotos, UpdateUserRating instead
 	AddUserInfo(user models.User, info models.JsonInfo) error
 	AddNewUser(user *models.User) error
 	GetUserByPhoneOrEmail(phone string, email string) (models.User, error)

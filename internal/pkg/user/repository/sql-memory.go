@@ -140,9 +140,9 @@ func (ur *sqlUserRepository) UpdateUserTags(uid int, tagId int) error {
 	return err
 }
 
-func (ur *sqlUserRepository) UpdateUserSimple(uid int, rating float32) error {
-	sqlStatement := `UPDATE profile_info SET rating = $1 WHERE pid = $2;`
-	_, err := ur.db.Exec(sqlStatement, rating, uid)
+func (ur *sqlUserRepository) UpdateUserSimple(uid int, social []string, about *string) error {
+	sqlStatement := `UPDATE profile_info SET about = $1, social = $2 WHERE pid = $3;`
+	_, err := ur.db.Exec(sqlStatement, *about, social, uid)
 	return err
 }
 
