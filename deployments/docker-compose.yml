@@ -1,0 +1,55 @@
+version: '3.3'
+services:
+  eventumbackend:
+    container_name: eventumbackend
+    restart: always
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_REGION
+    ports:
+      - '3001:3001'
+    links:
+      - eventumdb
+    working_dir: /home/eventum
+    networks:
+      - backend
+    build:
+      context: ../.
+      dockerfile: ./build/server.dockerfile
+
+  eventumdb:
+    container_name: eventumdb
+    restart: always
+    env_file:
+      - .env
+    build:
+      context: ..
+      dockerfile: ./build/db.dockerfile
+      args:
+        dbuser: ${POSTGRES_USER}
+        dbname: ${POSTGRES_DB}
+        dbpasswd: ${POSTGRES_PASSWORD}
+
+    volumes:
+      - ../scripts/init.sql:/home/eventum/init.sql
+      - database-data:/var/lib/postgresql/data/
+    #        - ./db/pg_hba.conf:/etc/postgresql/12/main/pg_hba.conf
+    #        - ./db/postgresql.conf:/etc/postgresql/12/main/postgresql.conf
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER
+      - POSTGRES_DB
+    networks:
+      - backend
+
+volumes:
+  database-data:
+
+networks:
+  backend:
