@@ -66,6 +66,12 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 	}},
+	"/api/profile/:id/meta": {{
+		Type:         "PUT",
+		Handler:      userDelivery.UpdUserMetaData,
+		CORS:         true,
+		AuthRequired: true,
+	}},
 	"/api/profile/:id": {
 		{
 			Type:         "PUT",

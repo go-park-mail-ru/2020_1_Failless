@@ -8,11 +8,11 @@ import (
 )
 
 func (uc *userUseCase) UpdateUserMeta(form *forms.MetaForm) (int, error) {
-	if err := uc.rep.AddUserInfo(user, info); err != nil {
+	if err := uc.rep.UpdateUserSimple(form.Uid, form.Social, &form.About); err != nil {
 		return http.StatusNotModified, err
 	}
 
-	return 0, nil
+	return http.StatusOK, nil
 }
 
 func (uc *userUseCase) UpdateUserInfo(form *forms.GeneralForm) (int, error) {

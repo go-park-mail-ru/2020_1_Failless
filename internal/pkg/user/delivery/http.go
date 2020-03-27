@@ -13,24 +13,34 @@ import (
 	"net/http"
 )
 
-////////////// profile part //////////////////
-
-func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func checkCredentials(w http.ResponseWriter, r *http.Request, ps map[string]string) int {
 	data := r.Context().Value(middleware.CtxUserKey)
 	if data == nil {
 		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
-		return
+		return -1
 	}
 
 	uid := 0
 	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
 		network.GenErrorCode(w, r, "Uid is incorrect", http.StatusInternalServerError)
-		return
+		return -1
 	}
 
 	cred := data.(forms.SignForm)
 	if cred.Uid != uid {
 		network.GenErrorCode(w, r, "forbidden", http.StatusForbidden)
+		return -1
+	}
+
+	return cred.Uid
+}
+
+
+////////////// profile part //////////////////
+
+func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := checkCredentials(w, r, ps)
+	if uid < 0 {
 		return
 	}
 
@@ -44,7 +54,7 @@ func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]strin
 
 	form.Uid = uid
 	uc := usecase.GetUseCase()
-	if code, err := uc.UpdateUserInfo(&form); err != nil {
+	if code, err := uc.UpdateUserMeta(&form); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
@@ -54,21 +64,8 @@ func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]strin
 
 
 func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	data := r.Context().Value(middleware.CtxUserKey)
-	if data == nil {
-		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
-		return
-	}
-
-	uid := 0
-	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
-		network.GenErrorCode(w, r, "Uid is incorrect", http.StatusInternalServerError)
-		return
-	}
-
-	cred := data.(forms.SignForm)
-	if cred.Uid != uid {
-		network.GenErrorCode(w, r, "forbidden", http.StatusForbidden)
+	uid := checkCredentials(w, r, ps)
+	if uid < 0 {
 		return
 	}
 
@@ -97,21 +94,8 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 }
 
 func UploadNewImage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	data := r.Context().Value(middleware.CtxUserKey)
-	if data == nil {
-		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
-		return
-	}
-
-	uid := 0
-	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
-		network.GenErrorCode(w, r, "Uid is incorrect", http.StatusInternalServerError)
-		return
-	}
-
-	cred := data.(forms.SignForm)
-	if cred.Uid != uid {
-		network.GenErrorCode(w, r, "forbidden", http.StatusForbidden)
+	uid := checkCredentials(w, r, ps)
+	if uid < 0 {
 		return
 	}
 

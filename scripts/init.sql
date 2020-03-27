@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS timetable
     is_edited BOOLEAN                              DEFAULT FALSE,
     sponsor   CITEXT                               DEFAULT NULL,
     photos    VARCHAR(64)[]                        DEFAULT NULL,
+    social    VARCHAR(144)[]                       DEFAULT NULL,
     etype     ETYPE_T
 );
 
@@ -139,7 +140,7 @@ CREATE OR REPLACE PROCEDURE update_tag(user_id INT, tid INT)
     LANGUAGE plpgsql AS
 $$
 BEGIN
-    IF EXISTS (SELECT * FROM user_tag WHERE uid = user_id AND tag_id = tid) THEN
+    IF EXISTS(SELECT * FROM user_tag WHERE uid = user_id AND tag_id = tid) THEN
         DELETE FROM user_tag WHERE uid = user_id AND tag_id = tid;
     ELSE
         INSERT INTO user_tag (tag_id, uid) VALUES (tid, user_id);
