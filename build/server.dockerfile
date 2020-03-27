@@ -7,7 +7,4 @@ RUN go build -o bin/eventum ./cmd/server/main.go
 
 EXPOSE 3001
 
-WORKDIR /home/eventum
-COPY --from=lang /home/eventum .
-
 CMD ./bin/eventum
