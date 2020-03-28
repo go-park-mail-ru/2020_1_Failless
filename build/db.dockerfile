@@ -28,7 +28,7 @@ ARG dbname
 
 USER postgres
 RUN /etc/init.d/postgresql start &&\
-    export user=$(echo ${dbuser} | sed -e 's|["'\'']||g'); psql --command "CREATE USER $user WITH SUPERUSER PASSWORD ${dbpasswd};" &&\
+    export user=$(echo ${dbuser} | sed -e 's|["'\'']||g'); psql --command "CREATE USER $user WITH SUPERUSER PASSWORD '${dbpasswd}';" &&\
     createdb -O $user $dbname && psql -d $dbname -c "CREATE EXTENSION IF NOT EXISTS citext;" &&\
     psql $dbname -a -f ./init.sql &&\
     /etc/init.d/postgresql stop
