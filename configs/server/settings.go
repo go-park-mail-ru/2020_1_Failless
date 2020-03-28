@@ -95,13 +95,12 @@ var routesMap = map[string][]settings.MapHandler{
 
 // Env variables which must to be set before running server
 var Secrets = []string{
-	"DB_NAME",
-	"DB_PASSWORD",
-	"DB_USER",
+	"POSTGRES_DB",
+	"POSTGRES_PASSWORD",
+	"POSTGRES_USER",
 	"AWS_ACCESS_KEY_ID",
 	"AWS_SECRET_ACCESS_KEY",
 	"AWS_REGION",
-	//"JWT_KEY",
 }
 
 var doOnce sync.Once

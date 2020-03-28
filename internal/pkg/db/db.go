@@ -8,11 +8,11 @@ import (
 )
 
 var (
-	host     = "localhost"
+	host     = "eventumdb"
 	port     = uint16(5432)
-	user     = os.Getenv("DB_USER")        
-	password = os.Getenv("DB_PASSWORD")
-	dbname   = os.Getenv("DB_NAME")
+	user     = os.Getenv("POSTGRES_USER")
+	password = os.Getenv("POSTGRES_PASSWORD")
+	dbname   = os.Getenv("POSTGRES_DB")
 )
 
 
