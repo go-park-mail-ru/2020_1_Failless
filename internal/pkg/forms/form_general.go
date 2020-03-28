@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type ProfileForm struct {
+type GeneralForm struct {
 	SignForm
 	Events   []models.Event       `json:"events"`
 	Tags     []models.Tag         `json:"tags"`
@@ -24,11 +24,11 @@ type ProfileForm struct {
 	Birthday time.Time            `json:"birthday, omitempty"`
 }
 
-func (p *ProfileForm) ValidateGender() bool {
+func (p *GeneralForm) ValidateGender() bool {
 	return models.Male == p.Gender || p.Gender == models.Female || p.Gender == models.Other
 }
 
-func (p *ProfileForm) ValidationImage() bool {
+func (p *GeneralForm) ValidationImage() bool {
 	imgBytes, err := base64.StdEncoding.DecodeString(p.Avatar.ImgBase64)
 	if err != nil {
 		log.Println(err.Error())
@@ -46,7 +46,7 @@ func (p *ProfileForm) ValidationImage() bool {
 	// Resize and crop the srcImage to fill the 100x100px area.
 	p.Avatar.Img = imaging.Fill(dstImage128, 100, 100, imaging.Center, imaging.Lanczos)
 	p.Avatar.ImgName = uuid.New().String() + ".jpg"
-	err = p.Avatar.SaveImage()
+	err = p.Avatar.SaveImage("users")
 	if err != nil {
 		log.Println("Can't save image")
 		log.Println(err.Error())
@@ -57,7 +57,7 @@ func (p *ProfileForm) ValidationImage() bool {
 	return true
 }
 
-func (p *ProfileForm) GetDBFormat(info *models.JsonInfo, user *models.User) error {
+func (p *GeneralForm) GetDBFormat(info *models.JsonInfo, user *models.User) error {
 	encPass, err := security.EncryptPassword(p.Password)
 	if err != nil {
 		return err
@@ -89,8 +89,7 @@ func (p *ProfileForm) GetDBFormat(info *models.JsonInfo, user *models.User) erro
 	return nil
 }
 
-func (p *ProfileForm) FillProfile(row models.JsonInfo) error {
-	// todo: take pictures from media
+func (p *GeneralForm) FillProfile(row models.JsonInfo) error {
 	ava := ""
 	if len(row.Photos) < 1 {
 		ava = "default.png"
@@ -104,5 +103,8 @@ func (p *ProfileForm) FillProfile(row models.JsonInfo) error {
 	p.About = row.About
 	p.Location = row.Location
 	p.Gender = row.Gender
+	for _, photo := range row.Photos {
+		p.Photos = append(p.Photos, EImage{ImgName: photo})
+	}
 	return nil
 }

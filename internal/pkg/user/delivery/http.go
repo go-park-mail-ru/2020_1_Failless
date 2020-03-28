@@ -3,6 +3,7 @@ package delivery
 import (
 	"encoding/json"
 	"failless/internal/pkg/forms"
+	"failless/internal/pkg/images"
 	"failless/internal/pkg/middleware"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
@@ -12,28 +13,64 @@ import (
 	"net/http"
 )
 
-////////////// profile part //////////////////
-
-func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func checkCredentials(w http.ResponseWriter, r *http.Request, ps map[string]string) int {
 	data := r.Context().Value(middleware.CtxUserKey)
 	if data == nil {
 		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
-		return
+		return -1
 	}
 
 	uid := 0
 	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
 		network.GenErrorCode(w, r, "Uid is incorrect", http.StatusInternalServerError)
-		return
+		return -1
 	}
 
 	cred := data.(forms.SignForm)
 	if cred.Uid != uid {
 		network.GenErrorCode(w, r, "forbidden", http.StatusForbidden)
+		return -1
+	}
+
+	return cred.Uid
+}
+
+
+////////////// profile part //////////////////
+
+func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := checkCredentials(w, r, ps)
+	if uid < 0 {
+		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	var form forms.ProfileForm
+	var form forms.MetaForm
+	err := decoder.Decode(&form)
+	if err != nil {
+		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		return
+	}
+
+	form.Uid = uid
+	uc := usecase.GetUseCase()
+	if code, err := uc.UpdateUserMeta(&form); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
+		return
+	}
+
+	network.Jsonify(w, form, http.StatusOK)
+}
+
+
+func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := checkCredentials(w, r, ps)
+	if uid < 0 {
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var form forms.GeneralForm
 	err := decoder.Decode(&form)
 	if err != nil {
 		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
@@ -56,6 +93,37 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	network.Jsonify(w, form, http.StatusOK)
 }
 
+func UploadNewImage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := checkCredentials(w, r, ps)
+	if uid < 0 {
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var form forms.UploadedImage
+	err := decoder.Decode(&form)
+	if err != nil {
+		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		return
+	}
+
+	form.Uid = uid
+	if form.Uploaded.ImgBase64 == "" ||
+		!images.ValidateImage(&form.Uploaded, images.Users) {
+		network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
+		return
+	}
+
+	uc := usecase.GetUseCase()
+	if err := uc.AddImageToProfile(form.Uid, form.Uploaded.ImgName); err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	network.Jsonify(w, network.Message{Message: "ok", Status: 200}, http.StatusOK)
+}
+
+
 func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := 0
 	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
@@ -63,7 +131,7 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	var profile forms.ProfileForm
+	var profile forms.GeneralForm
 	profile.Uid = uid
 	uc := usecase.GetUseCase()
 	if code, err := uc.GetUserInfo(&profile); err != nil {

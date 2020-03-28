@@ -7,7 +7,7 @@ import (
 
 //testing all profile forms
 func TestProfileFull(t *testing.T) {
-	f := ProfileForm{
+	f := GeneralForm{
 		//SignForm:  nil,
 		//ImgBase64: "?",
 		//ImgName:   "?",
@@ -16,7 +16,7 @@ func TestProfileFull(t *testing.T) {
 	}
 	assert.Equal(t, true, f.ValidateGender())
 
-	// needs to write ProfileForm in correct format to fully test image validation
+	// needs to write GeneralForm in correct format to fully test image validation
 	assert.Equal(t, false, f.ValidationImage())
 }
 

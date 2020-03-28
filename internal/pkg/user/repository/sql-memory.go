@@ -134,6 +134,18 @@ func (ur *sqlUserRepository) UpdateUserRating(uid int, rating float32) error {
 	return err
 }
 
+func (ur *sqlUserRepository) UpdateUserTags(uid int, tagId int) error {
+	sqlStatement := `CALL update_tag($1, $2);`
+	_, err := ur.db.Exec(sqlStatement, uid, tagId)
+	return err
+}
+
+func (ur *sqlUserRepository) UpdateUserSimple(uid int, social []string, about *string) error {
+	sqlStatement := `UPDATE profile_info SET about = $1, social = $2 WHERE pid = $3;`
+	_, err := ur.db.Exec(sqlStatement, *about, social, uid)
+	return err
+}
+
 func (ur *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err error) {
 	var profile ProfileInfo
 	sqlStatement := `SELECT about, photos, rating, birthday, gender FROM profile_info WHERE pid = $1 ;`
@@ -176,7 +188,6 @@ func (ur *sqlUserRepository) DeleteUser(mail string) error {
 	return err
 }
 
-
 // TODO: move it to event pkg
 func (ur *sqlUserRepository) GetUserEvents(uid int) ([]models.Event, error) {
 	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events WHERE uid = $1 ;`
@@ -188,7 +199,6 @@ func (ur *sqlUserRepository) GetEventsByTag(tag string) ([]models.Event, error) 
 	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events WHERE etype = $1 ;`
 	return ur.getEvents(sqlStatement, tag)
 }
-
 
 func (ur *sqlUserRepository) GetUserTags(uid int) ([]models.Tag, error) {
 	sqlStatement := `SELECT tag_id, name FROM user_tag NATURAL JOIN tag WHERE uid = $1 ;`
@@ -213,4 +223,15 @@ func (ur *sqlUserRepository) GetUserTags(uid int) ([]models.Tag, error) {
 	}
 
 	return tags, nil
+}
+
+func (ur *sqlUserRepository) UpdateUserPhotos(uid int, name string) error {
+	sqlStatement := `UPDATE profile_info SET photos = array_append(photos, $1) WHERE pid = $2;`
+	_, err := ur.db.Exec(sqlStatement, name, uid)
+	if err != nil {
+		log.Println(sqlStatement, name, uid)
+		log.Println(err.Error())
+		return err
+	}
+	return nil
 }

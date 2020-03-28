@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Eventum
   description: Eventum api
-  version: "1.0.4-oas3"
+  version: "1.1.0-oas3"
 paths:
   /api/event/new:
     post:
@@ -116,10 +116,88 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Tag'
-  '/api/profile/{uid}':
+  '/api/profile/{uid}/upload':
+    put:
+      summary: upload user image to profile
+      description: send image
+      parameters:
+        - name: uid
+          in: path
+          description: ID of user to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadImage'
+        description: 'upload image in base64 format in json'
+        required: true
+  'api/profile/{uid}/general':
     put:
       summary: updates user profile
       description: send updates to user profile
+      parameters:
+        - name: uid
+          in: path
+          description: ID of user to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/General'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+        description: Profile object that needs to be updated in database
+        required: true
+  'api/profile/{uid}/tag':
+    put:
+      summary: set/unset user tag
+      description: update user tags by set/unset concrete tag
+      parameters:
+        - name: uid
+          in: path
+          description: ID of user to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetaData'
+        description: Profile object that needs to be updated in database
+        required: true
+  'api/profile/{uid}/meta':
+    put:
+      summary: updates user meta data
+      description: send updates user metadata such as user tags, about, social
       parameters:
         - name: uid
           in: path
@@ -139,9 +217,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Profile'
+              $ref: '#/components/schemas/MetaData'
         description: Profile object that needs to be updated in database
         required: true
+  '/api/profile/{uid}':
     get:
       summary: gets profile info
       description: get all info about gained profile
@@ -229,6 +308,13 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/EventForm'
+    UploadImage:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UploadImage'
+      description: UploadImage object it's json with base64 image that need to be added to database
+      required: true
   schemas:
     User:
       type: object
@@ -454,6 +540,17 @@ components:
           type: integer
           format: number
           example: 2
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+    UploadImage:
+      type: object
+      properties:
+        uid:
+          type: integer
+          format: int
+          example: 10
         photos:
           type: array
           items:

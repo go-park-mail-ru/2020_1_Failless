@@ -7,7 +7,15 @@ import (
 	"net/http"
 )
 
-func (uc *userUseCase) UpdateUserInfo(form *forms.ProfileForm) (int, error) {
+func (uc *userUseCase) UpdateUserMeta(form *forms.MetaForm) (int, error) {
+	if err := uc.rep.UpdateUserSimple(form.Uid, form.Social, &form.About); err != nil {
+		return http.StatusNotModified, err
+	}
+
+	return http.StatusOK, nil
+}
+
+func (uc *userUseCase) UpdateUserInfo(form *forms.GeneralForm) (int, error) {
 	var info models.JsonInfo
 	var user models.User
 
@@ -27,7 +35,7 @@ func (uc *userUseCase) UpdateUserInfo(form *forms.ProfileForm) (int, error) {
 	return http.StatusOK, nil
 }
 
-func (uc *userUseCase) GetUserInfo(profile *forms.ProfileForm) (int, error) {
+func (uc *userUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 	row, err := uc.rep.GetProfileInfo(profile.Uid)
 	if err != nil {
 		log.Println(err.Error())
@@ -62,4 +70,9 @@ func (uc *userUseCase) GetUserInfo(profile *forms.ProfileForm) (int, error) {
 	}
 
 	return http.StatusOK, nil
+}
+
+func (uc *userUseCase) AddImageToProfile(uid int, name string) error {
+	err := uc.rep.UpdateUserPhotos(uid, name)
+	return err
 }
