@@ -9,12 +9,12 @@ CREATE TYPE SEX_T AS ENUM ('male', 'female', 'other');
 CREATE TYPE ETYPE_T AS ENUM ('concert', 'museum', 'bar', 'theater', 'walk', 'tour');
 
 CREATE TEXT SEARCH DICTIONARY russian_ispell
-    (
+(
     TEMPLATE = ispell,
     DictFile = russian,
     AffFile = russian,
     StopWords = russian
-    );
+);
 
 CREATE TEXT SEARCH CONFIGURATION ru (COPY =russian);
 
@@ -115,7 +115,6 @@ CREATE TABLE IF NOT EXISTS user_vote
 
 CREATE TABLE IF NOT EXISTS chat_user
 (
---     chat_id       INTEGER NOT NULL,
     chat_id    SERIAL PRIMARY KEY,
     admin_id   INTEGER REFERENCES profile (uid),
     date       TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
