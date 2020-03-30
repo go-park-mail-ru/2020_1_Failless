@@ -23,6 +23,6 @@ type EventRequest struct {
 	Page     int           `json:"page"`
 	Limit    int           `json:"limit"`
 	Query    string        `json:"query"`
-	Tag      int           `json:"tag, omitempty"`
+	Tags     []int         `json:"tag, omitempty"`
 	Location LocationPoint `json:"location, omitempty"`
 }

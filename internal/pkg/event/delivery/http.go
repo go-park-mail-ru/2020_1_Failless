@@ -88,3 +88,32 @@ func GetEventsByKeyWords(w http.ResponseWriter, r *http.Request, _ map[string]st
 	network.Jsonify(w, events, http.StatusOK)
 }
 
+func GetEventsFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
+	var searchRequest models.EventRequest
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&searchRequest)
+	if err != nil {
+		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		return
+	}
+
+	log.Println(searchRequest)
+
+	if searchRequest.Page < 1 {
+		searchRequest.Page = 1
+	}
+
+	var events []models.Event
+	uc := usecase.GetUseCase()
+	if code, err := uc.InitEventsByKeyWords(&events, searchRequest.Query, searchRequest.Page); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
+		return
+	}
+
+	network.Jsonify(w, events, http.StatusOK)
+}

@@ -20,7 +20,6 @@ func GetUseCase() event.UseCase {
 	}
 }
 
-
 func (uc *userUseCase) InitEventsByTime(events *[]models.Event) (status int, err error) {
 	*events, err = uc.rep.GetAllEvents()
 	if err != nil {
@@ -45,4 +44,24 @@ func (uc *userUseCase) CreateEvent(event forms.EventForm) (models.Event, error) 
 	model.Author = user
 	err = uc.rep.SaveNewEvent(&model)
 	return model, err
+}
+
+func (uc *userUseCase) InitEventsByUserPreferences(events *[]models.Event, request *models.EventRequest) (int, error) {
+	valid, err := uc.rep.GetValidTags(request.Tags)
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+
+	if valid != nil {
+		*events, err = uc.rep.GetNewEventsByTags(valid, request.Uid, request.Limit, request.Page)
+	} else {
+		*events, err = uc.rep.GetFeedEvents(request.Limit, request.Page)
+	}
+
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	log.Println(events)
+	return http.StatusOK, nil
 }

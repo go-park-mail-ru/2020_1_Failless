@@ -87,7 +87,7 @@ func (er *sqlEventsRepository) getEvents(sqlStatement string, args ...interface{
 	baseSql := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range, photos FROM events `
 	baseSql += sqlStatement
 	log.Println(baseSql, args)
-	rows, err := er.db.Query(baseSql , args...)
+	rows, err := er.db.Query(baseSql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -189,4 +189,12 @@ func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page in
 
 	args := generator.generateArgSlice(settings.UseCaseConf.PageLimit, page)
 	return er.getEvents(sqlCondition, args...)
+}
+
+func (er *sqlEventsRepository) GetValidTags([]int) ([]int, error) {
+	return nil, nil
+}
+
+func (er *sqlEventsRepository) GetNewEventsByTags(tags []int, uid int, limit int, page int) ([]models.Event, error) {
+	return nil, nil
 }
