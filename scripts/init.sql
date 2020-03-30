@@ -9,12 +9,12 @@ CREATE TYPE SEX_T AS ENUM ('male', 'female', 'other');
 CREATE TYPE ETYPE_T AS ENUM ('concert', 'museum', 'bar', 'theater', 'walk', 'tour');
 
 CREATE TEXT SEARCH DICTIONARY russian_ispell
-(
+    (
     TEMPLATE = ispell,
     DictFile = russian,
     AffFile = russian,
     StopWords = russian
-);
+    );
 
 CREATE TEXT SEARCH CONFIGURATION ru (COPY =russian);
 
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS events
     edate     TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     message   VARCHAR(1024)               NOT NULL,
     is_edited BOOLEAN                              DEFAULT FALSE,
-    is_public BOOLEAN                              DEFAULT FALSE,
+    is_public BOOLEAN                              DEFAULT TRUE, -- for small events, which we don't wanna be in the search
     author    CITEXT                               DEFAULT NULL,
     etype     INTEGER REFERENCES tag (tag_id),
     range     SMALLINT                             DEFAULT 1,

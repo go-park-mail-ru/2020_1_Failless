@@ -47,11 +47,12 @@ func (uc *userUseCase) CreateEvent(event forms.EventForm) (models.Event, error) 
 }
 
 func (uc *userUseCase) InitEventsByUserPreferences(events *[]models.Event, request *models.EventRequest) (int, error) {
-	valid, err := uc.rep.GetValidTags(request.Tags)
+	dbTags, err := uc.rep.GetValidTags()
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
 
+	valid := uc.TakeValidTagsOnly(request.Tags, dbTags)
 	if valid != nil {
 		*events, err = uc.rep.GetNewEventsByTags(valid, request.Uid, request.Limit, request.Page)
 	} else {
@@ -64,4 +65,17 @@ func (uc *userUseCase) InitEventsByUserPreferences(events *[]models.Event, reque
 
 	log.Println(events)
 	return http.StatusOK, nil
+}
+
+func (uc *userUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int {
+	var valid []int = nil
+	for _, tagId := range tagIds {
+		for _, tag := range tags {
+			if tagId == tag.TagId {
+				valid = append(valid, tagId)
+			}
+		}
+	}
+
+	return valid
 }
