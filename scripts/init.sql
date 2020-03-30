@@ -9,12 +9,12 @@ CREATE TYPE SEX_T AS ENUM ('male', 'female', 'other');
 CREATE TYPE ETYPE_T AS ENUM ('concert', 'museum', 'bar', 'theater', 'walk', 'tour');
 
 CREATE TEXT SEARCH DICTIONARY russian_ispell
-(
+    (
     TEMPLATE = ispell,
     DictFile = russian,
     AffFile = russian,
     StopWords = russian
-);
+    );
 
 CREATE TEXT SEARCH CONFIGURATION ru (COPY =russian);
 
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS profile_info
     location   GEOGRAPHY                            DEFAULT NULL, -- ST_POINT(latitude, longitude)
     birthday   DATE                                 DEFAULT NULL,
     gender     SEX_T,
-    social    VARCHAR(144)[]                       DEFAULT NULL,
+    social     VARCHAR(144)[]                       DEFAULT NULL,
     login_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
 
@@ -86,43 +86,61 @@ CREATE TABLE IF NOT EXISTS events
     photos    VARCHAR(64)[]                        DEFAULT NULL
 );
 
-CREATE TABLE IF NOT EXISTS event_vote
-(
-    uid   INTEGER  NOT NULL REFERENCES profile (uid),
-    eid   INTEGER  NOT NULL REFERENCES events (eid),
-    value SMALLINT NOT NULL DEFAULT 0,
-    bid   INTEGER           DEFAULT NULL
-);
-
 CREATE TABLE IF NOT EXISTS subscribe
 (
-    uid      INTEGER  NOT NULL REFERENCES profile (uid),
-    table_id INTEGER  NOT NULL REFERENCES timetable (table_id),
-    value    SMALLINT NOT NULL DEFAULT 0
+    uid      INTEGER NOT NULL REFERENCES profile (uid),
+    table_id INTEGER NOT NULL REFERENCES timetable (table_id)
+);
+
+CREATE TABLE IF NOT EXISTS event_vote
+(
+    uid       INTEGER  NOT NULL REFERENCES profile (uid),
+    eid       INTEGER  NOT NULL REFERENCES events (eid),
+    is_edited BOOLEAN  NOT NULL DEFAULT FALSE,
+    value     SMALLINT NOT NULL DEFAULT 0,
+    chat_id   INTEGER           DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS user_vote
 (
-    author_id INTEGER  NOT NULL REFERENCES profile (uid),
-    eid       INTEGER  NOT NULL REFERENCES events (eid),
-    user_id   INTEGER  NOT NULL REFERENCES profile (uid),
-    is_edited BOOLEAN  NOT NULL DEFAULT FALSE,
-    value     SMALLINT NOT NULL DEFAULT 0
+    uid     INTEGER  NOT NULL REFERENCES profile (uid),
+    user_id INTEGER  NOT NULL REFERENCES profile (uid),
+    value   SMALLINT NOT NULL DEFAULT 0,
+    chat_id INTEGER           DEFAULT NULL
 );
 
-CREATE TABLE IF NOT EXISTS band
+--------------------------------------------------------
+-------------------- CHAT PART -------------------------
+--------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS chat_user
 (
-    bid SERIAL PRIMARY KEY,
-    eid INTEGER REFERENCES events (eid)
+--     chat_id       INTEGER NOT NULL,
+    chat_id    SERIAL PRIMARY KEY,
+    admin_id   INTEGER REFERENCES profile (uid),
+    date       TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    user_count INTEGER                              DEFAULT 1,
+    title      VARCHAR(128)                NOT NULL CHECK ( title <> '' ),
+    eid        INTEGER REFERENCES events (eid)
 );
+
+CREATE TABLE IF NOT EXISTS user_chat
+(
+    user_local_id SERIAL PRIMARY KEY,
+    chat_local_id INTEGER REFERENCES chat_user (chat_id),
+    uid           INTEGER REFERENCES profile (uid), -- user id
+    date          TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+);
+
 
 CREATE TABLE IF NOT EXISTS message
 (
-    mid     BIGSERIAL PRIMARY KEY,
-    uid     INTEGER REFERENCES profile (uid),
-    bid     INTEGER REFERENCES band (bid),
-    message TEXT,
-    created TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+    mid           BIGSERIAL PRIMARY KEY,
+    uid           INTEGER REFERENCES profile (uid),
+    chat_id       INTEGER REFERENCES chat_user (chat_id),
+    user_local_id INTEGER REFERENCES user_chat (user_local_id),
+    message       TEXT,
+    created       TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
 
 CREATE OR REPLACE PROCEDURE add_location(uid INT, latitude FLOAT, longitude FLOAT)
