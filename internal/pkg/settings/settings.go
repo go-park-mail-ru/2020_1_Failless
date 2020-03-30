@@ -2,6 +2,7 @@ package settings
 
 import (
 	"net/http"
+	"time"
 )
 
 type HandlerFunc func(http.ResponseWriter, *http.Request, map[string]string)
@@ -18,6 +19,9 @@ type GlobalSecure struct {
 	CORSMethods  string
 	CORSMap      map[string]struct{}
 	AllowedHosts map[string]struct{}
+	EnableCSRF   bool
+	CSRFTokenLen int
+	CSRFTokenTTL time.Duration
 }
 
 type GlobalConfig struct {
