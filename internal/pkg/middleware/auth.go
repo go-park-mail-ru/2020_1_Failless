@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"failless/internal/pkg/forms"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/settings"
 	"github.com/dgrijalva/jwt-go"
@@ -14,13 +13,20 @@ import (
 type authError struct {
 
 	// Error message
-	msg  string
+	msg string
 
 	// 1 - cookie not found
 	// 2 - parse error
 	// 3 - signature invalid
 	// 4 - token invalid
 	code int
+}
+
+type UserClaims struct {
+	Uid   int
+	Phone string
+	Email string
+	Name  string
 }
 
 type UserKey string
@@ -69,7 +75,7 @@ func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 					errMsg.code = 5
 					errMsg.msg = "Token invalid"
 				} else { // success. user is authorized
-					form := forms.SignForm{
+					form := UserClaims{
 						Uid:   claims.Uid,
 						Phone: claims.Phone,
 						Email: claims.Email,

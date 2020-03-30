@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"failless/internal/pkg/event/usecase"
 	"failless/internal/pkg/forms"
-	"failless/internal/pkg/middleware"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
+	"failless/internal/pkg/security"
 	"log"
 	"net/http"
 )
@@ -25,11 +25,15 @@ func FeedEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 }
 
 func CreateNewEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	data := r.Context().Value(middleware.CtxUserKey)
-	if data == nil {
-		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
 		return
 	}
+	//data := r.Context().Value(middleware.CtxUserKey)
+	//if data == nil {
+	//	network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
+	//	return
+	//}
 
 	r.Header.Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(r.Body)
@@ -41,11 +45,11 @@ func CreateNewEvent(w http.ResponseWriter, r *http.Request, _ map[string]string)
 		return
 	}
 
-	cred := data.(forms.SignForm)
-	if cred.Uid != form.UId {
-		log.Println("form uid is not equal to uid from token")
-		form.UId = cred.Uid
-	}
+	//cred := data.(forms.SignForm)
+	//if cred.Uid != form.UId {
+	//	log.Println("form uid is not equal to uid from token")
+	//	form.UId = cred.Uid
+	//}
 
 	uc := usecase.GetUseCase()
 	event, err := uc.CreateEvent(form)

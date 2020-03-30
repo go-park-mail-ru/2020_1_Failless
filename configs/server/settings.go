@@ -117,12 +117,12 @@ func GetConfig() *settings.ServerSettings {
 			CORSMethods: "",
 			CORSMap:     map[string]struct{}{},
 			AllowedHosts: map[string]struct{}{
-				"http://localhost":           {},
-				"http://localhost:8080":      {},
-				"http://localhost:3000":      {},
-				"http://127.0.0.1":           {},
-				"http://127.0.0.1:8080":      {},
-				"http://127.0.0.1:3000":      {},
+				"delivery://localhost":           {},
+				"delivery://localhost:8080":      {},
+				"delivery://localhost:3000":      {},
+				"delivery://127.0.0.1":           {},
+				"delivery://127.0.0.1:8080":      {},
+				"delivery://127.0.0.1:3000":      {},
 				"https://eventum.rowbot.dev": {},
 			},
 		}
