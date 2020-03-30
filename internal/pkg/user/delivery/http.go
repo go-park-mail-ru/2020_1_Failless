@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/images"
-	"failless/internal/pkg/middleware"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
@@ -122,7 +121,7 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 ////////////// user part //////////////////
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	data := r.Context().Value(middleware.CtxUserKey)
+	data := r.Context().Value(security.CtxUserKey)
 	if data == nil {
 		log.Println("data wasn't found")
 		network.GenErrorCode(w, r, "User is not authorised", http.StatusUnauthorized)
@@ -187,7 +186,7 @@ func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 ////////////// registration part //////////////////
 
 func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	data := r.Context().Value(middleware.CtxUserKey)
+	data := r.Context().Value(security.CtxUserKey)
 	if data != nil {
 		network.Jsonify(w, data, http.StatusNotModified)
 		return

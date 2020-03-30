@@ -2,13 +2,24 @@ package security
 
 import (
 	"crypto/rand"
-	"failless/internal/pkg/middleware"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/settings"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"time"
 )
+
+type UserClaims struct {
+	Uid   int
+	Phone string
+	Email string
+	Name  string
+}
+
+type UserKey string
+
+// Context variable for pushing credentials through middleware to handlers
+const CtxUserKey UserKey = "auth"
 
 func ComparePasswords(hash []byte, p string) bool {
 	err := bcrypt.CompareHashAndPassword(hash, []byte(p))
@@ -20,13 +31,13 @@ func EncryptPassword(password string) ([]byte, error) {
 }
 
 func CheckCredentials(w http.ResponseWriter, r *http.Request) int {
-	data := r.Context().Value(middleware.CtxUserKey)
+	data := r.Context().Value(CtxUserKey)
 	if data == nil {
 		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
 		return -1
 	}
 
-	cred := data.(middleware.UserClaims)
+	cred := data.(UserClaims)
 	if cred.Uid < 0 {
 		network.GenErrorCode(w, r, "token uid is incorrect", http.StatusBadRequest)
 		return -1
