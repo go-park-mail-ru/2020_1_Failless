@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS profile
 CREATE TABLE IF NOT EXISTS tag
 (
     tag_id SERIAL PRIMARY KEY,
-    name   VARCHAR(32) UNIQUE NOT NULL CHECK ( name <> '' )
+    name   VARCHAR(64) UNIQUE NOT NULL CHECK ( name <> '' )
 );
 
 CREATE TABLE IF NOT EXISTS user_tag
@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS profile_info
     location   GEOGRAPHY                            DEFAULT NULL, -- ST_POINT(latitude, longitude)
     birthday   DATE                                 DEFAULT NULL,
     gender     SEX_T,
+    social    VARCHAR(144)[]                       DEFAULT NULL,
     login_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
 
@@ -66,7 +67,6 @@ CREATE TABLE IF NOT EXISTS timetable
     is_edited BOOLEAN                              DEFAULT FALSE,
     sponsor   CITEXT                               DEFAULT NULL,
     photos    VARCHAR(64)[]                        DEFAULT NULL,
-    social    VARCHAR(144)[]                       DEFAULT NULL,
     etype     ETYPE_T
 );
 

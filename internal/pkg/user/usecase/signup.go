@@ -7,6 +7,7 @@ import (
 )
 
 func (uc *userUseCase) RegisterNewUser(user *forms.SignForm) error {
+	// TODO: move it to repository
 	bPass, err := security.EncryptPassword(user.Password)
 	if err != nil {
 		return err
