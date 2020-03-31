@@ -29,11 +29,6 @@ func CreateNewEvent(w http.ResponseWriter, r *http.Request, _ map[string]string)
 	if uid < 0 {
 		return
 	}
-	//data := r.Context().Value(middleware.CtxUserKey)
-	//if data == nil {
-	//	network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
-	//	return
-	//}
 
 	r.Header.Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(r.Body)
@@ -44,12 +39,6 @@ func CreateNewEvent(w http.ResponseWriter, r *http.Request, _ map[string]string)
 		network.GenErrorCode(w, r, "incorrect data", http.StatusBadRequest)
 		return
 	}
-
-	//cred := data.(forms.SignForm)
-	//if cred.Uid != form.UId {
-	//	log.Println("form uid is not equal to uid from token")
-	//	form.UId = cred.Uid
-	//}
 
 	uc := usecase.GetUseCase()
 	event, err := uc.CreateEvent(form)
@@ -110,7 +99,7 @@ func GetEventsFeed(w http.ResponseWriter, r *http.Request, ps map[string]string)
 
 	var events []models.Event
 	uc := usecase.GetUseCase()
-	if code, err := uc.InitEventsByKeyWords(&events, searchRequest.Query, searchRequest.Page); err != nil {
+	if code, err := uc.InitEventsByUserPreferences(&events, &searchRequest); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}

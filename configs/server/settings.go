@@ -17,60 +17,79 @@ var routesMap = map[string][]settings.MapHandler{
 		Handler:      userDelivery.GetUserInfo,
 		CORS:         true,
 		AuthRequired: true,
+		CSRF:         false,
 	}},
 	"/api/logout": {{
 		Type:         "GET",
 		Handler:      userDelivery.Logout,
 		CORS:         true,
 		AuthRequired: true,
+		CSRF:         false,
 	}},
 	"/api/signin": {{
 		Type:         "POST",
 		Handler:      userDelivery.SignIn,
 		CORS:         true,
 		AuthRequired: false,
+		CSRF:         false,
 	}},
 	"/api/signup": {{
 		Type:         "POST",
 		Handler:      userDelivery.SignUp,
 		CORS:         true,
 		AuthRequired: false,
+		CSRF:         false,
 	}},
-	"/api/events/feed": {{
-		Type:         "GET",
-		Handler:      eventDelivery.FeedEvents,
-		CORS:         true,
-		AuthRequired: false,
-	}},
+	"/api/events/feed": {
+		{
+			Type:         "GET",
+			Handler:      eventDelivery.FeedEvents,
+			CORS:         true,
+			AuthRequired: false,
+			CSRF:         false,
+		},
+		{
+			Type:         "POST",
+			Handler:      eventDelivery.GetEventsFeed,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         false,
+		},
+	},
 	"/api/event/new": {{
 		Type:         "POST",
 		Handler:      eventDelivery.CreateNewEvent,
 		CORS:         true,
 		AuthRequired: true,
+		CSRF:         true,
 	}},
 	"/api/search/events": {{
 		Type:         "POST",
 		Handler:      eventDelivery.GetEventsByKeyWords,
 		CORS:         true,
 		AuthRequired: false,
+		CSRF:         false,
 	}},
 	"/api/tags/feed": {{
 		Type:         "GET",
 		Handler:      tagDelivery.FeedTags,
 		CORS:         true,
 		AuthRequired: false,
+		CSRF:         false,
 	}},
 	"/api/profile/:id/upload": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UploadNewImage,
 		CORS:         true,
 		AuthRequired: true,
+		CSRF:         true,
 	}},
 	"/api/profile/:id/meta": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UpdUserMetaData,
 		CORS:         true,
 		AuthRequired: true,
+		CSRF:         true,
 	}},
 	"/api/profile/:id": {
 		{
@@ -78,12 +97,14 @@ var routesMap = map[string][]settings.MapHandler{
 			Handler:      userDelivery.UpdProfilePage,
 			CORS:         true,
 			AuthRequired: true,
+			CSRF:         true,
 		},
 		{
 			Type:         "GET",
 			Handler:      userDelivery.GetProfilePage,
 			CORS:         true,
 			AuthRequired: false,
+			CSRF:         false,
 		}},
 	"/api": {{
 		Type:         "OPTIONS",
@@ -117,14 +138,19 @@ func GetConfig() *settings.ServerSettings {
 			CORSMethods: "",
 			CORSMap:     map[string]struct{}{},
 			AllowedHosts: map[string]struct{}{
-				"delivery://localhost":           {},
-				"delivery://localhost:8080":      {},
-				"delivery://localhost:3000":      {},
-				"delivery://127.0.0.1":           {},
-				"delivery://127.0.0.1:8080":      {},
-				"delivery://127.0.0.1:3000":      {},
+				"http://localhost":           {},
+				"http://localhost:8080":      {},
+				"http://localhost:3000":      {},
+				"http://127.0.0.1":           {},
+				"http://127.0.0.1:8080":      {},
+				"http://127.0.0.1:3000":      {},
 				"https://eventum.rowbot.dev": {},
 			},
+			// referring to https://security.stackexchange.com/questions/6957/length-of-csrf-token
+			// it's correct length of CSRF token for Base64 (in bytes)
+			CSRFTokenLen: 20,
+			CSRFTokenTTL: 1, // one day, but I am not sure about that
+			EnableCSRF:   true,
 		}
 		settings.UseCaseConf = settings.GlobalConfig{
 			PageLimit: 10,

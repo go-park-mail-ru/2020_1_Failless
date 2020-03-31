@@ -10,14 +10,13 @@ import (
 
 func SetCSRF(next settings.HandlerFunc) settings.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+		log.Println("SET CSRF TOKEN", r.Method)
 
-		// for debug
 		if !settings.SecureSettings.EnableCSRF {
 			next(w, r, ps)
 			return
 		}
 
-		// if it's not - set the token, if not already set
 		cookie, err := r.Cookie("csrf")
 		if err != nil || cookie.Value == "" {
 			err = security.NewCSRFToken(w)
@@ -30,9 +29,15 @@ func SetCSRF(next settings.HandlerFunc) settings.HandlerFunc {
 	}
 }
 
+// TODO: add to header CSRF-token when create request for up vote and down vote and all post|put|delete requests
+// login | register pages not needed in csrf token
+// and if we tape reload in the browser our SPA have to still work fine
+// we get token without session, using separate method for this (get token and after this go to handler)
+// we may save token to local storage in browser but not into page memory
 func CheckCSRF(next settings.HandlerFunc) settings.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-		// for debug
+		log.Println("CHECK CSRF TOKEN", r.Method)
+
 		if !settings.SecureSettings.EnableCSRF {
 			next(w, r, ps)
 			return
@@ -42,7 +47,7 @@ func CheckCSRF(next settings.HandlerFunc) settings.HandlerFunc {
 		headerToken := r.Header.Get("X-CSRF-Token")
 		if err != nil || headerToken != cookieToken.Value {
 			log.Println("CSRF Validation Failed")
-			network.GenErrorCode(w, r, "CSRF validation faild", http.StatusForbidden)
+			network.GenErrorCode(w, r, "CSRF validation failed", http.StatusForbidden)
 			return
 		}
 		next(w, r, ps)

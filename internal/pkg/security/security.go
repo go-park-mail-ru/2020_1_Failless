@@ -21,15 +21,24 @@ type UserKey string
 // Context variable for pushing credentials through middleware to handlers
 const CtxUserKey UserKey = "auth"
 
+// Compare password from database in bytes format and password
+// which was gotten from cookie
 func ComparePasswords(hash []byte, p string) bool {
 	err := bcrypt.CompareHashAndPassword(hash, []byte(p))
 	return err == nil
 }
 
+// Generate bcrypt hash with default cost from input string
+// Returns bytes array
+// TODO: check is default cost ok
 func EncryptPassword(password string) ([]byte, error) {
 	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }
 
+// CheckCredentials gets from context structure with credentials
+// (see UserClaims above) and check is Uid from this structure valid
+// if it is valid, than function returns it, else function send to
+// the client message with description of error and status code
 func CheckCredentials(w http.ResponseWriter, r *http.Request) int {
 	data := r.Context().Value(CtxUserKey)
 	if data == nil {
@@ -63,12 +72,8 @@ func CompareUidsFromURLAndToken(w http.ResponseWriter, r *http.Request, ps map[s
 	return uid
 }
 
-// TODO: add to header CSRF-token when create request for up vote and down vote and all post|put|delete requests
-// login | register pages not needed in csrf token
-// and if we tape reload in the browser our SPA have to still work fine
-// we get token without session, using separate method for this (get token and after this go to handler)
-// we may save token to local storage in browser but not into page memory
-
+// Simple function that generate random sequence of bytes for
+// different aims such as security, fun, fake data
 func GenerateRandomBytes(length int) ([]byte, error) {
 	bytes := make([]byte, length)
 	_, err := rand.Read(bytes)
@@ -95,12 +100,15 @@ func generateCSRFToken(length int) (string, error) {
 	return string(bytes), nil
 }
 
+// NewCSRFToken set to http.ResponseWriter cookie "csrf" which contains
+// just generated csrf-token using generateCSRFToken function. NewCSRFToken
+// use constant CSRFTokenLen from settings structure SecureSettings which
+// are set in the configs/server/settings.go
 func NewCSRFToken(w http.ResponseWriter) error {
 	token, err := generateCSRFToken(settings.SecureSettings.CSRFTokenLen)
 	if err != nil {
 		return err
 	}
-
 	http.SetCookie(w, &http.Cookie{
 		Name:     "csrf",
 		Value:    token,
