@@ -6,6 +6,7 @@ import (
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
 	"failless/internal/pkg/vote/usecase"
+	"log"
 	"net/http"
 )
 
@@ -16,6 +17,7 @@ func VoteUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 }
 
 func VoteEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	log.Println("vote for event")
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return
@@ -36,11 +38,7 @@ func VoteEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 	uc := usecase.GetUseCase()
 	message := uc.VoteEvent(vote)
-	if message.Status != http.StatusOK {
-		network.Jsonify(w, message, message.Status)
-		return
-	}
-
+	network.Jsonify(w, message, message.Status)
 }
 
 func FollowEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {

@@ -20,6 +20,7 @@ func GetUseCase() vote.UseCase {
 }
 
 func (vc *voteUseCase) VoteEvent(vote models.Vote) network.Message {
+	// TODO: add check is vote already be here
 	vote.Value = vc.ValidateValue(vote.Value)
 	err := vc.rep.AddEventVote(vote.Uid, vote.Id, vote.Value)
 	// i think that there could be an error in one case - invalid event id

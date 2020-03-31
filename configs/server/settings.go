@@ -87,7 +87,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/api/event/:id/follow": {{
 		Type:         "POST",
-		Handler:      voteDelivery.VoteEvent,
+		Handler:      voteDelivery.FollowEvent,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
@@ -181,7 +181,7 @@ func GetConfig() *settings.ServerSettings {
 			// it's correct length of CSRF token for Base64 (in bytes)
 			CSRFTokenLen: 20,
 			CSRFTokenTTL: 1, // one day, but I am not sure about that
-			EnableCSRF:   true,
+			EnableCSRF:   false,
 		}
 		settings.UseCaseConf = settings.GlobalConfig{
 			PageLimit: 10,

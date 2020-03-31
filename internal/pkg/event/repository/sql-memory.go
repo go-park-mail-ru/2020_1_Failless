@@ -204,7 +204,7 @@ func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page in
 		return nil, errors.New("Page number can't be less than 1\n")
 	}
 
-	sqlCondition := ` WHERE e.edate >= current_timestamp AND e.title_tsv @@ phraseto_tsquery('russian', $1 )
+	sqlCondition := ` WHERE e.edate >= current_timestamp AND e.title_tsv @@ phraseto_tsquery( $1 )
 							ORDER BY e.edate ASC LIMIT $2 OFFSET $3 ;`
 
 	var generator queryGenerator
