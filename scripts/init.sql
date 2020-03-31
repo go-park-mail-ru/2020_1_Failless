@@ -94,19 +94,21 @@ CREATE TABLE IF NOT EXISTS subscribe
 
 CREATE TABLE IF NOT EXISTS event_vote
 (
-    uid       INTEGER  NOT NULL REFERENCES profile (uid),
-    eid       INTEGER  NOT NULL REFERENCES events (eid),
-    is_edited BOOLEAN  NOT NULL DEFAULT FALSE,
-    value     SMALLINT NOT NULL DEFAULT 0,
-    chat_id   INTEGER           DEFAULT NULL
+    uid       INTEGER                     NOT NULL REFERENCES profile (uid),
+    eid       INTEGER                     NOT NULL REFERENCES events (eid),
+    is_edited BOOLEAN                     NOT NULL DEFAULT FALSE,
+    value     SMALLINT                    NOT NULL DEFAULT 0,
+    vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    chat_id   INTEGER                              DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS user_vote
 (
-    uid     INTEGER  NOT NULL REFERENCES profile (uid),
-    user_id INTEGER  NOT NULL REFERENCES profile (uid),
-    value   SMALLINT NOT NULL DEFAULT 0,
-    chat_id INTEGER           DEFAULT NULL
+    uid       INTEGER                     NOT NULL REFERENCES profile (uid),
+    user_id   INTEGER                     NOT NULL REFERENCES profile (uid),
+    value     SMALLINT                    NOT NULL DEFAULT 0,
+    vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    chat_id   INTEGER                              DEFAULT NULL
 );
 
 --------------------------------------------------------

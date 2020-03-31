@@ -185,7 +185,7 @@ func (er *sqlEventsRepository) GetAllEvents() ([]models.Event, error) {
 	return er.getEvents("", sqlCondition)
 }
 
-// Getting feed events. For now feed mean that this events ordered by date
+// Getting vote events. For now vote mean that this events ordered by date
 // Thus it's closest events
 func (er *sqlEventsRepository) GetFeedEvents(limit int, page int) ([]models.Event, error) {
 	if page < 1 || limit < 1 {
@@ -193,7 +193,7 @@ func (er *sqlEventsRepository) GetFeedEvents(limit int, page int) ([]models.Even
 	}
 
 	sqlCondition := ` WHERE e.edate >= current_timestamp ORDER BY e.edate ASC LIMIT $1 OFFSET $2 ;`
-	// TODO: add cool feed algorithm (aka select)
+	// TODO: add cool vote algorithm (aka select)
 	return er.getEvents("", sqlCondition, limit, page)
 }
 

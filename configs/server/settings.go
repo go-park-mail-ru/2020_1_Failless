@@ -9,6 +9,7 @@ import (
 	eventDelivery "failless/internal/pkg/event/delivery"
 	tagDelivery "failless/internal/pkg/tag/delivery"
 	userDelivery "failless/internal/pkg/user/delivery"
+	voteDelivery "failless/internal/pkg/vote/delivery"
 )
 
 var routesMap = map[string][]settings.MapHandler{
@@ -56,6 +57,13 @@ var routesMap = map[string][]settings.MapHandler{
 			CSRF:         false,
 		},
 	},
+	"/api/events/search": {{
+		Type:         "POST",
+		Handler:      eventDelivery.GetEventsByKeyWords,
+		CORS:         true,
+		AuthRequired: false,
+		CSRF:         false,
+	}},
 	"/api/event/new": {{
 		Type:         "POST",
 		Handler:      eventDelivery.CreateNewEvent,
@@ -63,12 +71,26 @@ var routesMap = map[string][]settings.MapHandler{
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/search/events": {{
+	"/api/event/:id/like": {{
 		Type:         "POST",
-		Handler:      eventDelivery.GetEventsByKeyWords,
+		Handler:      voteDelivery.VoteEvent,
 		CORS:         true,
-		AuthRequired: false,
-		CSRF:         false,
+		AuthRequired: true,
+		CSRF:         true,
+	}},
+	"/api/event/:id/dislike": {{
+		Type:         "POST",
+		Handler:      voteDelivery.VoteEvent,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+	}},
+	"/api/event/:id/follow": {{
+		Type:         "POST",
+		Handler:      voteDelivery.VoteEvent,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
 	}},
 	"/api/tags/feed": {{
 		Type:         "GET",
@@ -105,12 +127,21 @@ var routesMap = map[string][]settings.MapHandler{
 			CORS:         true,
 			AuthRequired: false,
 			CSRF:         false,
-		}},
+		},
+	},
+	"/api/user/:action": {{
+		Type:         "POST",
+		Handler:      voteDelivery.VoteUser,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+	}},
 	"/api": {{
 		Type:         "OPTIONS",
 		Handler:      router.OptionsReq,
 		CORS:         true,
 		AuthRequired: false,
+		CSRF:         false,
 	}},
 }
 

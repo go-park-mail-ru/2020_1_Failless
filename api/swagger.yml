@@ -106,7 +106,7 @@ paths:
   /api/tags/feed:
     get:
       summary: getting all tags
-      description: feed of all tags
+      description: vote of all tags
       responses:
         '200':
           description: successful operation

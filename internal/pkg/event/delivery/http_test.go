@@ -14,7 +14,7 @@ type TestCaseEvents struct {
 func TestFeedEvents(t *testing.T) {
 	cases := []TestCaseEvents{
 		TestCaseEvents{
-			Response:   `{"status": 200, "resp": {"feed": "data"}}`,
+			Response:   `{"status": 200, "resp": {"vote": "data"}}`,
 			StatusCode: http.StatusOK,
 		},
 	}

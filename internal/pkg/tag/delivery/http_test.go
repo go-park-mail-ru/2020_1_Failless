@@ -14,7 +14,7 @@ type TestCaseTags struct {
 func TestFeedTags(t *testing.T) {
 	cases := []TestCaseTags{
 		TestCaseTags{
-			Response:   `{"status": 200, "resp": {"feed": "data"}}`,
+			Response:   `{"status": 200, "resp": {"vote": "data"}}`,
 			StatusCode: http.StatusOK,
 		},
 	}
