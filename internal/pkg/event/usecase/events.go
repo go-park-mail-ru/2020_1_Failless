@@ -63,6 +63,11 @@ func (uc *userUseCase) InitEventsByUserPreferences(events *[]models.Event, reque
 		return http.StatusInternalServerError, err
 	}
 
+	for i := 0; i < len(*events); i++ {
+		(*events)[i].Tag = dbTags[(*events)[i].Type-1]
+		log.Println(dbTags[(*events)[i].Type - 1])
+	}
+
 	log.Println(events)
 	return http.StatusOK, nil
 }

@@ -10,10 +10,10 @@ import (
 )
 
 type UserClaims struct {
-	Uid   int
-	Phone string
-	Email string
-	Name  string
+	Uid   int    `json:"uid"`
+	Phone string `json:"phone"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
 }
 
 type UserKey string

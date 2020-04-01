@@ -16,6 +16,7 @@ type Event struct {
 	Limit    int       `json:"limit, omitempty"`
 	Photos   []string  `json:"photos, omitempty"`
 	Public   bool      `json:"public, omitempty"`
+	Tag      Tag       `json:"tag, omitempty"`
 }
 
 type EventRequest struct {

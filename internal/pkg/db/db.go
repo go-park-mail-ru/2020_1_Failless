@@ -9,7 +9,7 @@ import (
 
 var (
 	// TODO: add it as environment variable
-	host     = "localhost"
+	host     = "eventumdb"
 	port     = uint16(5432)
 	user     = os.Getenv("POSTGRES_USER")
 	password = os.Getenv("POSTGRES_PASSWORD")

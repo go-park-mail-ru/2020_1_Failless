@@ -218,7 +218,7 @@ func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page in
 }
 
 func (er *sqlEventsRepository) GetValidTags() ([]models.Tag, error) {
-	sqlStatement := `SELECT tag_id, name FROM tag;`
+	sqlStatement := `SELECT tag_id, name FROM tag ORDER BY tag_id;`
 	rows, err := er.db.Query(sqlStatement)
 	if err != nil {
 		return nil, err
