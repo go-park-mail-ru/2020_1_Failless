@@ -22,6 +22,8 @@ func Start() {
 		ReadTimeout:       time.Second * 10,
 		WriteTimeout:      time.Second * 30,
 		ReadHeaderTimeout: time.Second * 30,
+		IdleTimeout:       time.Second * 120,
+		MaxHeaderBytes:    http.DefaultMaxHeaderBytes, // TODO: ask what is the best value
 	}
 
 	log.Println("server is running on " + strconv.Itoa(serverSettings.Port))
