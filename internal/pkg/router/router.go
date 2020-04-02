@@ -19,13 +19,23 @@ func InitRouter(s *settings.ServerSettings, router *httptreemux.TreeMux) {
 	for key, list := range s.Routes {
 		for _, pack := range list {
 			handler := pack.Handler
+			if pack.Type != "OPTIONS" {
+				handler = middleware.SetCSRF(handler)
+				// TODO: check is csrf token work
+				if pack.CSRF {
+					handler = middleware.CheckCSRF(handler)
+				}
+			}
+
 			if pack.CORS {
 				s.Secure.CORSMap[pack.Type] = struct{}{}
 				handler = middleware.CORS(handler)
 			}
+
 			if pack.AuthRequired {
 				handler = middleware.Auth(handler)
 			}
+
 			switch pack.Type {
 			case "GET":
 				(*router).GET(key, httptreemux.HandlerFunc(handler))

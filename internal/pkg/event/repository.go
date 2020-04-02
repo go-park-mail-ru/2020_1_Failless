@@ -8,4 +8,6 @@ type Repository interface {
 	GetNameByID(uid int) (string, error)
 	GetFeedEvents(limit int, page int) ([]models.Event, error)
 	GetEventsByKeyWord(keyWords string, page int) ([]models.Event, error)
+	GetValidTags() ([]models.Tag, error)
+	GetNewEventsByTags(tags []int, uid int, limit int, page int) ([]models.Event, error)
 }

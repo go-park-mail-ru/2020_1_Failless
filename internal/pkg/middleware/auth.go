@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"context"
-	"failless/internal/pkg/forms"
 	"failless/internal/pkg/network"
+	"failless/internal/pkg/security"
 	"failless/internal/pkg/settings"
 	"github.com/dgrijalva/jwt-go"
 	"log"
@@ -14,7 +14,7 @@ import (
 type authError struct {
 
 	// Error message
-	msg  string
+	msg string
 
 	// 1 - cookie not found
 	// 2 - parse error
@@ -23,10 +23,17 @@ type authError struct {
 	code int
 }
 
-type UserKey string
+//type UserClaims struct {
+//	Uid   int
+//	Phone string
+//	Email string
+//	Name  string
+//}
 
-// Context variable for pushing credentials through middleware to handlers
-const CtxUserKey UserKey = "auth"
+//type UserKey string
+//
+//// Context variable for pushing credentials through middleware to handlers
+//const CtxUserKey UserKey = "auth"
 
 // Auth middleware checks is user authorized
 // If user is not authorized it write failed checker to the authError structure
@@ -38,7 +45,7 @@ func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 
 		// error - no cookie was found
 		if err != nil {
-			ctx = context.WithValue(ctx, CtxUserKey, nil)
+			ctx = context.WithValue(ctx, security.CtxUserKey, nil)
 			errMsg.code = 1
 			errMsg.msg = err.Error()
 			log.Print(err.Error())
@@ -54,7 +61,7 @@ func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 			if err != nil {
 				if err == jwt.ErrSignatureInvalid {
 					errMsg.code = 3
-					ctx = context.WithValue(ctx, CtxUserKey, nil)
+					ctx = context.WithValue(ctx, security.CtxUserKey, nil)
 					w.WriteHeader(http.StatusUnauthorized)
 				} else {
 					errMsg.code = 5
@@ -69,13 +76,13 @@ func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 					errMsg.code = 5
 					errMsg.msg = "Token invalid"
 				} else { // success. user is authorized
-					form := forms.SignForm{
+					form := security.UserClaims{
 						Uid:   claims.Uid,
 						Phone: claims.Phone,
 						Email: claims.Email,
 						Name:  claims.Name,
 					}
-					ctx = context.WithValue(ctx, CtxUserKey, form)
+					ctx = context.WithValue(ctx, security.CtxUserKey, form)
 				}
 			}
 		}
