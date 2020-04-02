@@ -187,14 +187,15 @@ func (er *sqlEventsRepository) GetAllEvents() ([]models.Event, error) {
 
 // Getting vote events. For now vote mean that this events ordered by date
 // Thus it's closest events
-func (er *sqlEventsRepository) GetFeedEvents(limit int, page int) ([]models.Event, error) {
+func (er *sqlEventsRepository) GetFeedEvents(uid int, limit int, page int) ([]models.Event, error) {
 	if page < 1 || limit < 1 {
 		return nil, errors.New("Page number can't be less than 1\n")
 	}
-
-	sqlCondition := ` WHERE e.edate >= current_timestamp ORDER BY e.edate ASC LIMIT $1 OFFSET $2 ;`
+	withCondition := `WITH voted_events AS ( SELECT eid FROM event_vote WHERE uid = $1 ) `
+	sqlCondition := ` LEFT JOIN voted_events AS v ON e.eid = v.eid WHERE v.eid IS NULL AND 
+						e.edate >= current_timestamp ORDER BY e.edate ASC LIMIT $2 OFFSET $3 ;`
 	// TODO: add cool vote algorithm (aka select)
-	return er.getEvents("", sqlCondition, limit, page)
+	return er.getEvents(withCondition, sqlCondition, uid, limit, page)
 }
 
 func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page int) ([]models.Event, error) {

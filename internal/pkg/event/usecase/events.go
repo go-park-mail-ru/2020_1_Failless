@@ -53,10 +53,11 @@ func (uc *userUseCase) InitEventsByUserPreferences(events *[]models.Event, reque
 	}
 
 	valid := uc.TakeValidTagsOnly(request.Tags, dbTags)
+	log.Println(request)
 	if valid != nil {
 		*events, err = uc.rep.GetNewEventsByTags(valid, request.Uid, request.Limit, request.Page)
 	} else {
-		*events, err = uc.rep.GetFeedEvents(request.Limit, request.Page)
+		*events, err = uc.rep.GetFeedEvents(request.Uid, request.Limit, request.Page)
 	}
 
 	if err != nil {
