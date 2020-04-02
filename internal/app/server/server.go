@@ -17,10 +17,13 @@ func Start() {
 	}
 	serverSettings := server.GetConfig()
 	serve := http.Server{
-		Addr:         serverSettings.Ip + ":" + strconv.Itoa(serverSettings.Port),
-		Handler:      serverSettings.GetRouter(),
-		ReadTimeout:  time.Second * 10,
-		WriteTimeout: time.Second * 30,
+		Addr:              serverSettings.Ip + ":" + strconv.Itoa(serverSettings.Port),
+		Handler:           serverSettings.GetRouter(),
+		ReadTimeout:       time.Second * 10,
+		WriteTimeout:      time.Second * 30,
+		ReadHeaderTimeout: time.Second * 30,
+		IdleTimeout:       time.Second * 120,
+		MaxHeaderBytes:    http.DefaultMaxHeaderBytes, // TODO: ask what is the best value
 	}
 
 	log.Println("server is running on " + strconv.Itoa(serverSettings.Port))
