@@ -181,7 +181,7 @@ func GetConfig() *settings.ServerSettings {
 			// it's correct length of CSRF token for Base64 (in bytes)
 			CSRFTokenLen: 20,
 			CSRFTokenTTL: 1, // one day, but I am not sure about that
-			EnableCSRF:   false,
+			EnableCSRF:   true,
 		}
 		settings.UseCaseConf = settings.GlobalConfig{
 			PageLimit: 10,
