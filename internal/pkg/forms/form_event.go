@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	EventTypes       = 3 // small | middle | large
+	EventTypes       = 16 // small | middle | large
 	MiddleEventLimit = 15
 	TitleLenLimit    = 128
 	MessageLenLimit  = 512
