@@ -26,4 +26,8 @@ type EventRequest struct {
 	Query    string        `json:"query"`
 	Tags     []int         `json:"tag, omitempty"`
 	Location LocationPoint `json:"location, omitempty"`
+	MinAge   int 		   `json:"minage"`
+	MaxAge   int           `json:"maxage"`
+	Men      bool          `json:"men"`
+	Women    bool		   `json:"women"`
 }
