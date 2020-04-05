@@ -167,7 +167,7 @@ BEGIN
 END;
 $$;
 
-CREATE INDEX IF NOT EXISTS event_title_idx ON events USING GIN (title);
+CREATE INDEX IF NOT EXISTS event_title_idx ON events USING GIN (to_tsvector('russian', title));
 
 CREATE OR REPLACE FUNCTION make_tsvector()
     RETURNS TRIGGER AS
