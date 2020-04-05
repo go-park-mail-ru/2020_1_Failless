@@ -102,7 +102,7 @@ func (uc *userUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {
 	//inf.Birthday = form.Birthday
 	//inf.Gender = form.Gender
 
-	if err := uc.rep.UpdUserGeneral(form.Uid, inf, usr); err != nil {
+	if err := uc.rep.UpdUserGeneral(inf, usr); err != nil {
 		log.Println("bad")
 		log.Println(err.Error())
 		return http.StatusInternalServerError, err
