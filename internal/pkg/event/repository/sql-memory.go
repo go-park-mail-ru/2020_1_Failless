@@ -145,8 +145,8 @@ func (er *sqlEventsRepository) getEvents(withCondition string, sqlStatement stri
 }
 
 func (er *sqlEventsRepository) SaveNewEvent(event *models.Event) error {
-	sqlStatement := `INSERT INTO events (uid, title, message, author, etype, is_public, range)
-							VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING eid, edate;`
+	sqlStatement := `INSERT INTO events (uid, title, message, author, etype, is_public, range, edate)
+							VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING eid;`
 	err := er.db.QueryRow(sqlStatement,
 		event.AuthorId,
 		event.Title,
@@ -154,7 +154,8 @@ func (er *sqlEventsRepository) SaveNewEvent(event *models.Event) error {
 		event.Author,
 		event.Type,
 		event.Public,
-		event.Limit).Scan(&event.EId, &event.EDate)
+		event.Limit,
+		event.EDate).Scan(&event.EId)
 	if err != nil {
 		log.Println(err.Error())
 		return err
