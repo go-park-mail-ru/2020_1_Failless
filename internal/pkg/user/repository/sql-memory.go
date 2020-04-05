@@ -235,3 +235,28 @@ func (ur *sqlUserRepository) UpdateUserPhotos(uid int, name string) error {
 	}
 	return nil
 }
+
+func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.User) error {
+	if usr.Uid < 0 {
+		sqlStatement := `SELECT uid FROM profile WHERE LOWER(email) = LOWER($1) OR phone = $2;`
+		row := ur.db.QueryRow(sqlStatement, usr.Email, usr.Phone)
+		err := row.Scan(&usr.Uid)
+		if err == pgx.ErrNoRows {
+			return errors.New("User " + usr.Email + "doesn't exist")
+		} else if err != nil {
+			log.Println(err.Error())
+			return err
+		}
+	}
+
+	//gender := user.GenderById(info.Gender)
+
+	sqlStatement := `UPDATE profile_info SET email = $1, phone = $2, password = $3;`
+	_, err := ur.db.Exec(sqlStatement, usr.Email, usr.Phone, usr.Password)
+	if err != nil {
+		log.Println(sqlStatement, usr.Email, usr.Phone, usr.Password)
+		log.Println(err.Error())
+		return err
+	}
+	return nil
+}

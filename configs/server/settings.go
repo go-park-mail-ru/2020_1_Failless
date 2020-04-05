@@ -113,6 +113,13 @@ var routesMap = map[string][]settings.MapHandler{
 		AuthRequired: true,
 		CSRF:         true,
 	}},
+	"/api/profile/:id/general": {{
+		Type:         "PUT",
+		Handler:      userDelivery.UpdProfileGeneral,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+	}},
 	"/api/profile/:id": {
 		{
 			Type:         "PUT",

@@ -14,6 +14,30 @@ import (
 
 ////////////// profile part //////////////////
 
+func UpdProfileGeneral(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := security.CompareUidsFromURLAndToken(w, r, ps)
+	if uid < 0 {
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var form forms.SignForm
+	err := decoder.Decode(&form)
+	if err != nil {
+		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		return
+	}
+
+	form.Uid = uid
+	uc := usecase.GetUseCase()
+	if code, err := uc.UpdateUserBase(&form); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
+		return
+	}
+
+	network.Jsonify(w, form, http.StatusOK)
+}
+
 func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := security.CompareUidsFromURLAndToken(w, r, ps)
 	if uid < 0 {
