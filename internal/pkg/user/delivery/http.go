@@ -120,7 +120,7 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 
 ////////////// user part //////////////////
 
-func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func GetUserInfo(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	data := r.Context().Value(security.CtxUserKey)
 	if data == nil {
 		log.Println("data wasn't found")
@@ -163,9 +163,11 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	if security.ComparePasswords(user.Password, form.Password) {
 		err := network.CreateAuth(w, user)
 		if err != nil {
+			log.Println("cookie wasn't set")
 			network.GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
 			return
 		}
+		log.Println("cookie was set")
 	} else {
 		network.GenErrorCode(w, r, "Passwords is not equal", http.StatusUnauthorized)
 	}
