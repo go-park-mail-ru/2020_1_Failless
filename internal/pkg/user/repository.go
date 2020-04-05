@@ -13,7 +13,7 @@ type Repository interface {
 	UpdateUserRating(uid int, rating float32) error
 	UpdateUserPhotos(uid int, name string) error
 	SetUserLocation(uid int, point models.LocationPoint) error
-	UpdUserGeneral(uid int, info models.JsonInfo, user models.User) error
+	UpdUserGeneral(info models.JsonInfo, user models.User) error
 
 	// Deprecated: use UpdateUserTags, UpdateUserSimple,
 	// UpdateUserPhotos, UpdateUserRating instead
