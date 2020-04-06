@@ -251,7 +251,7 @@ func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.Use
 
 	//gender := user.GenderById(info.Gender)
 
-	sqlStatement := `UPDATE profile_info SET email = $1, phone = $2, password = $3;`
+	sqlStatement := `UPDATE profile SET email = $1, phone = $2, password = $3;`
 	_, err := ur.db.Exec(sqlStatement, usr.Email, usr.Phone, usr.Password)
 	if err != nil {
 		log.Println(sqlStatement, usr.Email, usr.Phone, usr.Password)
