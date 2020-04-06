@@ -29,6 +29,32 @@ type UserGeneral struct {
 	Gender   int       `json:"gender, omitempty"`
 }
 
+type DBUserGeneral struct {
+	Uid      *int       `json:"uid, omitempty"`
+	Name     *string    `json:"name, omitempty"`
+	Photos   []string   `json:"photos, omitempty"`
+	About    *string    `json:"about, omitempty"`
+	Birthday *time.Time `json:"birthday, omitempty"`
+	Gender   *int       `json:"gender, omitempty"`
+}
+
+func (ug *DBUserGeneral) GetUserGeneral() UserGeneral {
+	user := UserGeneral{}
+	user.Uid = *ug.Uid
+	user.Name = *ug.Name
+	if ug.Gender != nil {
+		user.Gender = *ug.Gender
+	}
+	if ug.Birthday != nil {
+		user.Birthday = *ug.Birthday
+	}
+	if ug.Photos != nil {
+		user.Photos = ug.Photos
+	}
+
+	return user
+}
+
 // Struct describes location point of user
 type LocationPoint struct {
 	Latitude  float64 `json:"lat"`

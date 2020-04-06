@@ -45,7 +45,7 @@ func FollowEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 }
 
 func EventFollowers(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	log.Println("vote for event")
+	log.Println("follow for event")
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return

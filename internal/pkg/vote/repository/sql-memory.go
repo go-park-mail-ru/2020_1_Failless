@@ -6,6 +6,7 @@ import (
 	"failless/internal/pkg/vote"
 	"github.com/jackc/pgx"
 	"log"
+	"time"
 )
 
 type sqlVoteRepository struct {
@@ -38,6 +39,7 @@ func (vr *sqlVoteRepository) FindFollowers(eid int) ([]models.UserGeneral, error
 		log.Println("event has not got any followers")
 		return nil, nil
 	} else if err != nil || rows == nil {
+		log.Println(err.Error())
 		return nil, err
 	}
 
@@ -45,18 +47,26 @@ func (vr *sqlVoteRepository) FindFollowers(eid int) ([]models.UserGeneral, error
 	for rows.Next() {
 		profile := models.UserGeneral{}
 		gender := ""
+		genderPtr := &gender
+		bday := time.Time{}
+		bdayPtr := &bday
 		err = rows.Scan(
 			&profile.Uid,
 			&profile.Name,
 			&profile.About,
-			&gender,
-			&profile.Birthday,
+			&genderPtr,
+			&bdayPtr,
 			&profile.Photos)
 		if err != nil {
 			log.Println("Error while getting profiles")
 			return nil, err
 		}
-		profile.Gender = user.GenderByStr(gender)
+		if bdayPtr != nil {
+			profile.Birthday = bday
+		}
+		if genderPtr != nil {
+			profile.Gender = user.GenderByStr(gender)
+		}
 		profiles = append(profiles, profile)
 	}
 
