@@ -27,7 +27,7 @@ func VoteEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	var vote models.Vote
 	err := decoder.Decode(&vote)
 	if err != nil {
-		network.GenErrorCode(w, r,"Error within parse json", http.StatusBadRequest)
+		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
 		return
 	}
 
@@ -42,4 +42,26 @@ func VoteEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 }
 
 func FollowEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+}
+
+func EventFollowers(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	log.Println("vote for event")
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
+	id := network.GetIdFromRequest(w, r, &ps)
+	if id < 0 {
+		network.GenErrorCode(w, r, "url id is incorrect", http.StatusBadRequest)
+		return
+	}
+
+	uc := usecase.GetUseCase()
+	followers, err := uc.GetEventFollowers(id)
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	network.Jsonify(w, followers, http.StatusOK)
 }

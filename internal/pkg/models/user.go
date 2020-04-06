@@ -20,6 +20,15 @@ type User struct {
 	Password []byte `json:"-"`
 }
 
+type UserGeneral struct {
+	Uid      int       `json:"uid, omitempty"`
+	Name     string    `json:"name, omitempty"`
+	Photos   []string  `json:"photos, omitempty"`
+	About    string    `json:"about, omitempty"`
+	Birthday time.Time `json:"birthday, omitempty"`
+	Gender   int       `json:"gender, omitempty"`
+}
+
 // Struct describes location point of user
 type LocationPoint struct {
 	Latitude  float64 `json:"lat"`
