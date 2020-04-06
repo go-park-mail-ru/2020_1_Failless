@@ -85,13 +85,22 @@ var routesMap = map[string][]settings.MapHandler{
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/event/:id/follow": {{
-		Type:         "POST",
-		Handler:      voteDelivery.FollowEvent,
-		CORS:         true,
-		AuthRequired: true,
-		CSRF:         true,
-	}},
+	"/api/event/:id/follow": {
+		{
+			Type:         "POST",
+			Handler:      voteDelivery.FollowEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+		},
+		{
+			Type:         "GET",
+			Handler:      voteDelivery.EventFollowers,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         false,
+		},
+	},
 	"/api/tags/feed": {{
 		Type:         "GET",
 		Handler:      tagDelivery.FeedTags,
