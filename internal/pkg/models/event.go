@@ -20,14 +20,15 @@ type Event struct {
 }
 
 type EventRequest struct {
-	Uid      int           `json:"uid, omitempty"`
-	Page     int           `json:"page"`
-	Limit    int           `json:"limit"`
-	Query    string        `json:"query"`
-	Tags     []int         `json:"tags, omitempty"`
-	Location LocationPoint `json:"location, omitempty"`
-	MinAge   int 		   `json:"minage"`
-	MaxAge   int           `json:"maxage"`
-	Men      bool          `json:"men"`
-	Women    bool		   `json:"women"`
+	Uid       int           `json:"uid, omitempty"`
+	Page      int           `json:"page"`
+	Limit     int           `json:"limit"`
+	UserLimit int           `json:"user_limit, omitempty"`
+	Query     string        `json:"query"`
+	Tags      []int         `json:"tags, omitempty"`
+	Location  LocationPoint `json:"location, omitempty"`
+	MinAge    int           `json:"minage"`
+	MaxAge    int           `json:"maxage"`
+	Men       bool          `json:"men"`
+	Women     bool          `json:"women"`
 }

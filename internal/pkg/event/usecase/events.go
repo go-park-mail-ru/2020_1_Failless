@@ -29,7 +29,11 @@ func (uc *userUseCase) InitEventsByTime(events *[]models.Event) (status int, err
 }
 
 func (uc *userUseCase) InitEventsByKeyWords(events *[]models.Event, keyWords string, page int) (status int, err error) {
-	*events, err = uc.rep.GetEventsByKeyWord(keyWords, page)
+	if keyWords == "" {
+		*events, err = uc.rep.GetFeedEvents(-1, 10, page)
+	} else {
+		*events, err = uc.rep.GetEventsByKeyWord(keyWords, page)
+	}
 	log.Println(events)
 	if err != nil {
 		return http.StatusInternalServerError, err
