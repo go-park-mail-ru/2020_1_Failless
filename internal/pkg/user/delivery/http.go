@@ -62,7 +62,6 @@ func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]strin
 	network.Jsonify(w, form, http.StatusOK)
 }
 
-
 func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := security.CompareUidsFromURLAndToken(w, r, ps)
 	if uid < 0 {
@@ -122,7 +121,6 @@ func UploadNewImage(w http.ResponseWriter, r *http.Request, ps map[string]string
 
 	network.Jsonify(w, network.Message{Message: "ok", Status: 200}, http.StatusOK)
 }
-
 
 func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := 0

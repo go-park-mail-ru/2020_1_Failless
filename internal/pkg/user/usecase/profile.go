@@ -84,14 +84,12 @@ func (uc *userUseCase) AddImageToProfile(uid int, name string) error {
 }
 
 func (uc *userUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {
-	_, err := uc.rep.GetUserByUID(form.Uid)
+	usr, err := uc.rep.GetUserByUID(form.Uid)
 	if err != nil {
-		log.Println("bad")
 		log.Println(err.Error())
 		return http.StatusNotFound, err
 	}
 
-	var usr = models.User{}
 	usr.Uid = form.Uid
 	//usr.Name = form.Name
 	usr.Email = form.Email
@@ -103,7 +101,6 @@ func (uc *userUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {
 	//inf.Gender = form.Gender
 
 	if err := uc.rep.UpdUserGeneral(inf, usr); err != nil {
-		log.Println("bad")
 		log.Println(err.Error())
 		return http.StatusInternalServerError, err
 	}
