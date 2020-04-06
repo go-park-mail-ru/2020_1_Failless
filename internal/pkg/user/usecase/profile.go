@@ -3,6 +3,7 @@ package usecase
 import (
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
+	"failless/internal/pkg/security"
 	"log"
 	"net/http"
 )
@@ -80,4 +81,29 @@ func (uc *userUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 func (uc *userUseCase) AddImageToProfile(uid int, name string) error {
 	err := uc.rep.UpdateUserPhotos(uid, name)
 	return err
+}
+
+func (uc *userUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {
+	usr, err := uc.rep.GetUserByUID(form.Uid)
+	if err != nil {
+		log.Println(err.Error())
+		return http.StatusNotFound, err
+	}
+
+	usr.Uid = form.Uid
+	//usr.Name = form.Name
+	usr.Email = form.Email
+	usr.Phone = form.Phone
+	usr.Password, err = security.EncryptPassword(form.Password)
+
+	var inf = models.JsonInfo{}
+	//inf.Birthday = form.Birthday
+	//inf.Gender = form.Gender
+
+	if err := uc.rep.UpdUserGeneral(inf, usr); err != nil {
+		log.Println(err.Error())
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
 }
