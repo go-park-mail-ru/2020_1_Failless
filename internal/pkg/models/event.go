@@ -5,7 +5,7 @@ import "time"
 type EType int
 
 type Event struct {
-	EId      int       `json:"uid"`
+	EId      int       `json:"eid"`
 	AuthorId int       `json:"author_id"`
 	Title    string    `json:"title"`
 	EDate    time.Time `json:"date"`

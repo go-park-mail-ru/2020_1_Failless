@@ -53,7 +53,7 @@ func CreateAuth(w http.ResponseWriter, user models.User) error {
 		Value:    token,
 		Expires:  expires,
 		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	})
 	return nil
 }
