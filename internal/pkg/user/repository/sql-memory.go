@@ -235,3 +235,39 @@ func (ur *sqlUserRepository) UpdateUserPhotos(uid int, name string) error {
 	}
 	return nil
 }
+
+func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.User) error {
+	//gender := user.GenderById(info.Gender)
+
+	tx, err := ur.db.Begin()
+	if err != nil {
+		return err
+	}
+	// Rollback is safe to call even if the tx is already closed, so if
+	// the tx commits successfully, this is a no-op
+	defer tx.Rollback()
+
+	// TODO: add name
+	sqlStatement := `UPDATE profile SET email = $1, phone = $2, password = $3 WHERE uid = $4;`
+	_, err = tx.Exec(sqlStatement, usr.Email, usr.Phone, usr.Password)
+	if err != nil {
+		log.Println(sqlStatement, usr.Email, usr.Phone, usr.Password)
+		log.Println(err.Error())
+		return err
+	}
+
+	sqlStatement = `UPDATE profile_info SET birthday = $1, gender = $2 WHERE pid = $3;`
+	_, err = tx.Exec(sqlStatement, usr.Email, usr.Phone, usr.Password)
+	if err != nil {
+		log.Println(sqlStatement, usr.Email, usr.Phone, usr.Password)
+		log.Println(err.Error())
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

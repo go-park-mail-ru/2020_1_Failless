@@ -2,9 +2,11 @@ package repository
 
 import (
 	"failless/internal/pkg/models"
+	"failless/internal/pkg/user"
 	"failless/internal/pkg/vote"
 	"github.com/jackc/pgx"
 	"log"
+	"time"
 )
 
 type sqlVoteRepository struct {
@@ -26,9 +28,10 @@ func (vr *sqlVoteRepository) AddEventVote(uid int, eid int, value int8) error {
 	return nil
 }
 
-func (vr *sqlVoteRepository) FindFollowers(eid int) ([]models.User, error) {
-	sqlStatement := `SELECT u.uid, u.name, u.phone, u.email FROM event_vote AS ev
-							NATURAL JOIN profile AS u WHERE ev.eid = $1 AND ev.value > 0 ORDER BY ev.vote_date ASC;`
+func (vr *sqlVoteRepository) FindFollowers(eid int) ([]models.UserGeneral, error) {
+	sqlStatement := `SELECT u.uid, u.name, p.about, p.gender, p.birthday, p.photos FROM event_vote AS ev
+							NATURAL JOIN profile AS u JOIN profile_info AS p ON p.pid = u.uid 
+							WHERE ev.eid = $1 AND ev.value > 0 ORDER BY ev.vote_date DESC;`
 
 	rows, err := vr.db.Query(sqlStatement, eid)
 	if err != nil && rows != nil && !rows.Next() {
@@ -36,21 +39,38 @@ func (vr *sqlVoteRepository) FindFollowers(eid int) ([]models.User, error) {
 		log.Println("event has not got any followers")
 		return nil, nil
 	} else if err != nil || rows == nil {
+		log.Println(err.Error())
 		return nil, err
 	}
 
-	var users []models.User
+	var profiles []models.UserGeneral
 	for rows.Next() {
-		user := models.User{}
-		err = rows.Scan(&user.Uid, &user.Name, &user.Phone, &user.Email)
+		profile := models.UserGeneral{}
+		gender := ""
+		genderPtr := &gender
+		bday := time.Time{}
+		bdayPtr := &bday
+		err = rows.Scan(
+			&profile.Uid,
+			&profile.Name,
+			&profile.About,
+			&genderPtr,
+			&bdayPtr,
+			&profile.Photos)
 		if err != nil {
-			log.Println("Error while getting users")
+			log.Println("Error while getting profiles")
 			return nil, err
 		}
-		users = append(users, user)
+		if bdayPtr != nil {
+			profile.Birthday = bday
+		}
+		if genderPtr != nil {
+			profile.Gender = user.GenderByStr(gender)
+		}
+		profiles = append(profiles, profile)
 	}
 
-	return users, nil
+	return profiles, nil
 }
 
 func (vr *sqlVoteRepository) AddUserToChat(eid int, uid int) (models.Chat, error) {

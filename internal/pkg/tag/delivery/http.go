@@ -10,7 +10,7 @@ import (
 func FeedTags(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	uc := usecase.GetUseCase()
 	var tags []models.Tag
-	if code, err := uc.InitEventsByTime(tags); err != nil {
+	if code, err := uc.InitEventsByTime(&tags); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}

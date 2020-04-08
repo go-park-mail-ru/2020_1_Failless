@@ -14,6 +14,30 @@ import (
 
 ////////////// profile part //////////////////
 
+func UpdProfileGeneral(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := security.CompareUidsFromURLAndToken(w, r, ps)
+	if uid < 0 {
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var form forms.SignForm
+	err := decoder.Decode(&form)
+	if err != nil {
+		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		return
+	}
+
+	form.Uid = uid
+	uc := usecase.GetUseCase()
+	if code, err := uc.UpdateUserBase(&form); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
+		return
+	}
+
+	network.Jsonify(w, form, http.StatusOK)
+}
+
 func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := security.CompareUidsFromURLAndToken(w, r, ps)
 	if uid < 0 {
@@ -37,7 +61,6 @@ func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]strin
 
 	network.Jsonify(w, form, http.StatusOK)
 }
-
 
 func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := security.CompareUidsFromURLAndToken(w, r, ps)
@@ -99,7 +122,6 @@ func UploadNewImage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	network.Jsonify(w, network.Message{Message: "ok", Status: 200}, http.StatusOK)
 }
 
-
 func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := 0
 	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
@@ -120,7 +142,7 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 
 ////////////// user part //////////////////
 
-func GetUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func GetUserInfo(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	data := r.Context().Value(security.CtxUserKey)
 	if data == nil {
 		log.Println("data wasn't found")
@@ -163,9 +185,11 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	if security.ComparePasswords(user.Password, form.Password) {
 		err := network.CreateAuth(w, user)
 		if err != nil {
+			log.Println("cookie wasn't set")
 			network.GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
 			return
 		}
+		log.Println("cookie was set")
 	} else {
 		network.GenErrorCode(w, r, "Passwords is not equal", http.StatusUnauthorized)
 	}

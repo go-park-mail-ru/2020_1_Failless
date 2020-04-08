@@ -25,8 +25,8 @@ func (tr *sqlTagRepository) GetAllTags() ([]models.Tag, error) {
 	for rows.Next() {
 		tag := models.Tag{}
 		err = rows.Scan(
-			&tag.Name,
-			&tag.TagId)
+			&tag.TagId,
+			&tag.Name)
 		if err != nil {
 			return nil, err
 		}

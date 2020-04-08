@@ -3,6 +3,7 @@ package usecase
 import (
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
+	"failless/internal/pkg/security"
 	"log"
 	"net/http"
 )
@@ -12,6 +13,11 @@ func (uc *userUseCase) UpdateUserMeta(form *forms.MetaForm) (int, error) {
 		return http.StatusNotModified, err
 	}
 
+	for _, tag := range form.Tags {
+		if err := uc.rep.UpdateUserTags(form.Uid, tag); err != nil {
+			return http.StatusNotModified, err
+		}
+	}
 	return http.StatusOK, nil
 }
 
@@ -52,18 +58,18 @@ func (uc *userUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 		return http.StatusNotFound, err
 	}
 
-	profile.SignForm.Name = base.Name
-	profile.Phone = base.Phone
-	profile.Email = base.Email
-	profile.Uid = base.Uid
+	(*profile).SignForm.Name = base.Name
+	(*profile).Phone = base.Phone
+	(*profile).Email = base.Email
+	(*profile).Uid = base.Uid
 
-	profile.Events, err = uc.rep.GetUserEvents(base.Uid)
+	(*profile).Events, err = uc.rep.GetUserEvents(base.Uid)
 	if err != nil {
 		log.Println("error in get user events. Not fatal")
 		log.Println(err.Error())
 	}
 
-	profile.Tags, err = uc.rep.GetUserTags(base.Uid)
+	(*profile).Tags, err = uc.rep.GetUserTags(base.Uid)
 	if err != nil {
 		log.Println("error in get user tags. Not fatal")
 		log.Println(err.Error())
@@ -75,4 +81,29 @@ func (uc *userUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 func (uc *userUseCase) AddImageToProfile(uid int, name string) error {
 	err := uc.rep.UpdateUserPhotos(uid, name)
 	return err
+}
+
+func (uc *userUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {
+	usr, err := uc.rep.GetUserByUID(form.Uid)
+	if err != nil {
+		log.Println(err.Error())
+		return http.StatusNotFound, err
+	}
+
+	usr.Uid = form.Uid
+	//usr.Name = form.Name
+	usr.Email = form.Email
+	usr.Phone = form.Phone
+	usr.Password, err = security.EncryptPassword(form.Password)
+
+	var inf = models.JsonInfo{}
+	//inf.Birthday = form.Birthday
+	//inf.Gender = form.Gender
+
+	if err := uc.rep.UpdUserGeneral(inf, usr); err != nil {
+		log.Println(err.Error())
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
 }
