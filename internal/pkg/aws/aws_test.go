@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bytes"
 	"failless/internal/pkg/forms"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -22,19 +23,19 @@ func TestStartAWS(t *testing.T) {
 		log.Printf("Unable to start session %v", err)
 		t.Fail()
 	} else {
-		creds, err := sess.Config.Credentials.Get()
+		credentials, err := sess.sess.Config.Credentials.Get()
 		if err != nil {
-			log.Printf("Unable to get creds %v", err)
+			log.Printf("Unable to get credentials %v", err)
 			t.Fail()
 		} else {
-			log.Printf("Creds: %v", creds)
+			log.Printf("Credentials: %v", credentials)
 		}
 	}
 }
 
 func TestListObjects(t *testing.T) {
 	sess, _ := StartAWS()
-	_, err := ListObjects("event", 10)
+	_, err := sess.ListObjects("event", 10)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -52,7 +53,7 @@ func TestListObjects(t *testing.T) {
 
 func TestUploadToAWS(t *testing.T) {
 	path := "../" + forms.Media + testImageName
-	s3, _ := StartAWS()
+	service, _ := StartAWS()
 
 	_, err := os.Stat(path)
 	if err != nil {
@@ -67,13 +68,17 @@ func TestUploadToAWS(t *testing.T) {
 	}
 
 	tempImg := correctImage(path, testImageName)
+	buf, err := tempImg.ImageToBuffer()
+	if err != nil {
+		t.Fail()
+	}
 
-	err = s3.UploadToAWS(&tempImg, testFolder)
+	err = service.UploadToAWS(bytes.NewReader(buf.Bytes()), testFolder, testImageName)
 	if err != nil {
 		log.Printf("Unable to upload item %q, %v", tempImg.ImgName, err)
 		t.Fail()
 	} else {
-		result, _ := ListObjects(testFolder, 2)
+		result, _ := service.ListObjects(testFolder, 2)
 		if len(result.Contents) < 2 {
 			log.Println("Impossible.\nPerhaps the archives are incomplete.")
 			t.Fail()
