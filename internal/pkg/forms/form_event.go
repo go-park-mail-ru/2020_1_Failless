@@ -1,11 +1,7 @@
 package forms
 
 import (
-	"bytes"
-	"encoding/base64"
 	"failless/internal/pkg/models"
-	"github.com/disintegration/imaging"
-	"github.com/google/uuid"
 	"log"
 	"time"
 )
@@ -34,35 +30,6 @@ type EventForm struct {
 	Photos  []EImage `json:"photos, omitempty"`
 }
 
-func (ef *EventForm) ValidationImages() bool {
-	for _, photo := range ef.Photos {
-		imgBytes, err := base64.StdEncoding.DecodeString(photo.ImgBase64)
-		if err != nil {
-			log.Println(err.Error())
-			return false
-		}
-
-		img, err := imaging.Decode(bytes.NewReader(imgBytes))
-		if err != nil {
-			log.Println(err.Error())
-			return false
-		}
-
-		// Resize srcImage to size = 128x128px using the Lanczos filter.
-		dstImage128 := imaging.Resize(img, 128, 128, imaging.Lanczos)
-		// Resize and crop the srcImage to fill the 100x100px area.
-		photo.Img = imaging.Fill(dstImage128, 100, 100, imaging.Center, imaging.Lanczos)
-		photo.ImgName = uuid.New().String() + ".jpg"
-		err = photo.SaveImage("users")
-		if err != nil {
-			log.Println("Can't save image")
-			log.Println(err.Error())
-			return false
-		}
-	}
-	return true
-}
-
 func (ef *EventForm) ValidationLimits() bool {
 	res := 1 <= ef.Limit && ef.Limit <= MiddleEventLimit
 	log.Println(ef.Limit)
@@ -73,7 +40,7 @@ func (ef *EventForm) ValidationLimits() bool {
 }
 
 func (ef *EventForm) ValidationIDs() bool {
-	res := ef.UId >= 0 && ef.TagId >= 0
+	res := ef.UId >= 0 && (ef.TagId >= 0 && ef.TagId <= EventTypes)
 	if res {
 		log.Println("validation ids ok")
 	}
