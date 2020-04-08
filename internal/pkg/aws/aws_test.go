@@ -2,11 +2,12 @@ package aws
 
 import (
 	"bytes"
-	"failless/internal/pkg/forms"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/disintegration/imaging"
 	"github.com/stretchr/testify/assert"
+	"image/jpeg"
 	"log"
 	"os"
 	"testing"
@@ -14,7 +15,7 @@ import (
 
 const (
 	testImageName = "default.png"
-	testFolder = "test"
+	testFolder    = "test"
 )
 
 func TestStartAWS(t *testing.T) {
@@ -52,7 +53,7 @@ func TestListObjects(t *testing.T) {
 }
 
 func TestUploadToAWS(t *testing.T) {
-	path := "../" + forms.Media + testImageName
+	path := "../../../media/images/" + testImageName
 	service, _ := StartAWS()
 
 	_, err := os.Stat(path)
@@ -65,17 +66,18 @@ func TestUploadToAWS(t *testing.T) {
 			log.Printf("pwd: %q", pwd)
 		}
 		t.Fail()
+		return
 	}
 
-	tempImg := correctImage(path, testImageName)
-	buf, err := tempImg.ImageToBuffer()
+	buf, err := correctImage(path, testImageName)
 	if err != nil {
 		t.Fail()
+		return
 	}
 
 	err = service.UploadToAWS(bytes.NewReader(buf.Bytes()), testFolder, testImageName)
 	if err != nil {
-		log.Printf("Unable to upload item %q, %v", tempImg.ImgName, err)
+		log.Printf("Unable to upload item %q, %v", testImageName, err)
 		t.Fail()
 	} else {
 		result, _ := service.ListObjects(testFolder, 2)
@@ -83,13 +85,19 @@ func TestUploadToAWS(t *testing.T) {
 			log.Println("Impossible.\nPerhaps the archives are incomplete.")
 			t.Fail()
 		}
-		assert.Equal(t, testFolder + "/" + testImageName, *result.Contents[1].Key)
+		assert.Equal(t, testFolder+"/"+testImageName, *result.Contents[1].Key)
 	}
 }
 
-func correctImage(path, name string) (tmp forms.EImage) {
-	_ = tmp.GetImage(path)
-	_ = tmp.Encode()
-	tmp.ImgName = name
-	return
+func correctImage(path, name string) (*bytes.Buffer, error) {
+	img, err := imaging.Open(path + name)
+	if err != nil {
+		return nil, err
+	}
+	buf := new(bytes.Buffer)
+	err = jpeg.Encode(buf, img, nil)
+	if err != nil {
+		return nil, err
+	}
+	return buf, nil
 }
