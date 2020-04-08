@@ -58,12 +58,11 @@ func CreateAuth(w http.ResponseWriter, user models.User) error {
 	return nil
 }
 
-func CreateLogout(w http.ResponseWriter) error {
+func CreateLogout(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    "-",
 		MaxAge:   -1,
 		HttpOnly: true,
 	})
-	return nil
 }

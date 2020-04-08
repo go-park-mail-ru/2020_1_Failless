@@ -157,7 +157,7 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 ////////////// authorization part //////////////////
 
 func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	_ = network.CreateLogout(w)
+	network.CreateLogout(w)
 
 	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm
@@ -200,11 +200,7 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if err := network.CreateLogout(w); err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
-		return
-	}
-
+	network.CreateLogout(w)
 	network.Jsonify(w, network.Message{Message: "Successfully logout", Status: 200}, 200)
 }
 

@@ -13,69 +13,18 @@ import (
 	"testing"
 )
 
-//type TestCaseSignUp struct {
-//	RegForm    forms.SignForm
-//	StatusCode int
-//}
-//
-//func TestSignUp(t *testing.T) {
-//	url := "http://localhost:3001"
-//	badForm := forms.SignForm{
-//		Name:     "SergeyRof12",
-//		Phone:    "28005553535",
-//		Email:    "faker2@mail.ru",
-//		Password: "full12fill",
-//	}
-//	result, _ := json.Marshal(badForm)
-//	req := httptest.NewRequest("POST", url, bytes.NewBufferString(string(result)))
-//	w := httptest.NewRecorder()
-//	var ps map[string]string
-//	SignUp(w, req, ps)
-//	defer UserDelete(badForm.Email)
-//
-//	cases := []TestCaseSignUp{
-//		TestCaseSignUp{
-//			RegForm:    badForm,
-//			StatusCode: http.StatusConflict, // gets ok
-//		},
-//		TestCaseSignUp{
-//			RegForm: forms.SignForm{
-//				Name:     "SergeyM1an",
-//				Phone:    "89929052501",
-//				Email:    "kerc2h@yndex.ru",
-//				Password: "full12fill",
-//			},
-//			StatusCode: http.StatusOK,
-//		},
-//		TestCaseSignUp{
-//			RegForm: forms.SignForm{
-//				Name:     "F",
-//				Phone:    "F",
-//				Email:    "F",
-//				Password: "full12fill",
-//			},
-//			StatusCode: http.StatusForbidden, // gets ok?
-//		},
-//	}
-//	for caseNum, item := range cases {
-//		result, err := json.Marshal(item.RegForm)
-//		if err != nil {
-//			fmt.Println(err)
-//			os.Exit(1)
-//		}
-//		url := "middleware://localhost:5000"
-//		req := httptest.NewRequest("POST", url, bytes.NewBufferString(string(result)))
-//		w := httptest.NewRecorder()
-//		SignUp(w, req, ps)
-//		if w.Code != item.StatusCode {
-//			t.Errorf("[%d] wrong StatusCode: got %d, expected %d",
-//				caseNum, w.Code, item.StatusCode)
-//		}
-//		if item.RegForm != badForm {
-//			UserDelete(item.RegForm.Email)
-//		}
-//	}
-//}
+func signFormCheck(t *testing.T, body *bytes.Buffer, name interface{}) {
+	var respForm forms.SignForm
+	decoder := json.NewDecoder(body)
+	err := decoder.Decode(&respForm)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	assert.Equal(t, respForm.Password, "")
+	assert.Equal(t, respForm.Name, name)
+	assert.Equal(t, true, respForm.Uid > 0)
+}
 
 func decodeToMsg(body *bytes.Buffer) (network.Message, error) {
 	var msg network.Message
@@ -98,7 +47,6 @@ func TestGetUserInfo(t *testing.T) {
 
 	var ps map[string]string
 	GetUserInfo(rr, req, ps)
-
 	// Check the status code is what we expect.
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v",
@@ -158,18 +106,104 @@ func TestSignUp(t *testing.T) {
 	assert.Equal(t, msg.Phone, user.Phone)
 	assert.Equal(t, msg.Email, user.Email)
 
-
 	SignUp(rr, req, ps)
 
-	var respForm forms.SignForm
-	decoder = json.NewDecoder(rr.Body)
-	err = decoder.Decode(&respForm)
+	signFormCheck(t, rr.Body, mcPostBody["name"])
+}
+
+func TestSignIn(t *testing.T) {
+	mcPostBody := map[string]interface{}{
+		"uid":      0,
+		"name":     "mrTester",
+		"phone":    "88005553535",
+		"email":    "mrtester@test.com",
+		"password": "qwerty12345",
+	}
+	body, _ := json.Marshal(mcPostBody)
+	req, err := http.NewRequest("POST", "/api/signin", bytes.NewReader(body))
 	if err != nil {
 		t.Fail()
 		return
 	}
-	assert.Equal(t, respForm.Password, "")
-	assert.Equal(t, respForm.Name, mcPostBody["name"])
-	assert.Equal(t, true, respForm.Uid > 0)
+
+	rr := httptest.NewRecorder()
+	var ps map[string]string
+	SignIn(rr, req, ps)
+	signFormCheck(t, rr.Body, mcPostBody["name"])
 }
 
+func TestLogout(t *testing.T) {
+	req, err := http.NewRequest("GET", "/api/logout", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	rr := httptest.NewRecorder()
+	var ps map[string]string
+	Logout(rr, req, ps)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+		return
+	}
+
+	msg, err := decodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	assert.Equal(t, msg.Status, http.StatusOK)
+	assert.Equal(t, msg.Message, "Successfully logout")
+}
+
+func TestGetProfilePage(t *testing.T) {
+	mcPostBody := map[string]interface{}{
+		"uid":      1,
+		"name":     "mrTester",
+		"phone":    "88005553535",
+		"email":    "mrtester@test.com",
+		"password": "qwerty12345",
+	}
+	body, _ := json.Marshal(mcPostBody)
+	req, err := http.NewRequest("POST", "api/profile/1", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	user := security.UserClaims{
+		Uid:   1,
+		Phone: "88005553535",
+		Email: "mrtester@test.com",
+		Name:  "mrTester",
+	}
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, user)
+
+	rr := httptest.NewRecorder()
+	ps := map[string]string{}
+	GetProfilePage(rr, req.WithContext(ctx), ps)
+	msg, err := decodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	assert.Equal(t, msg.Status, http.StatusOK)
+	assert.Equal(t, msg.Message, "Successfully logout")
+
+	ps = map[string]string{"id": "1"}
+	GetProfilePage(rr, req.WithContext(ctx), ps)
+	decoder := json.NewDecoder(rr.Body)
+	var profile forms.GeneralForm
+	err = decoder.Decode(&profile)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, profile.Uid, user.Uid)
+	assert.Equal(t, profile.Phone, user.Phone)
+	assert.Equal(t, profile.Email, user.Email)
+}
