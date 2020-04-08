@@ -15,7 +15,7 @@ func CORS(next settings.HandlerFunc) settings.HandlerFunc {
 		if allowed && allowedMethod {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-CSRF-Token")
 			w.Header().Set("Access-Control-Max-Age", "600")
 			w.Header().Set("Access-Control-Allow-Methods", settings.SecureSettings.CORSMethods)
 		}

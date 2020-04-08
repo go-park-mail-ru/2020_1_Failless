@@ -85,13 +85,22 @@ var routesMap = map[string][]settings.MapHandler{
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/event/:id/follow": {{
-		Type:         "POST",
-		Handler:      voteDelivery.FollowEvent,
-		CORS:         true,
-		AuthRequired: true,
-		CSRF:         true,
-	}},
+	"/api/event/:id/follow": {
+		{
+			Type:         "POST",
+			Handler:      voteDelivery.FollowEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+		},
+		{
+			Type:         "GET",
+			Handler:      voteDelivery.EventFollowers,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         false,
+		},
+	},
 	"/api/tags/feed": {{
 		Type:         "GET",
 		Handler:      tagDelivery.FeedTags,
@@ -109,6 +118,13 @@ var routesMap = map[string][]settings.MapHandler{
 	"/api/profile/:id/meta": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UpdUserMetaData,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+	}},
+	"/api/profile/:id/general": {{
+		Type:         "PUT",
+		Handler:      userDelivery.UpdProfileGeneral,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
@@ -176,12 +192,13 @@ func GetConfig() *settings.ServerSettings {
 				"http://127.0.0.1:8080":      {},
 				"http://127.0.0.1:3000":      {},
 				"https://eventum.rowbot.dev": {},
+				"https://eventum.xyz":        {},
 			},
 			// referring to https://security.stackexchange.com/questions/6957/length-of-csrf-token
 			// it's correct length of CSRF token for Base64 (in bytes)
 			CSRFTokenLen: 20,
-			CSRFTokenTTL: 1, // one day, but I am not sure about that
-			EnableCSRF:   false,
+			CSRFTokenTTL: 1, // one hour
+			EnableCSRF:   true,
 		}
 		settings.UseCaseConf = settings.GlobalConfig{
 			PageLimit: 10,

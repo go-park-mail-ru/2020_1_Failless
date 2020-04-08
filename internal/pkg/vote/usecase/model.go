@@ -48,3 +48,8 @@ func (vc *voteUseCase) ValidateValue(value int8) int8 {
 	}
 	return 0
 }
+
+func (vc *voteUseCase) GetEventFollowers(eid int) ([]models.UserGeneral, error) {
+	return vc.rep.FindFollowers(eid)
+}
+

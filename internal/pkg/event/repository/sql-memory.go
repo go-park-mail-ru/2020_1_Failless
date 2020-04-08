@@ -145,8 +145,8 @@ func (er *sqlEventsRepository) getEvents(withCondition string, sqlStatement stri
 }
 
 func (er *sqlEventsRepository) SaveNewEvent(event *models.Event) error {
-	sqlStatement := `INSERT INTO events (uid, title, message, author, etype, is_public, range)
-							VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING eid, edate;`
+	sqlStatement := `INSERT INTO events (uid, title, message, author, etype, is_public, range, edate)
+							VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING eid;`
 	err := er.db.QueryRow(sqlStatement,
 		event.AuthorId,
 		event.Title,
@@ -154,7 +154,8 @@ func (er *sqlEventsRepository) SaveNewEvent(event *models.Event) error {
 		event.Author,
 		event.Type,
 		event.Public,
-		event.Limit).Scan(&event.EId, &event.EDate)
+		event.Limit,
+		event.EDate).Scan(&event.EId)
 	if err != nil {
 		log.Println(err.Error())
 		return err
@@ -187,14 +188,15 @@ func (er *sqlEventsRepository) GetAllEvents() ([]models.Event, error) {
 
 // Getting vote events. For now vote mean that this events ordered by date
 // Thus it's closest events
-func (er *sqlEventsRepository) GetFeedEvents(limit int, page int) ([]models.Event, error) {
+func (er *sqlEventsRepository) GetFeedEvents(uid int, limit int, page int) ([]models.Event, error) {
 	if page < 1 || limit < 1 {
 		return nil, errors.New("Page number can't be less than 1\n")
 	}
-
-	sqlCondition := ` WHERE e.edate >= current_timestamp ORDER BY e.edate ASC LIMIT $1 OFFSET $2 ;`
+	withCondition := `WITH voted_events AS ( SELECT eid FROM event_vote WHERE uid = $1 ) `
+	sqlCondition := ` LEFT JOIN voted_events AS v ON e.eid = v.eid WHERE v.eid IS NULL AND e.uid != $2 AND
+						e.edate >= current_timestamp ORDER BY e.edate ASC LIMIT $3 OFFSET $4 ;`
 	// TODO: add cool vote algorithm (aka select)
-	return er.getEvents("", sqlCondition, limit, page)
+	return er.getEvents(withCondition, sqlCondition, uid, uid, limit, page)
 }
 
 func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page int) ([]models.Event, error) {
@@ -254,9 +256,9 @@ func (er *sqlEventsRepository) generateORStatement(fieldName string, length int)
 func (er *sqlEventsRepository) GetNewEventsByTags(tags []int, uid int, limit int, page int) ([]models.Event, error) {
 	var generator queryGenerator
 	withCondition := `WITH voted_events AS ( SELECT eid FROM event_vote WHERE uid = $1 ) `
-	sqlStatement := ` LEFT JOIN voted_events AS v ON e.eid = v.eid WHERE `
-	items := append([]int{uid}, tags...)
-	sqlStatement += generator.generateArgsSql(len(items), "OR", "e.etype =", 1)
+	sqlStatement := ` LEFT JOIN voted_events AS v ON e.eid = v.eid WHERE e.uid != $2 AND `
+	items := append([]int{uid, uid}, tags...)
+	sqlStatement += generator.generateArgsSql(len(items), "OR", "e.etype =", 2)
 	sqlStatement += generator.getConstantCondition(len(items))
 	return er.getEvents(withCondition, sqlStatement, generator.JoinIntArgs(items, limit, page)...)
 }

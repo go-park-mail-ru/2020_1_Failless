@@ -5,6 +5,7 @@ import (
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/tag"
 	"failless/internal/pkg/tag/repository"
+	"log"
 	"net/http"
 )
 
@@ -18,11 +19,11 @@ func GetUseCase() tag.UseCase {
 	}
 }
 
-func (uc *tagUseCase) InitEventsByTime(tags []models.Tag) (int, error) {
-	tags, err := uc.rep.GetAllTags()
+func (uc *tagUseCase) InitEventsByTime(tags *[]models.Tag) (status int, err error) {
+	*tags, err = uc.rep.GetAllTags()
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-
+	log.Println(tags)
 	return http.StatusOK, nil
 }
