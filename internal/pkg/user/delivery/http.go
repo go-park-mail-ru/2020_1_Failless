@@ -78,11 +78,12 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 
 	form.Uid = uid
 	if form.Avatar.ImgBase64 != "" {
-		if !form.ValidationImage() {
+		if !images.ValidateImage(&form.Avatar, images.Users) {
 			network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
 			return
 		}
 	}
+
 	uc := usecase.GetUseCase()
 	if code, err := uc.UpdateUserInfo(&form); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)

@@ -22,6 +22,8 @@ func (uc *userUseCase) UpdateUserMeta(form *forms.MetaForm) (int, error) {
 }
 
 func (uc *userUseCase) UpdateUserInfo(form *forms.GeneralForm) (int, error) {
+	form.Photos = append(form.Photos, form.Avatar)
+
 	var info models.JsonInfo
 	var user models.User
 
