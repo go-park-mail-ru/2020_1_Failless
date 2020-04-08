@@ -112,7 +112,7 @@ func NewCSRFToken(w http.ResponseWriter) error {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "csrf",
 		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 24 * settings.SecureSettings.CSRFTokenTTL),
+		Expires:  time.Now().Add(time.Hour * settings.SecureSettings.CSRFTokenTTL),
 		HttpOnly: false,
 		Path:     "/", // TODO: check it
 	})

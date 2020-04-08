@@ -197,7 +197,7 @@ func GetConfig() *settings.ServerSettings {
 			// referring to https://security.stackexchange.com/questions/6957/length-of-csrf-token
 			// it's correct length of CSRF token for Base64 (in bytes)
 			CSRFTokenLen: 20,
-			CSRFTokenTTL: 1, // one day, but I am not sure about that
+			CSRFTokenTTL: 1, // one hour
 			EnableCSRF:   true,
 		}
 		settings.UseCaseConf = settings.GlobalConfig{
