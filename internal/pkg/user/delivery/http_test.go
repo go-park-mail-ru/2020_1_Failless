@@ -21,8 +21,8 @@ func signFormCheck(t *testing.T, body *bytes.Buffer, name interface{}) {
 		t.Fail()
 		return
 	}
-	assert.Equal(t, respForm.Password, "")
-	assert.Equal(t, respForm.Name, name)
+	assert.Equal(t, "", respForm.Password)
+	assert.Equal(t, name, respForm.Name)
 	assert.Equal(t, true, respForm.Uid > 0)
 }
 
@@ -150,10 +150,10 @@ func TestLogout(t *testing.T) {
 	}
 
 	msg, err := decodeToMsg(rr.Body)
-	if err != nil {
-		t.Fail()
-		return
-	}
+	//if err != nil {
+	//	t.Fail()
+	//	return
+	//}
 	assert.Equal(t, msg.Status, http.StatusOK)
 	assert.Equal(t, msg.Message, "Successfully logout")
 }
@@ -167,7 +167,7 @@ func TestGetProfilePage(t *testing.T) {
 		"password": "qwerty12345",
 	}
 	body, _ := json.Marshal(mcPostBody)
-	req, err := http.NewRequest("POST", "api/profile/1", bytes.NewReader(body))
+	req, err := http.NewRequest("POST", "/api/profile/1", bytes.NewReader(body))
 	if err != nil {
 		t.Fail()
 		return
@@ -206,4 +206,191 @@ func TestGetProfilePage(t *testing.T) {
 	assert.Equal(t, profile.Uid, user.Uid)
 	assert.Equal(t, profile.Phone, user.Phone)
 	assert.Equal(t, profile.Email, user.Email)
+}
+
+func TestUploadNewImage(t *testing.T) {
+	mcPostBody := map[string]interface{}{
+		"uid":      1,
+		"uploaded": "",
+	}
+	body, _ := json.Marshal(mcPostBody)
+	req, err := http.NewRequest("PUT", "/api/profile/1/upload", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	user := security.UserClaims{
+		Uid:   1,
+		Phone: "88005553535",
+		Email: "mrtester@test.com",
+		Name:  "mrTester",
+	}
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, user)
+
+	rr := httptest.NewRecorder()
+	ps := map[string]string{"id": "1"}
+	UploadNewImage(rr, req.WithContext(ctx), ps)
+
+	msg, err := decodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, "Error within parse json", msg.Message)
+}
+
+func TestUploadNewImage2(t *testing.T) {
+	eimage := map[string]interface{}{
+		"img":  "long long base64 string",
+		"path": "default.png",
+	}
+	mcPostBody := map[string]interface{}{
+		"uid":      1,
+		"uploaded": eimage,
+	}
+	body, _ := json.Marshal(mcPostBody)
+	req, err := http.NewRequest("PUT", "/api/profile/1/upload", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	user := security.UserClaims{
+		Uid:   1,
+		Phone: "88005553535",
+		Email: "mrtester@test.com",
+		Name:  "mrTester",
+	}
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, user)
+
+	rr := httptest.NewRecorder()
+	ps := map[string]string{"id": "1"}
+	UploadNewImage(rr, req.WithContext(ctx), ps)
+
+	msg, err := decodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	assert.Equal(t, http.StatusOK, msg.Status)
+	assert.Equal(t, "ok", msg.Message)
+}
+
+func TestUpdUserMetaData(t *testing.T) {
+	mcPostBody := map[string]interface{}{
+		"uid":    1,
+		"tags":   []int{1, 2, 3},
+		"about":  "hello world",
+		"social": []string{"vk.com/id1"},
+	}
+	body, _ := json.Marshal(mcPostBody)
+	req, err := http.NewRequest("PUT", "/api/profile/1/meta", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	user := security.UserClaims{
+		Uid:   1,
+		Phone: "88005553535",
+		Email: "mrtester@test.com",
+		Name:  "mrTester",
+	}
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, user)
+
+	rr := httptest.NewRecorder()
+	ps := map[string]string{"id": "1"}
+	UpdUserMetaData(rr, req.WithContext(ctx), ps)
+
+	decoder := json.NewDecoder(rr.Body)
+	var metaForm forms.MetaForm
+	err = decoder.Decode(&metaForm)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, metaForm.Uid, user.Uid)
+	assert.Equal(t, metaForm.Tags, mcPostBody["tags"])
+	assert.Equal(t, metaForm.About, mcPostBody["about"])
+	assert.Equal(t, metaForm.Social, mcPostBody["social"])
+}
+
+func TestUpdProfileGeneral(t *testing.T) {
+	mcPostBody := map[string]interface{}{
+		"uid":      1,
+		"name":     "mrTester",
+		"phone":    "88005553535",
+		"email":    "mrtester@test.com",
+		"password": "qwerty12345",
+	}
+
+	body, _ := json.Marshal(mcPostBody)
+	req, err := http.NewRequest("PUT", "/api/profile/1/general", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	user := security.UserClaims{
+		Uid:   1,
+		Phone: "88005553535",
+		Email: "mrtester@test.com",
+		Name:  "mrTester",
+	}
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, user)
+
+	rr := httptest.NewRecorder()
+	ps := map[string]string{"id": "1"}
+	UpdProfileGeneral(rr, req.WithContext(ctx), ps)
+	signFormCheck(t, rr.Body, user.Name)
+}
+
+func TestUpdProfilePage(t *testing.T) {
+	mcPostBody := map[string]interface{}{
+		"uid":      1,
+		"name":     "mrTester",
+		"phone":    "88005553535",
+		"email":    "mrtester@test.com",
+		"password": "qwerty12345",
+	}
+
+	body, _ := json.Marshal(mcPostBody)
+	req, err := http.NewRequest("PUT", "/api/profile/1", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	user := security.UserClaims{
+		Uid:   1,
+		Phone: "88005553535",
+		Email: "mrtester@test.com",
+		Name:  "mrTester",
+	}
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, user)
+
+	rr := httptest.NewRecorder()
+	ps := map[string]string{"id": "1"}
+	UpdProfilePage(rr, req.WithContext(ctx), ps)
+
+	decoder := json.NewDecoder(rr.Body)
+	var generalForm forms.GeneralForm
+	err = decoder.Decode(&generalForm)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, generalForm.Uid, user.Uid)
+	assert.Equal(t, generalForm.Tags, mcPostBody["tags"])
+	assert.Equal(t, generalForm.About, mcPostBody["about"])
+	assert.Equal(t, generalForm.Email, mcPostBody["email"])
 }
