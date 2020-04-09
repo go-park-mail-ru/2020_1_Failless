@@ -7,9 +7,9 @@ import (
 	"net/http"
 )
 
-func (uc *userUseCase) FillFormIfExist(cred *models.User) (int, error) {
+func (uc *UserUseCase) FillFormIfExist(cred *models.User) (int, error) {
 	log.Println(*cred)
-	user, err := uc.rep.GetUserByPhoneOrEmail(cred.Phone, cred.Email)
+	user, err := uc.Rep.GetUserByPhoneOrEmail(cred.Phone, cred.Email)
 	if err == nil && user.Uid < 0 {
 		log.Println("user not found")
 		return http.StatusNotFound, errors.New("User doesn't exist\n")

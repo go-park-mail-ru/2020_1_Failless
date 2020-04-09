@@ -1,13 +1,8 @@
 package forms
 
 import (
-	"bytes"
-	"encoding/base64"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/security"
-	"github.com/disintegration/imaging"
-	"github.com/google/uuid"
-	"log"
 	"time"
 )
 
@@ -26,35 +21,6 @@ type GeneralForm struct {
 
 func (p *GeneralForm) ValidateGender() bool {
 	return models.Male == p.Gender || p.Gender == models.Female || p.Gender == models.Other
-}
-
-func (p *GeneralForm) ValidationImage() bool {
-	imgBytes, err := base64.StdEncoding.DecodeString(p.Avatar.ImgBase64)
-	if err != nil {
-		log.Println(err.Error())
-		return false
-	}
-
-	img, err := imaging.Decode(bytes.NewReader(imgBytes))
-	if err != nil {
-		log.Println(err.Error())
-		return false
-	}
-
-	// Resize srcImage to size = 128x128px using the Lanczos filter.
-	dstImage128 := imaging.Resize(img, 128, 128, imaging.Lanczos)
-	// Resize and crop the srcImage to fill the 100x100px area.
-	p.Avatar.Img = imaging.Fill(dstImage128, 100, 100, imaging.Center, imaging.Lanczos)
-	p.Avatar.ImgName = uuid.New().String() + ".jpg"
-	err = p.Avatar.SaveImage("users")
-	if err != nil {
-		log.Println("Can't save image")
-		log.Println(err.Error())
-		return false
-	}
-
-	p.Photos = append(p.Photos, p.Avatar)
-	return true
 }
 
 func (p *GeneralForm) GetDBFormat(info *models.JsonInfo, user *models.User) error {
@@ -103,6 +69,8 @@ func (p *GeneralForm) FillProfile(row models.JsonInfo) error {
 	p.About = row.About
 	p.Location = row.Location
 	p.Gender = row.Gender
+	p.Birthday = row.Birthday
+	p.Rating = row.Rating
 	for _, photo := range row.Photos {
 		p.Photos = append(p.Photos, EImage{ImgName: photo})
 	}

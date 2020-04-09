@@ -1,11 +1,13 @@
 package aws
 
 import (
-	"failless/internal/pkg/forms"
+	"bytes"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/disintegration/imaging"
 	"github.com/stretchr/testify/assert"
+	"image/jpeg"
 	"log"
 	"os"
 	"testing"
@@ -13,7 +15,7 @@ import (
 
 const (
 	testImageName = "default.png"
-	testFolder = "test"
+	testFolder    = "test"
 )
 
 func TestStartAWS(t *testing.T) {
@@ -22,19 +24,19 @@ func TestStartAWS(t *testing.T) {
 		log.Printf("Unable to start session %v", err)
 		t.Fail()
 	} else {
-		creds, err := sess.Config.Credentials.Get()
+		credentials, err := sess.sess.Config.Credentials.Get()
 		if err != nil {
-			log.Printf("Unable to get creds %v", err)
+			log.Printf("Unable to get credentials %v", err)
 			t.Fail()
 		} else {
-			log.Printf("Creds: %v", creds)
+			log.Printf("Credentials: %v", credentials)
 		}
 	}
 }
 
 func TestListObjects(t *testing.T) {
 	sess, _ := StartAWS()
-	_, err := ListObjects("event", 10)
+	_, err := sess.ListObjects("event", 10)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -51,8 +53,8 @@ func TestListObjects(t *testing.T) {
 }
 
 func TestUploadToAWS(t *testing.T) {
-	path := "../" + forms.Media + testImageName
-	s3, _ := StartAWS()
+	path := "../../../media/images/" + testImageName
+	service, _ := StartAWS()
 
 	_, err := os.Stat(path)
 	if err != nil {
@@ -64,27 +66,38 @@ func TestUploadToAWS(t *testing.T) {
 			log.Printf("pwd: %q", pwd)
 		}
 		t.Fail()
+		return
 	}
 
-	tempImg := correctImage(path, testImageName)
-
-	err = s3.UploadToAWS(&tempImg, testFolder)
+	buf, err := correctImage(path, testImageName)
 	if err != nil {
-		log.Printf("Unable to upload item %q, %v", tempImg.ImgName, err)
+		t.Fail()
+		return
+	}
+
+	err = service.UploadToAWS(bytes.NewReader(buf.Bytes()), testFolder, testImageName)
+	if err != nil {
+		log.Printf("Unable to upload item %q, %v", testImageName, err)
 		t.Fail()
 	} else {
-		result, _ := ListObjects(testFolder, 2)
+		result, _ := service.ListObjects(testFolder, 2)
 		if len(result.Contents) < 2 {
 			log.Println("Impossible.\nPerhaps the archives are incomplete.")
 			t.Fail()
 		}
-		assert.Equal(t, testFolder + "/" + testImageName, *result.Contents[1].Key)
+		assert.Equal(t, testFolder+"/"+testImageName, *result.Contents[1].Key)
 	}
 }
 
-func correctImage(path, name string) (tmp forms.EImage) {
-	_ = tmp.GetImage(path)
-	_ = tmp.Encode()
-	tmp.ImgName = name
-	return
+func correctImage(path, name string) (*bytes.Buffer, error) {
+	img, err := imaging.Open(path + name)
+	if err != nil {
+		return nil, err
+	}
+	buf := new(bytes.Buffer)
+	err = jpeg.Encode(buf, img, nil)
+	if err != nil {
+		return nil, err
+	}
+	return buf, nil
 }

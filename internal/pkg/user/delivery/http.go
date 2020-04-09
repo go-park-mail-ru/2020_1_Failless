@@ -78,11 +78,12 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 
 	form.Uid = uid
 	if form.Avatar.ImgBase64 != "" {
-		if !form.ValidationImage() {
+		if !images.ValidateImage(&form.Avatar, images.Users) {
 			network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
 			return
 		}
 	}
+
 	uc := usecase.GetUseCase()
 	if code, err := uc.UpdateUserInfo(&form); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
@@ -156,7 +157,7 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 ////////////// authorization part //////////////////
 
 func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	_ = network.CreateLogout(w)
+	network.CreateLogout(w)
 
 	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm
@@ -199,11 +200,7 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if err := network.CreateLogout(w); err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
-		return
-	}
-
+	network.CreateLogout(w)
 	network.Jsonify(w, network.Message{Message: "Successfully logout", Status: 200}, 200)
 }
 
@@ -255,14 +252,4 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 	form.Password = ""
 	network.Jsonify(w, form, http.StatusOK)
-}
-
-// debug&test func
-func UserDelete(mail string) {
-	//err := db.DeleteUser(db.ConnectToDB(), mail)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//log.Println("Success 'UserDelete'")
 }

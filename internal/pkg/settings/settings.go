@@ -26,6 +26,7 @@ type GlobalSecure struct {
 
 type GlobalConfig struct {
 	PageLimit int
+	InHDD     bool
 }
 
 var SecureSettings GlobalSecure

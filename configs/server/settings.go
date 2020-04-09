@@ -202,6 +202,7 @@ func GetConfig() *settings.ServerSettings {
 		}
 		settings.UseCaseConf = settings.GlobalConfig{
 			PageLimit: 10,
+			InHDD:     true,
 		}
 		conf.InitSecure(&settings.SecureSettings)
 		conf.InitConf(&settings.UseCaseConf)
