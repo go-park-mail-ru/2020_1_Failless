@@ -12,9 +12,7 @@ import (
 func TestCreateLogout(t *testing.T) {
 	rr := httptest.NewRecorder()
 
-	if err := CreateLogout(rr); err != nil {
-		t.Fatal(err)
-	}
+	CreateLogout(rr)
 	var correctCookie = http.Cookie{
 		Name:     "token",
 		Value:    "-",

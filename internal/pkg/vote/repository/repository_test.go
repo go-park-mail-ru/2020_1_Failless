@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"failless/internal/pkg/db"
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/jackc/pgx/stdlib"
+	//"failless/internal/pkg/db"
+	//"github.com/DATA-DOG/go-sqlmock"
+	//"github.com/jackc/pgx/stdlib"
 	"testing"
 )
 
