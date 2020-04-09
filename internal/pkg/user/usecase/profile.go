@@ -8,20 +8,20 @@ import (
 	"net/http"
 )
 
-func (uc *userUseCase) UpdateUserMeta(form *forms.MetaForm) (int, error) {
-	if err := uc.rep.UpdateUserSimple(form.Uid, form.Social, &form.About); err != nil {
+func (uc *UserUseCase) UpdateUserMeta(form *forms.MetaForm) (int, error) {
+	if err := uc.Rep.UpdateUserSimple(form.Uid, form.Social, &form.About); err != nil {
 		return http.StatusNotModified, err
 	}
 
 	for _, tag := range form.Tags {
-		if err := uc.rep.UpdateUserTags(form.Uid, tag); err != nil {
+		if err := uc.Rep.UpdateUserTags(form.Uid, tag); err != nil {
 			return http.StatusNotModified, err
 		}
 	}
 	return http.StatusOK, nil
 }
 
-func (uc *userUseCase) UpdateUserInfo(form *forms.GeneralForm) (int, error) {
+func (uc *UserUseCase) UpdateUserInfo(form *forms.GeneralForm) (int, error) {
 	form.Photos = append(form.Photos, form.Avatar)
 
 	var info models.JsonInfo
@@ -31,7 +31,7 @@ func (uc *userUseCase) UpdateUserInfo(form *forms.GeneralForm) (int, error) {
 		return http.StatusInternalServerError, err
 	}
 	user.Uid = form.Uid
-	if err := uc.rep.AddUserInfo(user, info); err != nil {
+	if err := uc.Rep.AddUserInfo(user, info); err != nil {
 		return http.StatusNotModified, err
 	}
 
@@ -43,8 +43,8 @@ func (uc *userUseCase) UpdateUserInfo(form *forms.GeneralForm) (int, error) {
 	return http.StatusOK, nil
 }
 
-func (uc *userUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
-	row, err := uc.rep.GetProfileInfo(profile.Uid)
+func (uc *UserUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
+	row, err := uc.Rep.GetProfileInfo(profile.Uid)
 	if err != nil {
 		log.Println(err.Error())
 		return http.StatusNotFound, err
@@ -55,7 +55,7 @@ func (uc *userUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 		return http.StatusInternalServerError, err
 	}
 
-	base, err := uc.rep.GetUserByUID(profile.Uid)
+	base, err := uc.Rep.GetUserByUID(profile.Uid)
 	if err != nil {
 		return http.StatusNotFound, err
 	}
@@ -65,13 +65,13 @@ func (uc *userUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 	(*profile).Email = base.Email
 	(*profile).Uid = base.Uid
 
-	(*profile).Events, err = uc.rep.GetUserEvents(base.Uid)
+	(*profile).Events, err = uc.Rep.GetUserEvents(base.Uid)
 	if err != nil {
 		log.Println("error in get user events. Not fatal")
 		log.Println(err.Error())
 	}
 
-	(*profile).Tags, err = uc.rep.GetUserTags(base.Uid)
+	(*profile).Tags, err = uc.Rep.GetUserTags(base.Uid)
 	if err != nil {
 		log.Println("error in get user tags. Not fatal")
 		log.Println(err.Error())
@@ -80,13 +80,13 @@ func (uc *userUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 	return http.StatusOK, nil
 }
 
-func (uc *userUseCase) AddImageToProfile(uid int, name string) error {
-	err := uc.rep.UpdateUserPhotos(uid, name)
+func (uc *UserUseCase) AddImageToProfile(uid int, name string) error {
+	err := uc.Rep.UpdateUserPhotos(uid, name)
 	return err
 }
 
-func (uc *userUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {
-	usr, err := uc.rep.GetUserByUID(form.Uid)
+func (uc *UserUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {
+	usr, err := uc.Rep.GetUserByUID(form.Uid)
 	if err != nil {
 		log.Println(err.Error())
 		return http.StatusNotFound, err
@@ -102,7 +102,7 @@ func (uc *userUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {
 	//inf.Birthday = form.Birthday
 	//inf.Gender = form.Gender
 
-	if err := uc.rep.UpdUserGeneral(inf, usr); err != nil {
+	if err := uc.Rep.UpdUserGeneral(inf, usr); err != nil {
 		log.Println(err.Error())
 		return http.StatusInternalServerError, err
 	}

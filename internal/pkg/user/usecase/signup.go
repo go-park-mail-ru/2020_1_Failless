@@ -6,7 +6,7 @@ import (
 	"failless/internal/pkg/security"
 )
 
-func (uc *userUseCase) RegisterNewUser(user *forms.SignForm) error {
+func (uc *UserUseCase) RegisterNewUser(user *forms.SignForm) error {
 	// TODO: move it to repository
 	bPass, err := security.EncryptPassword(user.Password)
 	if err != nil {
@@ -20,5 +20,5 @@ func (uc *userUseCase) RegisterNewUser(user *forms.SignForm) error {
 		Password: bPass,
 	}
 
-	return uc.rep.AddNewUser(&dbUser)
+	return uc.Rep.AddNewUser(&dbUser)
 }

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"failless/internal/pkg/settings"
 	"github.com/jackc/pgx"
 	"log"
 	"os"
@@ -35,9 +36,13 @@ func ConnectToDB() *pgx.ConnPool {
 		}
 		dbase, err := pgx.NewConnPool(pgxConnPoolConfig)
 		if err != nil {
-			log.Fatal("Connection to database was failed")
+			if settings.UseCaseConf.InHDD {
+				log.Fatal("Connection to database was failed")
+			}
+			db = nil
+		} else {
+			db = dbase
 		}
-		db = dbase
 	})
 	return db
 }

@@ -64,7 +64,6 @@ func (ur *userRepository) DeleteUser(mail string) error {
 	return nil
 }
 
-// TODO: move it to event pkg
 func (ur *userRepository) GetUserEvents(uid int) ([]models.Event, error) {
 	return nil, nil
 }

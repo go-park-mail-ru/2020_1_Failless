@@ -6,21 +6,30 @@ import (
 	"failless/internal/pkg/event/repository"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
+	"failless/internal/pkg/settings"
 	"log"
 	"net/http"
 )
 
-type userUseCase struct {
+type eventUseCase struct {
 	rep event.Repository
 }
 
 func GetUseCase() event.UseCase {
-	return &userUseCase{
-		rep: repository.NewSqlEventRepository(db.ConnectToDB()),
+	if settings.UseCaseConf.InHDD {
+		log.Println("IN HDD")
+		return &eventUseCase{
+			rep: repository.NewSqlEventRepository(db.ConnectToDB()),
+		}
+	} else {
+		log.Println("IN MEMORY")
+		return &eventUseCase{
+			rep: repository.NewEventRepository(),
+		}
 	}
 }
 
-func (uc *userUseCase) InitEventsByTime(events *[]models.Event) (status int, err error) {
+func (uc *eventUseCase) InitEventsByTime(events *[]models.Event) (status int, err error) {
 	*events, err = uc.rep.GetAllEvents()
 	if err != nil {
 		return http.StatusInternalServerError, err
@@ -28,7 +37,7 @@ func (uc *userUseCase) InitEventsByTime(events *[]models.Event) (status int, err
 	return http.StatusOK, nil
 }
 
-func (uc *userUseCase) InitEventsByKeyWords(events *[]models.Event, keyWords string, page int) (status int, err error) {
+func (uc *eventUseCase) InitEventsByKeyWords(events *[]models.Event, keyWords string, page int) (status int, err error) {
 	if keyWords == "" {
 		*events, err = uc.rep.GetFeedEvents(-1, 10, page)
 	} else {
@@ -41,7 +50,7 @@ func (uc *userUseCase) InitEventsByKeyWords(events *[]models.Event, keyWords str
 	return http.StatusOK, nil
 }
 
-func (uc *userUseCase) CreateEvent(event forms.EventForm) (models.Event, error) {
+func (uc *eventUseCase) CreateEvent(event forms.EventForm) (models.Event, error) {
 	user, err := uc.rep.GetNameByID(event.UId)
 	model := models.Event{}
 	event.GetDBFormat(&model)
@@ -50,7 +59,7 @@ func (uc *userUseCase) CreateEvent(event forms.EventForm) (models.Event, error) 
 	return model, err
 }
 
-func (uc *userUseCase) InitEventsByUserPreferences(events *[]models.Event, request *models.EventRequest) (int, error) {
+func (uc *eventUseCase) InitEventsByUserPreferences(events *[]models.Event, request *models.EventRequest) (int, error) {
 	dbTags, err := uc.rep.GetValidTags()
 	if err != nil {
 		return http.StatusBadRequest, err
@@ -77,7 +86,7 @@ func (uc *userUseCase) InitEventsByUserPreferences(events *[]models.Event, reque
 	return http.StatusOK, nil
 }
 
-func (uc *userUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int {
+func (uc *eventUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int {
 	var valid []int = nil
 	for _, tagId := range tagIds {
 		for _, tag := range tags {

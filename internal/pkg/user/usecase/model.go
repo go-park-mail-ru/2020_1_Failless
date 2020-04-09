@@ -8,20 +8,20 @@ import (
 	"log"
 )
 
-type userUseCase struct {
-	rep user.Repository
+type UserUseCase struct {
+	Rep user.Repository
 }
 
 func GetUseCase() user.UseCase {
 	if settings.UseCaseConf.InHDD {
 		log.Println("IN HDD")
-		return &userUseCase{
-			rep: repository.NewSqlUserRepository(db.ConnectToDB()),
+		return &UserUseCase{
+			Rep: repository.NewSqlUserRepository(db.ConnectToDB()),
 		}
 	} else {
 		log.Println("IN MEMORY")
-		return &userUseCase{
-			rep: repository.NewUserRepository(),
+		return &UserUseCase{
+			Rep: repository.NewUserRepository(),
 		}
 	}
 }
