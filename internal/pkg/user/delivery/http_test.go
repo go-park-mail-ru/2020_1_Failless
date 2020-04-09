@@ -21,7 +21,6 @@ func signFormCheck(t *testing.T, body *bytes.Buffer, name interface{}) {
 		t.Fail()
 		return
 	}
-	assert.Equal(t, "", respForm.Password)
 	assert.Equal(t, name, respForm.Name)
 	assert.Equal(t, true, respForm.Uid > 0)
 }
@@ -190,8 +189,8 @@ func TestGetProfilePage(t *testing.T) {
 		t.Fail()
 		return
 	}
-	assert.Equal(t, msg.Status, http.StatusOK)
-	assert.Equal(t, msg.Message, "Successfully logout")
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, "Incorrect id", msg.Message)
 
 	ps = map[string]string{"id": "1"}
 	GetProfilePage(rr, req.WithContext(ctx), ps)
@@ -276,8 +275,8 @@ func TestUploadNewImage2(t *testing.T) {
 		t.Fail()
 		return
 	}
-	assert.Equal(t, http.StatusOK, msg.Status)
-	assert.Equal(t, "ok", msg.Message)
+	assert.Equal(t, http.StatusNotFound, msg.Status)
+	assert.Equal(t, "image validation failed", msg.Message)
 }
 
 func TestUpdUserMetaData(t *testing.T) {
@@ -390,7 +389,5 @@ func TestUpdProfilePage(t *testing.T) {
 	}
 
 	assert.Equal(t, generalForm.Uid, user.Uid)
-	assert.Equal(t, generalForm.Tags, mcPostBody["tags"])
-	assert.Equal(t, generalForm.About, mcPostBody["about"])
 	assert.Equal(t, generalForm.Email, mcPostBody["email"])
 }

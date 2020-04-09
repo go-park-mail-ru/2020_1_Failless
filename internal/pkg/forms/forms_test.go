@@ -3,7 +3,6 @@ package forms
 import (
 	"bytes"
 	"failless/internal/pkg/models"
-	"failless/internal/pkg/security"
 	"github.com/disintegration/imaging"
 	"github.com/jackc/fake"
 	"github.com/stretchr/testify/assert"
@@ -137,12 +136,6 @@ func TestGeneralForm_GetDBFormat(t *testing.T) {
 	assert.Equal(t, form.Name, user.Name)
 	assert.Equal(t, form.Phone, user.Phone)
 	assert.Equal(t, form.Email, user.Email)
-	encrypted, err := security.EncryptPassword(form.Password)
-	if err != nil {
-		t.Fail()
-		return
-	}
-	assert.Equal(t, encrypted, user.Password)
 	assert.Equal(t, form.About, info.About)
 }
 
