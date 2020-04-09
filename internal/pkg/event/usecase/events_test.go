@@ -3,8 +3,11 @@ package usecase
 import (
 	"bytes"
 	"encoding/json"
+	"failless/internal/pkg/event"
+	"failless/internal/pkg/event/mocks"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
+	"github.com/golang/mock/gomock"
 	"testing"
 )
 
@@ -12,14 +15,37 @@ type TestCaseEvents struct {
 	Request    string
 }
 
+func getTestUseCase(mockRep *mocks.MockRepository) event.UseCase {
+	return &userUseCase{
+		rep: mockRep,
+	}
+}
+
 func TestGetUseCase(t *testing.T) {
 
 }
 
 func TestUserUseCase_InitEventsByTime(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockRepository := mocks.NewMockRepository(mockCtrl)
+	uc := getTestUseCase(mockRepository)
+	//
+	//var testEvent = models.Event{
+	//	EId: 1,
+	//	AuthorId: 1,
+	//	Title: "qqq",
+	//	Message: "qqq",
+	//	EDate:  time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+	//}
+	var testEvent []models.Event
+
+	mockRepository.EXPECT().GetAllEvents().Return(testEvent, nil).Times(1)
+
 	var events []models.Event
 
-	uc := GetUseCase()
+	//uc := GetUseCase()
 	_, err := uc.InitEventsByTime(&events)
 
 	if err != nil {
