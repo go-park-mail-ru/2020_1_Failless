@@ -1,0 +1,557 @@
+openapi: 3.0.0
+info:
+  title: Eventum
+  description: Eventum api
+  version: "1.1.0-oas3"
+paths:
+  /api/event/new:
+    post:
+      summary: create new event
+      description: send json with event description which will be validate on the backend and it will be added to the service database
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+      requestBody:
+        $ref: '#/components/requestBodies/EventForm'
+  '/api/event/{eid}':
+    put:
+      summary: updates event info
+      description: send new json with event info for update event which already exist
+      parameters:
+        - name: eid
+          in: path
+          description: ID of event to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+      requestBody:
+        $ref: '#/components/requestBodies/EventForm'
+    get:
+      summary: gets event info
+      description: get all info about event
+      parameters:
+        - name: eid
+          in: path
+          description: ID of event to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+  /api/search/events:
+    post:
+      summary: getting events by key-words
+      description: events sorted by date by key-words in the title and description
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+      requestBody:
+        $ref: '#/components/requestBodies/QueryObject'
+  /api/search/users:
+    post:
+      summary: getting userts by their tags
+      description: >-
+        users sorted by location (in the future) by tags which were set by users
+        in their profiles
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Profile'
+      requestBody:
+        $ref: '#/components/requestBodies/QueryObject'
+  /api/search/company:
+    post:
+      summary: get middle events
+      description: getting middle events (with limits)"
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+      requestBody:
+        $ref: '#/components/requestBodies/QueryObject'
+  /api/tags/feed:
+    get:
+      summary: getting all tags
+      description: vote of all tags
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+  '/api/profile/{uid}/upload':
+    put:
+      summary: upload user image to profile
+      description: send image
+      parameters:
+        - name: uid
+          in: path
+          description: ID of user to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadImage'
+        description: 'upload image in base64 format in json'
+        required: true
+  'api/profile/{uid}/general':
+    put:
+      summary: updates user profile
+      description: send updates to user profile
+      parameters:
+        - name: uid
+          in: path
+          description: ID of user to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/General'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+        description: Profile object that needs to be updated in database
+        required: true
+  'api/profile/{uid}/tag':
+    put:
+      summary: set/unset user tag
+      description: update user tags by set/unset concrete tag
+      parameters:
+        - name: uid
+          in: path
+          description: ID of user to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetaData'
+        description: Profile object that needs to be updated in database
+        required: true
+  'api/profile/{uid}/meta':
+    put:
+      summary: updates user meta data
+      description: send updates user metadata such as user tags, about, social
+      parameters:
+        - name: uid
+          in: path
+          description: ID of user to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetaData'
+        description: Profile object that needs to be updated in database
+        required: true
+  '/api/profile/{uid}':
+    get:
+      summary: gets profile info
+      description: get all info about gained profile
+      parameters:
+        - name: uid
+          in: path
+          description: ID of user to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+  /api/getuser:
+    get:
+      summary: gets user info
+      description: get all user info
+      responses:
+        '200':
+          description: OK
+        '409':
+          description: Not Authorized
+  /api/signin:
+    post:
+      summary: login user
+      description: logins user if his data and password is valid
+      responses:
+        '200':
+          description: successful or unsuccessful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      requestBody:
+        $ref: '#/components/requestBodies/User'
+  /api/logout:
+    get:
+      summary: logins out user
+      description: logins out user by setting him '-1' age of cookies
+      responses:
+        '200':
+          description: successful or unsuccessful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+  /api/signup:
+    post:
+      summary: registers user
+      description: 'registers user with his data, validating it and checking for conflicts'
+      responses:
+        '200':
+          description: Message about success or unsuccess operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+      requestBody:
+        $ref: '#/components/requestBodies/User'
+servers:
+  - url: 'https://eventum.rowbot.dev:3000/'
+components:
+  requestBodies:
+    QueryObject:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/QueryObject'
+      description: QueryObject that needs to be updated in database
+      required: true
+    User:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/User'
+      description: User object with its credentionals
+      required: true
+    EventForm:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EventForm'
+    UploadImage:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UploadImage'
+      description: UploadImage object it's json with base64 image that need to be added to database
+      required: true
+  schemas:
+    User:
+      type: object
+      properties:
+        uid:
+          type: integer
+          format: int
+          example: 10
+        email:
+          type: string
+          format: email
+          example: alex@example.com
+        name:
+          type: string
+          format: name
+          example: Alex
+        password:
+          type: string
+          format: password
+          example: qwerty12345
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+          format: string
+          example: User not found
+        status:
+          type: integer
+          format: int64
+          example: 404
+    Image:
+      type: object
+      properties:
+        img:
+          type: string
+          format: string
+          example: KJKJBKAKjJBKJBkjbKJBKBKJbkjbkBKbkjbbJKBKJBKb
+        path:
+          type: string
+          format: path
+          example: /img/defalut.png
+    Location:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: float64
+          example: 3000.2221
+        lng:
+          type: number
+          format: float64
+          example: 3000.2221
+        accurancy:
+          type: number
+          format: float64
+          example: 10
+    Profile:
+      type: object
+      properties:
+        uid:
+          type: integer
+          format: id
+          example: 1
+        name:
+          type: string
+          format: name
+          example: Alex
+        birtday:
+          type: string
+          format: date
+          example: 01.01.1998
+        photos:
+          type: array
+          items:
+            type: string
+            format: text
+            example: default.png
+        about:
+          type: string
+          format: text
+          example: I am really hot girl from far city and I'd like to find new friends
+        rating:
+          type: integer
+          format: number
+          example: 4.5
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+        tags:
+          type: array
+          items:
+            type: string
+            format: text
+            example: хочувБАР
+        gender:
+          type: integer
+          format: int
+          example: 1
+        location:
+          $ref: '#/components/schemas/Location'
+        login_date:
+          type: string
+          format: date-time
+    Tag:
+      type: object
+      properties:
+        name:
+          type: string
+          example: bar
+          format: name
+        tag_id:
+          type: integer
+          example: 10
+          format: number
+    Event:
+      type: object
+      properties:
+        eid:
+          type: integer
+          example: 10
+          format: id
+        author_id:
+          type: integer
+          format: id
+          example: 11
+        title:
+          type: string
+          format: text
+          example: I wanna go to pub
+        date:
+          type: string
+          format: date-time
+        message:
+          type: string
+          format: text
+          example: >-
+            I know really nice place for go out and I like to find a company for
+            that
+        author:
+          type: string
+          format: name
+          example: Jennifer
+        type:
+          type: array
+          items:
+            type: integer
+            format: number
+            example: 1
+        limit:
+          type: integer
+          format: number
+          example: 2
+    QueryObject:
+      type: object
+      properties:
+        uid:
+          type: integer
+          example: 10
+          format: id
+        page:
+          type: integer
+          example: 1
+          format: number
+        limit:
+          type: integer
+          example: 10
+          format: number
+        query:
+          type: string
+          format: string
+          example: meeting on the Pushkin Square
+        tags:
+          type: array
+          items:
+            type: integer
+            format: number
+            example: 5
+        ageLimit:
+          type: integer
+          format: number
+          example: '20'
+        type:
+          type: integer
+          format: number
+          example: 1
+        location:
+          $ref: '#/components/schemas/Location'
+    EventForm:
+      type: object
+      properties:
+        author_id:
+          type: integer
+          format: id
+          example: 11
+        title:
+          type: string
+          format: text
+          example: I wanna go to pub
+        date:
+          type: string
+          format: date-time
+        message:
+          type: string
+          format: text
+          example: >-
+            I know really nice place for go out and I like to find a company for
+            that
+        type:
+          type: integer
+          format: number
+          example: 1
+        tag:
+          type: integer
+          format: number
+          example: 1
+        is_public:
+          type: boolean
+          format: boolean
+          example: true
+        limit:
+          type: integer
+          format: number
+          example: 2
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+    UploadImage:
+      type: object
+      properties:
+        uid:
+          type: integer
+          format: int
+          example: 10
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'

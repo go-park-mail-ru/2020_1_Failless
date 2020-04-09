@@ -1,0 +1,396 @@
+package forms
+
+import (
+	"bytes"
+	"failless/internal/pkg/models"
+	"github.com/disintegration/imaging"
+	"github.com/jackc/fake"
+	"github.com/stretchr/testify/assert"
+	"image/jpeg"
+	"log"
+	"math/rand"
+	"os"
+	"testing"
+	"time"
+)
+
+const fileName = "../../../media/images/default.png"
+
+
+type Faker struct {
+}
+
+func (f *Faker) GetImage() EImage {
+	return EImage{
+		ImgBase64: "",
+		ImgName:   fake.ProductName(),
+		Img:       nil,
+	}
+}
+
+func (f *Faker) GetSignForm() SignForm {
+	return SignForm{
+		Uid:      rand.Int(),
+		Name:     fake.FirstName(),
+		Phone:    fake.DigitsN(8),
+		Email:    fake.EmailAddress(),
+		Password: fake.Password(8, 50, true, true, true),
+	}
+}
+
+func (f *Faker) GetEventForm() EventForm {
+	return EventForm{
+		UId:     rand.Int(),
+		Title:   fake.Title(),
+		Message: fake.Paragraph(),
+		Type:    rand.Int() % 16,
+		Private: false,
+		TagId:   rand.Int() % 16,
+		Limit:   rand.Int()%15 + 2,
+		Date:    "2020-10-10",
+		Photos:  []EImage{f.GetImage()},
+	}
+}
+
+func (f *Faker) GetLocation() models.LocationPoint {
+	return models.LocationPoint{
+		Latitude:  fake.Latitute(),
+		Longitude: fake.Longitude(),
+		Accuracy:  rand.Int() % 100,
+	}
+}
+
+func (f *Faker) GetGeneral() GeneralForm {
+	return GeneralForm{
+		SignForm: SignForm{},
+		Events: []models.Event{
+		},
+		Tags: []models.Tag{
+
+		},
+		Avatar:   f.GetImage(),
+		Photos:   []EImage{f.GetImage()},
+		Gender:   rand.Int() % 3,
+		About:    fake.Paragraph(),
+		Rating:   float32(rand.Int() % 5),
+		Location: f.GetLocation(),
+		Birthday: time.Now().Add(-time.Hour * 24 * 30 * 365 * time.Duration(rand.Int()%20)),
+	}
+}
+
+//testing all profile forms
+func TestGeneralForm_FillProfile(t *testing.T) {
+	faker := Faker{}
+	form := faker.GetGeneral()
+	profile := models.JsonInfo{
+		About:     fake.Paragraph(),
+		Photos:    []string{fake.DomainName()},
+		Rating:    float32(rand.Int() % 5),
+		Birthday:  form.Birthday,
+		Gender:    models.Male,
+		LoginDate: form.Birthday,
+		Location:  faker.GetLocation(),
+	}
+	if err := form.FillProfile(profile); err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, form.Birthday, profile.Birthday)
+	assert.Equal(t, form.Location, profile.Location)
+	assert.Equal(t, form.Gender, profile.Gender)
+	assert.Equal(t, form.Rating, profile.Rating)
+	assert.Equal(t, form.About, profile.About)
+	if len(profile.Photos) > 0 {
+		assert.Equal(t, form.Avatar.ImgName, profile.Photos[0])
+	} else {
+		assert.Equal(t, form.Avatar.ImgName, "default.png")
+	}
+	for i, photo := range profile.Photos {
+		assert.Equal(t, form.Photos[i].ImgName, photo)
+	}
+}
+
+func TestGeneralForm_GetDBFormat(t *testing.T) {
+	faker := Faker{}
+	info := models.JsonInfo{}
+	user := models.User{}
+	form := faker.GetGeneral()
+	if err := form.GetDBFormat(&info, &user); err != nil {
+		t.Fail()
+		return
+	}
+	assert.Equal(t, form.Birthday, info.Birthday)
+	assert.Equal(t, form.Location, info.Location)
+	assert.Equal(t, form.Gender, info.Gender)
+	assert.Equal(t, form.Rating, info.Rating)
+	assert.Equal(t, form.About, info.About)
+	if len(form.Photos) != len(info.Photos) {
+		t.Fail()
+		return
+	}
+	for i, photo := range form.Photos {
+		assert.Equal(t, info.Photos[i], photo.ImgName)
+	}
+
+	assert.Equal(t, form.Name, user.Name)
+	assert.Equal(t, form.Phone, user.Phone)
+	assert.Equal(t, form.Email, user.Email)
+	assert.Equal(t, form.About, info.About)
+}
+
+func TestEImage_Encode(t *testing.T) {
+	eimage := EImage{}
+	if err := eimage.GetImage(fileName); err != nil {
+		t.Fail()
+		return
+	}
+	err := eimage.Encode()
+	if err != nil {
+		t.Fail()
+		return
+	}
+}
+
+func TestEImage_GetImage(t *testing.T) {
+	log.Println(os.Getwd())
+	img, err := imaging.Open(fileName)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	eimage := EImage{}
+	if err := eimage.GetImage(fileName); err != nil {
+		t.Fail()
+		return
+	}
+	assert.Equal(t, eimage.Img, img)
+}
+
+
+func TestEImage_SaveImage(t *testing.T) {
+	eimage := EImage{}
+	if err := eimage.GetImage(fileName); err != nil {
+		t.Fail()
+		return
+	}
+	err := eimage.SaveImage("test")
+	if err != nil {
+		t.Fail()
+	}
+}
+
+func TestEImage_ImageToBuffer(t *testing.T) {
+	eimage := EImage{}
+	if err := eimage.GetImage(fileName); err != nil {
+		t.Fail()
+		return
+	}
+	buf, err := eimage.ImageToBuffer()
+	if err != nil {
+		t.Fail()
+		return
+	}
+	buf2 := new(bytes.Buffer)
+	img, err := imaging.Open(fileName)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	err = jpeg.Encode(buf2, img, nil)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	assert.Equal(t, buf, buf2)
+}
+
+func TestGeneralForm_ValidateGender(t *testing.T) {
+	form := GeneralForm{Gender: models.Male}
+	assert.Equal(t, true, form.ValidateGender())
+	form.Gender = models.Female
+	assert.Equal(t, true, form.ValidateGender())
+	form.Gender = models.Other
+	assert.Equal(t, true, form.ValidateGender())
+	form.Gender = 4
+	assert.Equal(t, false, form.ValidateGender())
+}
+
+// testing all signup forms
+func TestSignForm_Validate(t *testing.T) {
+	faker := Faker{}
+	s := faker.GetSignForm()
+	assert.Equal(t, true, s.Validate())
+	s = SignForm{
+		Name:     "Se",
+		Phone:    "8502",
+		Email:    "kerchtown!yandex.ru",
+		Password: "faillesstop1indaworld",
+	}
+	assert.Equal(t, false, s.Validate())
+	s.Email = "mrtester@test.com"
+	assert.Equal(t, false, s.Validate())
+	s.Phone = "9991002003"
+	assert.Equal(t, false, s.Validate())
+	s.Password = "failless12"
+	assert.Equal(t, true, s.Validate())
+}
+
+func TestSignForm_ValidatePassword(t *testing.T) {
+	s := SignForm{Password: "Fina11ySomEG00Dpass"}
+	assert.Equal(t, true, s.ValidatePassword())
+	s = SignForm{Password: "bad_pass"}
+	assert.Equal(t, false, s.ValidatePassword())
+}
+
+func TestSignForm_ValidateEmail(t *testing.T) {
+	s := SignForm{Email: fake.EmailAddress()}
+	assert.Equal(t, true, s.ValidateEmail())
+	s = SignForm{Email: "bad@mailru"}
+	assert.Equal(t, false, s.ValidateEmail())
+	s = SignForm{Email: "bad0mail.ru"}
+	assert.Equal(t, false, s.ValidateEmail())
+}
+
+func TestSignForm_ValidatePhone(t *testing.T) {
+	s := SignForm{Phone: "88005553535"}
+	assert.Equal(t, true, s.ValidatePhone())
+
+	s.Phone = "itsnotaphone"
+	assert.Equal(t, false, s.ValidatePhone())
+
+	s.Phone = "800"
+	assert.Equal(t, false, s.ValidatePhone())
+
+	s.Phone = "14881488148814881488"
+	assert.Equal(t, false, s.ValidatePhone())
+
+	s.Phone = "+7(495)25-25-515"
+	assert.Equal(t, false, s.ValidatePhone())
+	s.Phone = ""
+	assert.Equal(t, false, s.ValidatePhone())
+}
+
+func TestEventForm_CheckTextFields(t *testing.T) {
+	form := EventForm{
+		Title:   "",
+		Message: "",
+	}
+
+	form.Title = ""
+	assert.Equal(t, false, form.CheckTextFields())
+	form.Title = "Ok title"
+	assert.Equal(t, true, form.CheckTextFields())
+	form.Title = fake.CharactersN(TitleLenLimit + 1)
+	assert.Equal(t, false, form.CheckTextFields())
+	form.Title = "Ok title"
+	form.Message = fake.CharactersN(MessageLenLimit + 1)
+	assert.Equal(t, false, form.CheckTextFields())
+	form.Message = "Ok message"
+	assert.Equal(t, true, form.CheckTextFields())
+
+	faker := Faker{}
+	form = faker.GetEventForm()
+	assert.Equal(t, true, form.CheckTextFields())
+}
+
+func TestEventForm_ValidationType(t *testing.T) {
+	form := EventForm{TagId: -1, Type: -1}
+	assert.Equal(t, false, form.ValidationType())
+	form.Type = EventTypes + 1
+	form.TagId = EventTypes + 1
+	assert.Equal(t, false, form.ValidationType())
+	form.TagId = EventTypes / 2
+	assert.Equal(t, true, form.ValidationType())
+}
+
+func TestEventForm_ValidationLimits(t *testing.T) {
+	form := EventForm{Limit: 0}
+	assert.Equal(t, false, form.ValidationLimits())
+	form.Limit = MiddleEventLimit + 1
+	assert.Equal(t, false, form.ValidationLimits())
+	form.Limit = -1
+	assert.Equal(t, false, form.ValidationLimits())
+	form.Limit = MiddleEventLimit / 2
+	assert.Equal(t, true, form.ValidationLimits())
+}
+
+func TestEventForm_ValidationIDs(t *testing.T) {
+	form := EventForm{UId: -1, TagId: -1}
+	assert.Equal(t, false, form.ValidationIDs())
+	form.TagId = 100
+	assert.Equal(t, false, form.ValidationIDs())
+	form.TagId = EventTypes + 1
+	form.UId = 1
+	assert.Equal(t, false, form.ValidationIDs())
+	form.TagId = EventTypes / 2
+	assert.Equal(t, true, form.ValidationIDs())
+	form.UId = -1
+	assert.Equal(t, false, form.ValidationIDs())
+}
+
+func TestEventForm_GetDBFormat(t *testing.T) {
+	faker := Faker{}
+	form := faker.GetEventForm()
+	copyForm := form
+	model := models.Event{}
+	form.GetDBFormat(&model)
+	assert.Equal(t, true, model.AuthorId == copyForm.UId)
+	assert.Equal(t, true, model.Title == copyForm.Title)
+	assert.Equal(t, true, model.Message == copyForm.Message)
+	assert.Equal(t, true, model.Type == copyForm.TagId)
+	assert.Equal(t, true, model.Limit == copyForm.Limit)
+	if copyForm.Limit < 3 {
+		assert.Equal(t, false, model.Public)
+	} else {
+		assert.Equal(t, true, model.Public)
+	}
+
+	if copyForm.Date != "-" && copyForm.Date != "" {
+		checkDate, err := time.Parse(layoutISO, copyForm.Date)
+		if err != nil {
+			t.Fail()
+			return
+		}
+		assert.Equal(t, true, model.EDate == checkDate)
+	}
+
+	for i, photo := range copyForm.Photos {
+		log.Println(model.Photos)
+		log.Println(i)
+		if len(model.Photos) == 0 || len(model.Photos) < i+1 {
+			t.Fail()
+			return
+		}
+		assert.Equal(t, true, model.Photos[i] == photo.ImgName)
+	}
+
+	form.Limit = 2
+	form.GetDBFormat(&model)
+	assert.Equal(t, false, model.Public)
+
+}
+
+func TestEventForm_Validate(t *testing.T) {
+	faker := Faker{}
+	form := faker.GetEventForm()
+	assert.Equal(t, true, form.Validate())
+	form.Limit = 100
+	assert.Equal(t, false, form.Validate())
+	form.TagId = -1
+	form.Limit = 10
+	assert.Equal(t, false, form.Validate())
+	form.TagId = 2
+	assert.Equal(t, true, form.Validate())
+	form.Type = 2
+	form.Title = ""
+	assert.Equal(t, false, form.Validate())
+	form.Title = "Ok title"
+	form.Message = fake.CharactersN(MessageLenLimit + 1)
+	assert.Equal(t, false, form.Validate())
+	form.Message = "Ok message"
+	form.UId = -1
+	assert.Equal(t, false, form.Validate())
+	form.UId = 10
+	assert.Equal(t, true, form.Validate())
+}

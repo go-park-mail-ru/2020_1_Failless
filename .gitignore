@@ -1,1 +1,8 @@
 .idea
+bin/*
+configs/ssl-bundle
+media/images/*
+media/data/*
+.DS_Store
+.env
+*.log
