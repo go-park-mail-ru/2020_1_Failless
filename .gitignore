@@ -5,3 +5,4 @@ media/images/*
 media/data/*
 .DS_Store
 .env
+*.log

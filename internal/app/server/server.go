@@ -2,6 +2,7 @@ package server
 
 import (
 	"failless/configs/server"
+	"failless/internal/pkg/logger"
 	"failless/internal/pkg/settings"
 	"fmt"
 	"log"
@@ -11,6 +12,9 @@ import (
 )
 
 func Start() {
+	file := logger.OpenLogFile()
+	defer file.Close()
+
 	if ok := settings.CheckSecretes(server.Secrets); !ok {
 		log.Println("Can't find variables ", server.Secrets)
 		log.Fatal("Environment variables don't set")
