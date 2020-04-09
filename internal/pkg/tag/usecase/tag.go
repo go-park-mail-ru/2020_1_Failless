@@ -3,6 +3,7 @@ package usecase
 import (
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/models"
+	"failless/internal/pkg/settings"
 	"failless/internal/pkg/tag"
 	"failless/internal/pkg/tag/repository"
 	"log"
@@ -14,8 +15,14 @@ type tagUseCase struct {
 }
 
 func GetUseCase() tag.UseCase {
-	return &tagUseCase{
-		rep: repository.NewSqlTagRepository(db.ConnectToDB()),
+	if settings.UseCaseConf.InHDD {
+		return &tagUseCase{
+			rep: repository.NewSqlTagRepository(db.ConnectToDB()),
+		}
+	} else {
+		return &tagUseCase{
+			rep: repository.NewTagRepository(),
+		}
 	}
 }
 
