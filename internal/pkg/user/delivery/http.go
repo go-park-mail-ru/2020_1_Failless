@@ -141,6 +141,10 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	network.Jsonify(w, profile, http.StatusOK)
 }
 
+func GetProfileSubscriptions(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	// TODO: do it in the future
+}
+
 ////////////// user part //////////////////
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request, _ map[string]string) {
@@ -288,10 +292,29 @@ func GetUsersFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 
 	var users []models.UserGeneral
 	uc := usecase.GetUseCase()
-	if code, err := uc.InitEventsByUserPreferences(&users, &searchRequest); err != nil {
+	if code, err := uc.InitUsersByUserPreferences(&users, &searchRequest); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
+
+	// TODO: combine with GeneralForm to get tags and events
+
+	//var info []forms.GeneralForm
+	//
+	//if code, err := uc.GetUserInfo(&info); err != nil {
+	//	network.GenErrorCode(w, r, err.Error(), code)
+	//	return
+	//}
+
+	// Mix up UserGeneral and GeneralForm
+
+	//type kek struct {
+	//	user models.UserGeneral
+	//	info forms.GeneralForm
+	//}
+
+	//var a kek
+	//a.user = users
 
 	network.Jsonify(w, users, http.StatusOK)
 }

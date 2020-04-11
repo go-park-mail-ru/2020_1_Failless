@@ -129,6 +129,13 @@ var routesMap = map[string][]settings.MapHandler{
 		AuthRequired: true,
 		CSRF:         true,
 	}},
+	"/api/profile/:id/subscriptions": {{
+		Type:         "GET",
+		Handler:      userDelivery.GetProfileSubscriptions,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+	}},
 	"/api/profile/:id": {
 		{
 			Type:         "PUT",
@@ -145,8 +152,8 @@ var routesMap = map[string][]settings.MapHandler{
 			CSRF:         false,
 		},
 	},
-	"/api/user/:action": {{
-		Type:         "POST",
+	"/api/users/:action": {{
+		Type:         "PUT",
 		Handler:      voteDelivery.VoteUser,
 		CORS:         true,
 		AuthRequired: true,

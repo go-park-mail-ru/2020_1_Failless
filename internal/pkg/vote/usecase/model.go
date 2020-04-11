@@ -19,6 +19,26 @@ func GetUseCase() vote.UseCase {
 	}
 }
 
+func (vc *voteUseCase) VoteUser(vote models.Vote) network.Message {
+	// TODO: add check is vote already be here
+	vote.Value = vc.ValidateValue(vote.Value)
+	err := vc.rep.AddUserVote(vote.Uid, vote.Id, vote.Value)
+	// i think that there could be an error in one case - invalid event id
+	if err != nil {
+		return network.Message{
+			Request: nil,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+		}
+	}
+
+	return network.Message{
+		Request: nil,
+		Message: "OK",
+		Status:  http.StatusOK,
+	}
+}
+
 func (vc *voteUseCase) VoteEvent(vote models.Vote) network.Message {
 	// TODO: add check is vote already be here
 	vote.Value = vc.ValidateValue(vote.Value)

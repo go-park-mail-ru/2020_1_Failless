@@ -28,6 +28,17 @@ func (vr *sqlVoteRepository) AddEventVote(uid int, eid int, value int8) error {
 	return nil
 }
 
+func (vr *sqlVoteRepository) AddUserVote(uid int, id int, value int8) error {
+	sqlStatement := `INSERT INTO user_vote (uid, user_id, value) VALUES ( $1 , $2 , $3 );`
+	_, err := vr.db.Exec(sqlStatement, uid, id, value)
+	if err != nil {
+		log.Println(sqlStatement, uid, id, value)
+		return err
+	}
+
+	return nil
+}
+
 func (vr *sqlVoteRepository) FindFollowers(eid int) ([]models.UserGeneral, error) {
 	sqlStatement := `SELECT u.uid, u.name, p.about, p.gender, p.birthday, p.photos FROM event_vote AS ev
 							NATURAL JOIN profile AS u JOIN profile_info AS p ON p.pid = u.uid 
