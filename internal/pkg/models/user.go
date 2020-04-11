@@ -29,6 +29,7 @@ type UserGeneral struct {
 	Gender   int       `json:"gender, omitempty"`
 }
 
+
 type DBUserGeneral struct {
 	Uid      *int       `json:"uid, omitempty"`
 	Name     *string    `json:"name, omitempty"`
@@ -72,4 +73,18 @@ type JsonInfo struct {
 	Gender    int           `json:"gender"`
 	LoginDate time.Time     `json:"login_date"`
 	Location  LocationPoint `json:"location"`
+}
+
+// For feed users
+type UserRequest struct {
+	Uid       int           `json:"uid, omitempty"`
+	Page      int           `json:"page"`
+	Limit     int           `json:"limit"`
+	Query     string        `json:"query"`
+	Tags      []int         `json:"tags, omitempty"`
+	Location  LocationPoint `json:"location, omitempty"`
+	MinAge    int           `json:"minage"`
+	MaxAge    int           `json:"maxage"`
+	Men       bool          `json:"men"`
+	Women     bool          `json:"women"`
 }

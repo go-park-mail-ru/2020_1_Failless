@@ -4,8 +4,10 @@ import (
 	"errors"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/user"
+	"fmt"
 	"github.com/jackc/pgx"
 	"log"
+	"time"
 )
 
 type sqlUserRepository struct {
@@ -270,4 +272,88 @@ func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.Use
 	}
 
 	return nil
+}
+
+func (ur *sqlUserRepository) GetValidTags() ([]models.Tag, error) {
+	sqlStatement := `SELECT tag_id, name FROM tag ORDER BY tag_id;`
+	rows, err := ur.db.Query(sqlStatement)
+	if err != nil {
+		return nil, err
+	}
+
+	var tags []models.Tag
+	for rows.Next() {
+		tag := models.Tag{}
+		err = rows.Scan(&tag.TagId, &tag.Name)
+		if err != nil {
+			return nil, err
+		}
+		tags = append(tags, tag)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return tags, nil
+}
+
+func (ur *sqlUserRepository) GetRandomFeedUsers(uid int, limit int, page int) ([]models.UserGeneral, error) {
+	if page < 1 || limit < 1 {
+		return nil, errors.New("Page number can't be less than 1\n")
+	}
+	withCondition := `
+		WITH voted_users AS ( SELECT user_id FROM user_vote WHERE author_id = $1 ) `
+	sqlCondition := ` 
+		LEFT JOIN voted_users AS v 
+		ON p.pid = v.user_id 
+		WHERE v.user_id IS NULL 
+		AND
+		p.pid != $2
+		LIMIT $3 OFFSET $4 ;`
+	// TODO: add cool vote algorithm (aka select)
+	return ur.getUsers(withCondition, sqlCondition, uid, uid, limit, page)
+}
+
+// +/- universal method for getting users array by condition (aka sqlStatement)
+// and parameters in args (interface array)
+func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string, args ...interface{}) ([]models.UserGeneral, error) {
+	baseSql := withCondition + `
+		SELECT p.pid, u.name, p.photos, p.about, p.birthday, p.gender
+		FROM profile_info as p
+		JOIN profile as u
+		ON p.pid = u.uid `
+	baseSql += sqlStatement
+	log.Println(baseSql, args)
+	rows, err := ur.db.Query(baseSql, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	var users []models.UserGeneral
+	for rows.Next() {
+		userInfo := models.UserGeneral{}
+		gender := ""
+		genderPtr := &gender
+		bday := time.Time{}
+		bdayPtr := &bday
+		err = rows.Scan(
+			&userInfo.Uid,
+			&userInfo.Name,
+			&userInfo.Photos,
+			&userInfo.About,
+			&bdayPtr,
+			&genderPtr)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		users = append(users, userInfo)
+	}
+	err = rows.Err()
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	return users, nil
 }

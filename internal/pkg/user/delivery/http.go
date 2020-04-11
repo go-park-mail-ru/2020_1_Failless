@@ -253,3 +253,45 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	form.Password = ""
 	network.Jsonify(w, form, http.StatusOK)
 }
+
+// debug&test func
+func UserDelete(mail string) {
+	//err := db.DeleteUser(db.ConnectToDB(), mail)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//log.Println("Success 'UserDelete'")
+}
+
+////////////// feed part //////////////////
+
+func GetUsersFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
+	var searchRequest models.UserRequest
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&searchRequest)
+	if err != nil {
+		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		return
+	}
+
+	log.Println(searchRequest)
+
+	if searchRequest.Page < 1 {
+		searchRequest.Page = 1
+	}
+
+	var users []models.UserGeneral
+	uc := usecase.GetUseCase()
+	if code, err := uc.InitEventsByUserPreferences(&users, &searchRequest); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
+		return
+	}
+
+	network.Jsonify(w, users, http.StatusOK)
+}

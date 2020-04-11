@@ -152,6 +152,13 @@ var routesMap = map[string][]settings.MapHandler{
 		AuthRequired: true,
 		CSRF:         true,
 	}},
+	"/api/users/feed": {{
+		Type:		  "POST",
+		Handler:      userDelivery.GetUsersFeed,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+	}},
 	"/api": {{
 		Type:         "OPTIONS",
 		Handler:      router.OptionsReq,
@@ -198,7 +205,7 @@ func GetConfig() *settings.ServerSettings {
 			// it's correct length of CSRF token for Base64 (in bytes)
 			CSRFTokenLen: 20,
 			CSRFTokenTTL: 1, // one hour
-			EnableCSRF:   true,
+			EnableCSRF:   false,
 		}
 		settings.UseCaseConf = settings.GlobalConfig{
 			PageLimit: 10,

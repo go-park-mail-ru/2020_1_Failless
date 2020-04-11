@@ -14,6 +14,8 @@ type Repository interface {
 	UpdateUserPhotos(uid int, name string) error
 	SetUserLocation(uid int, point models.LocationPoint) error
 	UpdUserGeneral(info models.JsonInfo, user models.User) error
+	GetValidTags() ([]models.Tag, error)
+	GetRandomFeedUsers(uid int, limit int, page int) ([]models.UserGeneral, error)
 
 	// Deprecated: use UpdateUserTags, UpdateUserSimple,
 	// UpdateUserPhotos, UpdateUserRating instead
