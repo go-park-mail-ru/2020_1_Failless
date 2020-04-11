@@ -290,6 +290,7 @@ func GetUsersFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 		searchRequest.Page = 1
 	}
 
+	// Get FeedUsers to show
 	var users []models.UserGeneral
 	uc := usecase.GetUseCase()
 	if code, err := uc.InitUsersByUserPreferences(&users, &searchRequest); err != nil {
@@ -297,24 +298,43 @@ func GetUsersFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 		return
 	}
 
-	// TODO: combine with GeneralForm to get tags and events
+	// Get additional info about FeedUsers
+	var info []forms.GeneralForm
+	for i := 0; i < len(users); i++ {
+		tempinfo := forms.GeneralForm{}
+		tempinfo.Uid = users[i].Uid
+		if code, err := uc.GetUserInfo(&tempinfo); err != nil {
+			network.GenErrorCode(w, r, err.Error(), code)
+			return
+		}
+		info = append(info, tempinfo)
+	}
 
-	//var info []forms.GeneralForm
+	if len(info) != len(users) {
+		network.GenErrorCode(w, r, "invalid lengths", http.StatusBadRequest)
+		return
+	}
+
+	//Mix up UserGeneral and GeneralForm
+	type kek struct {
+		models.UserGeneral
+		Events []models.Event		`json:"events"`
+		Tags []models.Tag			`json:"tags"`
+	}
 	//
-	//if code, err := uc.GetUserInfo(&info); err != nil {
-	//	network.GenErrorCode(w, r, err.Error(), code)
-	//	return
-	//}
+	var result []kek
+	for i := 0; i < len(users); i++ {
+		tempkek := kek{}
+		tempkek.Uid = users[i].Uid
+		tempkek.Name = users[i].Name
+		tempkek.Photos = users[i].Photos
+		tempkek.About = users[i].About
+		tempkek.Birthday = users[i].Birthday
+		tempkek.Gender = users[i].Gender
+		tempkek.Events = info[i].Events
+		tempkek.Tags = info[i].Tags
+		result = append(result, tempkek)
+	}
 
-	// Mix up UserGeneral and GeneralForm
-
-	//type kek struct {
-	//	user models.UserGeneral
-	//	info forms.GeneralForm
-	//}
-
-	//var a kek
-	//a.user = users
-
-	network.Jsonify(w, users, http.StatusOK)
+	network.Jsonify(w, result, http.StatusOK)
 }

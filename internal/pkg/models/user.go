@@ -80,11 +80,11 @@ type UserRequest struct {
 	Uid       int           `json:"uid, omitempty"`
 	Page      int           `json:"page"`
 	Limit     int           `json:"limit"`
-	Query     string        `json:"query"`
+	Query     string        `json:"query, omitempty"`
 	Tags      []int         `json:"tags, omitempty"`
 	Location  LocationPoint `json:"location, omitempty"`
-	MinAge    int           `json:"minage"`
-	MaxAge    int           `json:"maxage"`
+	MinAge    int           `json:"minAge"`
+	MaxAge    int           `json:"maxAge"`
 	Men       bool          `json:"men"`
 	Women     bool          `json:"women"`
 }
