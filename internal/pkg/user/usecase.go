@@ -13,7 +13,7 @@ type UseCase interface {
 	RegisterNewUser(user *forms.SignForm) error
 	AddImageToProfile(uid int, name string) error
 	UpdateUserBase(form *forms.SignForm) (int, error)
-	InitEventsByUserPreferences(users *[]models.UserGeneral, request *models.UserRequest) (int, error)
+	InitUsersByUserPreferences(users *[]models.UserGeneral, request *models.UserRequest) (int, error)
 }
 
 // Get gender string by int id

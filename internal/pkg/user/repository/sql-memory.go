@@ -302,16 +302,16 @@ func (ur *sqlUserRepository) GetRandomFeedUsers(uid int, limit int, page int) ([
 		return nil, errors.New("Page number can't be less than 1\n")
 	}
 	withCondition := `
-		WITH voted_users AS ( SELECT user_id FROM user_vote WHERE author_id = $1 ) `
+		WITH voted_users AS ( SELECT user_id FROM user_vote WHERE uid = $1 ) `
 	sqlCondition := ` 
 		LEFT JOIN voted_users AS v 
 		ON p.pid = v.user_id 
 		WHERE v.user_id IS NULL 
 		AND
 		p.pid != $2
-		LIMIT $3 OFFSET $4 ;`
+		LIMIT $3 ; `
 	// TODO: add cool vote algorithm (aka select)
-	return ur.getUsers(withCondition, sqlCondition, uid, uid, limit, page)
+	return ur.getUsers(withCondition, sqlCondition, uid, uid, limit)
 }
 
 // +/- universal method for getting users array by condition (aka sqlStatement)
