@@ -92,15 +92,11 @@ func (vr *sqlVoteRepository) CheckMatching(uid, id int) (bool, error) {
 	sqlStatement := `
 		SELECT uid, user_id
 		FROM user_vote
-		WHERE uid = $2 AND user_id = $1;`
+		WHERE uid = $1 AND user_id = $2 AND value = 1;`
 
-	rows, err := vr.db.Query(sqlStatement, uid, id)
-	if err != nil {
-		log.Println(err)
-		return false, err
-	}
+	rows, _ := vr.db.Exec(sqlStatement, id, uid)
 
-	if rows != nil {
+	if rows.RowsAffected() == 1 {
 		return true, nil
 	}
 
