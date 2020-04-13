@@ -87,3 +87,22 @@ func (vr *sqlVoteRepository) FindFollowers(eid int) ([]models.UserGeneral, error
 func (vr *sqlVoteRepository) AddUserToChat(eid int, uid int) (models.Chat, error) {
 	return models.Chat{}, nil
 }
+
+func (vr *sqlVoteRepository) CheckMatching(uid, id int) (bool, error) {
+	sqlStatement := `
+		SELECT uid, user_id
+		FROM user_vote
+		WHERE uid = $2 AND user_id = $1;`
+
+	rows, err := vr.db.Query(sqlStatement, uid, id)
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+
+	if rows != nil {
+		return true, nil
+	}
+
+	return false, nil
+}
