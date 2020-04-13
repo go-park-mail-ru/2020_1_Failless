@@ -298,7 +298,7 @@ func GetUsersFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 		return
 	}
 
-	// Get additional info about FeedUsers
+	// Get events and tags about FeedUsers
 	var info []forms.GeneralForm
 	for i := 0; i < len(users); i++ {
 		tempinfo := forms.GeneralForm{}
@@ -315,13 +315,26 @@ func GetUsersFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 		return
 	}
 
-	//Mix up UserGeneral and GeneralForm
+	// Get subscriptions for FeedUsers
+	var subs [][]models.Event
+	for i := 0; i < len(users); i++ {
+		var tempsubs []models.Event
+		if code, err := uc.GetUserSubscriptions(&tempsubs, users[i].Uid); err != nil {
+			network.GenErrorCode(w, r, err.Error(), code)
+			return
+		}
+		subs = append(subs, tempsubs)
+	}
+
+	//Mix up of UserGeneral, GeneralForm and Subs
 	type kek struct {
 		models.UserGeneral
 		Events []models.Event		`json:"events"`
 		Tags []models.Tag			`json:"tags"`
+		Subs []models.Event			`json:"subscriptions"`
 	}
-	//
+
+	// Collecting all together
 	var result []kek
 	for i := 0; i < len(users); i++ {
 		tempkek := kek{}
@@ -333,6 +346,7 @@ func GetUsersFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 		tempkek.Gender = users[i].Gender
 		tempkek.Events = info[i].Events
 		tempkek.Tags = info[i].Tags
+		tempkek.Subs = subs[i]
 		result = append(result, tempkek)
 	}
 

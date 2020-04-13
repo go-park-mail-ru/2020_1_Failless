@@ -91,3 +91,7 @@ func (ur *userRepository) GetValidTags() ([]models.Tag, error) {
 func (ur *userRepository) GetRandomFeedUsers(uid int, limit int, page int) ([]models.UserGeneral, error) {
 	return nil, nil
 }
+
+func (ur *userRepository) GetUserSubscriptions(uid int) ([]models.Event, error) {
+	return nil, nil
+}

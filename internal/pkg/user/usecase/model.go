@@ -56,3 +56,14 @@ func (uc *UserUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int 
 
 	return valid
 }
+
+func (uc *UserUseCase) GetUserSubscriptions(events *[]models.Event, uid int) (int, error) {
+	var err error
+	*events, err = uc.Rep.GetUserSubscriptions(uid)
+
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
+}

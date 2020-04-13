@@ -4,7 +4,6 @@ import (
 	"errors"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/user"
-	"fmt"
 	"github.com/jackc/pgx"
 	"log"
 	"time"
@@ -344,16 +343,49 @@ func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string,
 			&bdayPtr,
 			&genderPtr)
 		if err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
 		users = append(users, userInfo)
 	}
 	err = rows.Err()
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
 	return users, nil
+}
+
+func (ur *sqlUserRepository) GetUserSubscriptions(uid int) ([]models.Event, error) {
+	sqlStatement := `
+		SELECT events.eid, events.uid, title, edate, message, events.is_edited, author, etype, range
+			FROM events JOIN event_vote ON events.eid = event_vote.eid
+			WHERE event_vote.uid = $1 AND event_vote.value = 1;`
+	rows, err := ur.db.Query(sqlStatement, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	var subs []models.Event
+	for rows.Next() {
+		event := models.Event{}
+		err = rows.Scan(
+			&event.EId,
+			&event.AuthorId,
+			&event.Title,
+			&event.EDate,
+			&event.Message,
+			&event.Edited,
+			&event.Author,
+			&event.Type,
+			&event.Limit)
+		if err != nil {
+			return nil, err
+		}
+		subs = append(subs, event)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return subs, nil
 }
