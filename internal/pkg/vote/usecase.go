@@ -7,5 +7,6 @@ import (
 
 type UseCase interface {
 	VoteEvent(vote models.Vote) network.Message
+	VoteUser(vote models.Vote) network.Message
 	GetEventFollowers(eid int) ([]models.UserGeneral, error)
 }

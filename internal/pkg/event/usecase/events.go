@@ -29,19 +29,19 @@ func GetUseCase() event.UseCase {
 	}
 }
 
-func (uc *eventUseCase) InitEventsByTime(events *[]models.Event) (status int, err error) {
-	*events, err = uc.rep.GetAllEvents()
+func (ec *eventUseCase) InitEventsByTime(events *[]models.Event) (status int, err error) {
+	*events, err = ec.rep.GetAllEvents()
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
 	return http.StatusOK, nil
 }
 
-func (uc *eventUseCase) InitEventsByKeyWords(events *[]models.Event, keyWords string, page int) (status int, err error) {
+func (ec *eventUseCase) InitEventsByKeyWords(events *[]models.Event, keyWords string, page int) (status int, err error) {
 	if keyWords == "" {
-		*events, err = uc.rep.GetFeedEvents(-1, 10, page)
+		*events, err = ec.rep.GetFeedEvents(-1, 10, page)
 	} else {
-		*events, err = uc.rep.GetEventsByKeyWord(keyWords, page)
+		*events, err = ec.rep.GetEventsByKeyWord(keyWords, page)
 	}
 	log.Println(events)
 	if err != nil {
@@ -50,27 +50,27 @@ func (uc *eventUseCase) InitEventsByKeyWords(events *[]models.Event, keyWords st
 	return http.StatusOK, nil
 }
 
-func (uc *eventUseCase) CreateEvent(event forms.EventForm) (models.Event, error) {
-	user, err := uc.rep.GetNameByID(event.UId)
+func (ec *eventUseCase) CreateEvent(event forms.EventForm) (models.Event, error) {
+	user, err := ec.rep.GetNameByID(event.UId)
 	model := models.Event{}
 	event.GetDBFormat(&model)
 	model.Author = user
-	err = uc.rep.SaveNewEvent(&model)
+	err = ec.rep.SaveNewEvent(&model)
 	return model, err
 }
 
-func (uc *eventUseCase) InitEventsByUserPreferences(events *[]models.Event, request *models.EventRequest) (int, error) {
-	dbTags, err := uc.rep.GetValidTags()
+func (ec *eventUseCase) InitEventsByUserPreferences(events *[]models.Event, request *models.EventRequest) (int, error) {
+	dbTags, err := ec.rep.GetValidTags()
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
 
-	valid := uc.TakeValidTagsOnly(request.Tags, dbTags)
+	valid := ec.TakeValidTagsOnly(request.Tags, dbTags)
 	log.Println(request)
 	if valid != nil {
-		*events, err = uc.rep.GetNewEventsByTags(valid, request.Uid, request.Limit, request.Page)
+		*events, err = ec.rep.GetNewEventsByTags(valid, request.Uid, request.Limit, request.Page)
 	} else {
-		*events, err = uc.rep.GetFeedEvents(request.Uid, request.Limit, request.Page)
+		*events, err = ec.rep.GetFeedEvents(request.Uid, request.Limit, request.Page)
 	}
 
 	if err != nil {
@@ -86,7 +86,7 @@ func (uc *eventUseCase) InitEventsByUserPreferences(events *[]models.Event, requ
 	return http.StatusOK, nil
 }
 
-func (uc *eventUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int {
+func (ec *eventUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int {
 	var valid []int = nil
 	for _, tagId := range tagIds {
 		for _, tag := range tags {

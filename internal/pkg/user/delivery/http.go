@@ -141,6 +141,10 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	network.Jsonify(w, profile, http.StatusOK)
 }
 
+func GetProfileSubscriptions(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	// TODO: do it in the future
+}
+
 ////////////// user part //////////////////
 
 func GetUserInfo(w http.ResponseWriter, r *http.Request, _ map[string]string) {
@@ -252,4 +256,99 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 	form.Password = ""
 	network.Jsonify(w, form, http.StatusOK)
+}
+
+// debug&test func
+func UserDelete(mail string) {
+	//err := db.DeleteUser(db.ConnectToDB(), mail)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	os.Exit(1)
+	//}
+	//log.Println("Success 'UserDelete'")
+}
+
+////////////// feed part //////////////////
+
+func GetUsersFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
+	var searchRequest models.UserRequest
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&searchRequest)
+	if err != nil {
+		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		return
+	}
+
+	log.Println(searchRequest)
+
+	if searchRequest.Page < 1 {
+		searchRequest.Page = 1
+	}
+
+	// Get FeedUsers to show
+	var users []models.UserGeneral
+	uc := usecase.GetUseCase()
+	if code, err := uc.InitUsersByUserPreferences(&users, &searchRequest); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
+		return
+	}
+
+	// Get events and tags about FeedUsers
+	var info []forms.GeneralForm
+	for i := 0; i < len(users); i++ {
+		tempinfo := forms.GeneralForm{}
+		tempinfo.Uid = users[i].Uid
+		if code, err := uc.GetUserInfo(&tempinfo); err != nil {
+			network.GenErrorCode(w, r, err.Error(), code)
+			return
+		}
+		info = append(info, tempinfo)
+	}
+
+	if len(info) != len(users) {
+		network.GenErrorCode(w, r, "invalid lengths", http.StatusBadRequest)
+		return
+	}
+
+	// Get subscriptions for FeedUsers
+	var subs [][]models.Event
+	for i := 0; i < len(users); i++ {
+		var tempsubs []models.Event
+		if code, err := uc.GetUserSubscriptions(&tempsubs, users[i].Uid); err != nil {
+			network.GenErrorCode(w, r, err.Error(), code)
+			return
+		}
+		subs = append(subs, tempsubs)
+	}
+
+	//Mix up of UserGeneral, GeneralForm and Subs
+	type kek struct {
+		models.UserGeneral
+		Events []models.Event		`json:"events"`
+		Tags []models.Tag			`json:"tags"`
+		Subs []models.Event			`json:"subscriptions"`
+	}
+
+	// Collecting all together
+	var result []kek
+	for i := 0; i < len(users); i++ {
+		tempkek := kek{}
+		tempkek.Uid = users[i].Uid
+		tempkek.Name = users[i].Name
+		tempkek.Photos = users[i].Photos
+		tempkek.About = users[i].About
+		tempkek.Birthday = users[i].Birthday
+		tempkek.Gender = users[i].Gender
+		tempkek.Events = info[i].Events
+		tempkek.Tags = info[i].Tags
+		tempkek.Subs = subs[i]
+		result = append(result, tempkek)
+	}
+
+	network.Jsonify(w, result, http.StatusOK)
 }
