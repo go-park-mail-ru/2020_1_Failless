@@ -59,7 +59,13 @@ func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 				return
 			}
 
-			ctx = context.WithValue(ctx, security.CtxUserKey, authReply)
+			uClaims := security.UserClaims{
+				Uid:   int(authReply.Cred.Uid),
+				Phone: authReply.Cred.Phone,
+				Email: authReply.Cred.Email,
+				Name:  authReply.Cred.Name,
+			}
+			ctx = context.WithValue(ctx, security.CtxUserKey, uClaims)
 
 		}
 		next(w, r.WithContext(ctx), ps)

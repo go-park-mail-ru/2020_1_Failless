@@ -3,7 +3,6 @@ package auth
 import (
 	"failless/internal/pkg/logger"
 	"failless/internal/pkg/settings"
-	"flag"
 	"fmt"
 	"google.golang.org/grpc"
 	"log"
@@ -26,7 +25,6 @@ func Start() {
 	}
 	serverSettings := conf.GetConfig()
 
-	flag.Parse()
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", serverSettings.Port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)

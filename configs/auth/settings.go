@@ -2,9 +2,7 @@ package auth
 
 import (
 	"failless/configs"
-	"failless/internal/pkg/router"
 	"failless/internal/pkg/settings"
-	"github.com/dimfeld/httptreemux"
 	"sync"
 )
 
@@ -49,7 +47,6 @@ func GetConfig() *settings.ServerSettings {
 		}
 		conf.InitSecure(&settings.SecureSettings)
 		conf.InitConf(&settings.UseCaseConf)
-		router.InitRouter(&conf, httptreemux.New())
 	})
 	return &conf
 }
