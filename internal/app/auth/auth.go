@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"failless/configs/auth"
 	"failless/internal/pkg/logger"
 	"failless/internal/pkg/settings"
 	"flag"
@@ -9,25 +8,23 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
-	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
-	"time"
 
 	pb "failless/api/proto/auth"
+	conf "failless/configs/auth"
+	auth "failless/internal/pkg/auth/usecase"
 )
 
 func Start() {
 	file := logger.OpenLogFile("auth")
-	pb.RegisterAuthServer()
 	defer file.Close()
 
-	if ok := settings.CheckSecretes(auth.Secrets); !ok {
-		log.Println("Can't find variables ", auth.Secrets)
+	if ok := settings.CheckSecretes(conf.Secrets); !ok {
+		log.Println("Can't find variables ", conf.Secrets)
 		log.Fatal("Environment variables don't set")
 	}
-	serverSettings := auth.GetConfig()
+	serverSettings := conf.GetConfig()
 
 	flag.Parse()
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", serverSettings.Port))
@@ -35,7 +32,8 @@ func Start() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterAuthServer(grpcServer, &routeGuideServer{})
+	srv := auth.GetUseCase()
+	pb.RegisterAuthServer(grpcServer, &srv)
 
 	go func() {
 		if err := grpcServer.Serve(lis); err != nil {

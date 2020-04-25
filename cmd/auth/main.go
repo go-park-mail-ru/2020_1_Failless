@@ -1,4 +1,4 @@
-package auth
+package main
 
 import (
 	"failless/internal/app/auth"

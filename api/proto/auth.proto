@@ -4,7 +4,6 @@ option go_package = "proto/auth";
 
 service Auth {
   rpc Authorize (AuthRequest) returns (AuthorizeReply) {}
-  rpc SignUp (AuthRequest) returns (AuthorizeReply) {}
   rpc CheckAuthorize (Token) returns (AuthorizeReply) {}
   rpc GetToken (AuthRequest) returns (Token) {}
 }

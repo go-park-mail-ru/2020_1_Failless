@@ -207,7 +207,6 @@ var Secrets = []string{
 
 var doOnce sync.Once
 var conf settings.ServerSettings
-var AuthClient pb.AuthClient
 
 func GetConfig() *settings.ServerSettings {
 	doOnce.Do(func() {
@@ -244,6 +243,6 @@ func GetConfig() *settings.ServerSettings {
 		router.InitRouter(&conf, httptreemux.New())
 	})
 	conn := ConnectToAuthMS(fmt.Sprintf("%s:%d", configs.IPAddress, configs.PortAuth))
-	AuthClient = pb.NewAuthClient(conn)
+	settings.AuthClient = pb.NewAuthClient(conn)
 	return &conf
 }

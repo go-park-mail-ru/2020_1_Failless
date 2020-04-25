@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"failless/internal/pkg/auth"
 	"failless/internal/pkg/models"
 	"github.com/jackc/pgx"
 	"log"
@@ -8,6 +9,10 @@ import (
 
 type sqlAuthRepository struct {
 	db *pgx.ConnPool
+}
+
+func NewSqlAuthRepository(db *pgx.ConnPool) auth.Repository {
+	return &sqlAuthRepository{db: db}
 }
 
 // Private method

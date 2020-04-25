@@ -3,6 +3,8 @@ package usecase
 import (
 	"context"
 	"failless/internal/pkg/auth"
+	"failless/internal/pkg/auth/repository"
+	"failless/internal/pkg/db"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
@@ -14,6 +16,12 @@ import (
 
 type AuthService struct {
 	Rep auth.Repository
+}
+
+func GetUseCase() AuthService {
+	return AuthService{
+		Rep: repository.NewSqlAuthRepository(db.ConnectToDB()),
+	}
 }
 
 func (as *AuthService) Authorize(ctx context.Context, cred *pb.AuthRequest) (*pb.AuthorizeReply, error) {
