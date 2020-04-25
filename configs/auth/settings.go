@@ -1,51 +1,12 @@
 package auth
 
 import (
+	"failless/configs"
 	"failless/internal/pkg/router"
 	"failless/internal/pkg/settings"
 	"github.com/dimfeld/httptreemux"
 	"sync"
-
-	userDelivery "failless/internal/pkg/user/delivery"
 )
-
-var routesMap = map[string][]settings.MapHandler{
-	"/api/getuser": {{
-		Type:         "GET",
-		Handler:      userDelivery.GetUserInfo,
-		CORS:         true,
-		AuthRequired: true,
-		CSRF:         false,
-	}},
-	"/api/logout": {{
-		Type:         "GET",
-		Handler:      userDelivery.Logout,
-		CORS:         true,
-		AuthRequired: true,
-		CSRF:         false,
-	}},
-	"/api/signin": {{
-		Type:         "POST",
-		Handler:      userDelivery.SignIn,
-		CORS:         true,
-		AuthRequired: false,
-		CSRF:         false,
-	}},
-	"/api/signup": {{
-		Type:         "POST",
-		Handler:      userDelivery.SignUp,
-		CORS:         true,
-		AuthRequired: false,
-		CSRF:         false,
-	}},
-	"/api": {{
-		Type:         "OPTIONS",
-		Handler:      router.OptionsReq,
-		CORS:         true,
-		AuthRequired: false,
-		CSRF:         false,
-	}},
-}
 
 // Env variables which must to be set before running server
 var Secrets = []string{
@@ -60,9 +21,8 @@ var conf settings.ServerSettings
 func GetConfig() *settings.ServerSettings {
 	doOnce.Do(func() {
 		conf = settings.ServerSettings{
-			Port:   3002,
-			Ip:     "0.0.0.0",
-			Routes: routesMap,
+			Port:   configs.PortAuth,
+			Ip:     configs.IPAddress,
 		}
 		settings.SecureSettings = settings.GlobalSecure{
 			CORSMethods: "",

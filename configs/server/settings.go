@@ -1,16 +1,36 @@
 package server
 
 import (
+	"failless/configs"
 	"failless/internal/pkg/router"
 	"failless/internal/pkg/settings"
+	"fmt"
 	"github.com/dimfeld/httptreemux"
+	"google.golang.org/grpc"
+	"log"
 	"sync"
 
+	pb "failless/api/proto/auth"
 	eventDelivery "failless/internal/pkg/event/delivery"
 	tagDelivery "failless/internal/pkg/tag/delivery"
 	userDelivery "failless/internal/pkg/user/delivery"
 	voteDelivery "failless/internal/pkg/vote/delivery"
 )
+
+var authConn *grpc.ClientConn
+var dialAuthOnce sync.Once
+
+func ConnectToAuthMS(addr string) *grpc.ClientConn {
+	dialAuthOnce.Do(
+		func() {
+			var err error
+			authConn, err = grpc.Dial(addr, grpc.WithInsecure())
+			if err != nil {
+				log.Fatalf("Failed to dial the auth server: %v", err)
+			}
+		})
+	return authConn
+}
 
 var routesMap = map[string][]settings.MapHandler{
 	"/api/getuser": {{
@@ -160,7 +180,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         true,
 	}},
 	"/api/users/feed": {{
-		Type:		  "POST",
+		Type:         "POST",
 		Handler:      userDelivery.GetUsersFeed,
 		CORS:         true,
 		AuthRequired: true,
@@ -187,12 +207,13 @@ var Secrets = []string{
 
 var doOnce sync.Once
 var conf settings.ServerSettings
+var AuthClient pb.AuthClient
 
 func GetConfig() *settings.ServerSettings {
 	doOnce.Do(func() {
 		conf = settings.ServerSettings{
-			Port:   3001,
-			Ip:     "0.0.0.0",
+			Port:   configs.PortServer,
+			Ip:     configs.IPAddress,
 			Routes: routesMap,
 		}
 		settings.SecureSettings = settings.GlobalSecure{
@@ -222,5 +243,7 @@ func GetConfig() *settings.ServerSettings {
 		conf.InitConf(&settings.UseCaseConf)
 		router.InitRouter(&conf, httptreemux.New())
 	})
+	conn := ConnectToAuthMS(fmt.Sprintf("%s:%d", configs.IPAddress, configs.PortAuth))
+	AuthClient = pb.NewAuthClient(conn)
 	return &conf
 }

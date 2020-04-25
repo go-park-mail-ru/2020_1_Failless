@@ -4,15 +4,23 @@ import (
 	"failless/configs/auth"
 	"failless/internal/pkg/logger"
 	"failless/internal/pkg/settings"
+	"flag"
 	"fmt"
+	"google.golang.org/grpc"
 	"log"
+	"net"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
 	"time"
+
+	pb "failless/api/proto/auth"
 )
 
 func Start() {
 	file := logger.OpenLogFile("auth")
+	pb.RegisterAuthServer()
 	defer file.Close()
 
 	if ok := settings.CheckSecretes(auth.Secrets); !ok {
@@ -20,19 +28,22 @@ func Start() {
 		log.Fatal("Environment variables don't set")
 	}
 	serverSettings := auth.GetConfig()
-	serve := http.Server{
-		Addr:              serverSettings.Ip + ":" + strconv.Itoa(serverSettings.Port),
-		Handler:           serverSettings.GetRouter(),
-		ReadTimeout:       time.Second * 10,
-		WriteTimeout:      time.Second * 30,
-		ReadHeaderTimeout: time.Second * 30,
-		IdleTimeout:       time.Second * 120,
-		MaxHeaderBytes:    http.DefaultMaxHeaderBytes, // TODO: ask what is the best value
-	}
 
-	log.Println("server is running on " + strconv.Itoa(serverSettings.Port))
-	err := serve.ListenAndServe()
+	flag.Parse()
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", serverSettings.Port))
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf("failed to listen: %v", err)
 	}
+	grpcServer := grpc.NewServer()
+	pb.RegisterAuthServer(grpcServer, &routeGuideServer{})
+
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("Failed to serve: %v", err)
+		}
+	}()
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+
+	<-stop
 }

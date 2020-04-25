@@ -258,16 +258,6 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	network.Jsonify(w, form, http.StatusOK)
 }
 
-// debug&test func
-func UserDelete(mail string) {
-	//err := db.DeleteUser(db.ConnectToDB(), mail)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//log.Println("Success 'UserDelete'")
-}
-
 ////////////// feed part //////////////////
 
 func GetUsersFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) {
