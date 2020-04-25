@@ -1,7 +1,7 @@
-package server
+package auth
 
 import (
-	"failless/configs/server"
+	"failless/configs/auth"
 	"failless/internal/pkg/logger"
 	"failless/internal/pkg/settings"
 	"fmt"
@@ -12,14 +12,14 @@ import (
 )
 
 func Start() {
-	file := logger.OpenLogFile("server")
+	file := logger.OpenLogFile("auth")
 	defer file.Close()
 
-	if ok := settings.CheckSecretes(server.Secrets); !ok {
-		log.Println("Can't find variables ", server.Secrets)
+	if ok := settings.CheckSecretes(auth.Secrets); !ok {
+		log.Println("Can't find variables ", auth.Secrets)
 		log.Fatal("Environment variables don't set")
 	}
-	serverSettings := server.GetConfig()
+	serverSettings := auth.GetConfig()
 	serve := http.Server{
 		Addr:              serverSettings.Ip + ":" + strconv.Itoa(serverSettings.Port),
 		Handler:           serverSettings.GetRouter(),
