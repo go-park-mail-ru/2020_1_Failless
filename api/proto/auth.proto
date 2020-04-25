@@ -1,0 +1,28 @@
+syntax = "proto3";
+package auth;
+option go_package = "proto/auth";
+
+service Auth {
+  rpc Authorize (AuthRequest) returns (AuthorizeReply) {}
+  rpc CheckAuthorize (CheckAuthRequest) returns (AuthorizeReply) {}
+  rpc SignUp (AuthRequest) returns (AuthorizeReply) {}
+}
+
+message AuthRequest {
+  int64 uid = 1;
+  string name = 2;
+  string phone = 3;
+  string email = 4;
+  string password = 5;
+}
+
+message AuthorizeReply {
+  int64 uid = 1;
+  string name = 2;
+  string phone = 3;
+  string email = 4;
+}
+
+message CheckAuthRequest {
+  string token = 1;
+}
