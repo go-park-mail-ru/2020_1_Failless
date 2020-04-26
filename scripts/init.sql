@@ -58,6 +58,10 @@ CREATE TABLE IF NOT EXISTS profile_info
     login_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
 
+--------------------------------------------------------
+-------------------- EVENT PART ------------------------
+--------------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS timetable
 (
     table_id  SERIAL PRIMARY KEY,
@@ -89,7 +93,8 @@ CREATE TABLE IF NOT EXISTS events
 CREATE TABLE IF NOT EXISTS subscribe
 (
     uid      INTEGER NOT NULL REFERENCES profile (uid),
-    table_id INTEGER NOT NULL REFERENCES timetable (table_id)
+    table_id INTEGER NOT NULL REFERENCES timetable (table_id),
+    CONSTRAINT unique_subscription UNIQUE (uid, table_id)
 );
 
 CREATE TABLE IF NOT EXISTS event_vote
@@ -99,16 +104,18 @@ CREATE TABLE IF NOT EXISTS event_vote
     is_edited BOOLEAN                     NOT NULL DEFAULT FALSE,
     value     SMALLINT                    NOT NULL DEFAULT 0,
     vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
-    chat_id   INTEGER                              DEFAULT NULL
+    chat_id   INTEGER                              DEFAULT NULL,
+    CONSTRAINT unique_event_vote UNIQUE (uid, eid)
 );
 
 CREATE TABLE IF NOT EXISTS user_vote
 (
     uid       INTEGER                     NOT NULL REFERENCES profile (uid),
     user_id   INTEGER                     NOT NULL REFERENCES profile (uid),
-    value     SMALLINT                    NOT NULL   DEFAULT 0,
-    vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL   DEFAULT current_timestamp,
-    chat_id   INTEGER REFERENCES chat_pair (chat_id) DEFAULT NULL
+    value     SMALLINT                    NOT NULL DEFAULT 0,
+    vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    chat_id   INTEGER REFERENCES chat_pair (chat_id) DEFAULT NULL,
+    CONSTRAINT unique_user_vote UNIQUE (uid, user_id)
 );
 
 --------------------------------------------------------
@@ -117,10 +124,10 @@ CREATE TABLE IF NOT EXISTS user_vote
 
 CREATE TABLE IF NOT EXISTS chat_pair
 (
-    chat_id SERIAL PRIMARY KEY,
-    id1     INTEGER REFERENCES profile (uid),
-    id2     INTEGER REFERENCES profile (uid),
-    date    TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+    chat_id     SERIAL PRIMARY KEY,
+    id1         INTEGER REFERENCES profile (uid),
+    id2         INTEGER REFERENCES profile (uid),
+    date        TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
 
 CREATE TABLE IF NOT EXISTS chat_user
@@ -130,7 +137,7 @@ CREATE TABLE IF NOT EXISTS chat_user
     date       TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     user_count INTEGER                              DEFAULT 1,
     title      VARCHAR(128)                NOT NULL CHECK ( title <> '' ),
-    eid        INTEGER REFERENCES events (eid)      DEFAULT NULL
+    eid        INTEGER REFERENCES events (eid)
 );
 
 CREATE TABLE IF NOT EXISTS user_chat
@@ -138,7 +145,6 @@ CREATE TABLE IF NOT EXISTS user_chat
     user_local_id SERIAL PRIMARY KEY,
     chat_local_id INTEGER REFERENCES chat_user (chat_id),
     uid           INTEGER REFERENCES profile (uid), -- user id
-    -- TODO: add last loaded message id
     date          TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
 
@@ -150,7 +156,6 @@ CREATE TABLE IF NOT EXISTS message
     chat_id       INTEGER REFERENCES chat_user (chat_id),
     user_local_id INTEGER REFERENCES user_chat (user_local_id),
     message       TEXT,
-    is_shown      BOOLEAN                              DEFAULT FALSE,
     created       TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
 

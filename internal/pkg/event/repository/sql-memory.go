@@ -262,3 +262,25 @@ func (er *sqlEventsRepository) GetNewEventsByTags(tags []int, uid int, limit int
 	sqlStatement += generator.getConstantCondition(len(items))
 	return er.getEvents(withCondition, sqlStatement, generator.JoinIntArgs(items, limit, page)...)
 }
+
+func (er *sqlEventsRepository) FollowMidEvent(uid, eid int) error {
+	sqlStatement := `INSERT INTO event_vote (uid, eid, value) VALUES ( $1 , $2 , 1 );`
+	rows, err := er.db.Exec(sqlStatement, uid, eid)
+	if err != nil || rows.RowsAffected() == 0 {
+		log.Println(err)
+		log.Println(sqlStatement, uid, eid)
+		return err
+	}
+
+	return nil
+}
+func (er *sqlEventsRepository) FollowBigEvent(uid, eid int) error {
+	sqlStatement := `
+		INSERT INTO subscribe (uid, table_id) VALUES ( $1, $2 );`
+
+	rows, err := er.db.Exec(sqlStatement, uid, eid)
+	if err != nil || rows.RowsAffected() == 0 {
+		return err
+	}
+	return nil
+}
