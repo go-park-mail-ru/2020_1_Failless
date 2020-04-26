@@ -47,3 +47,13 @@ VALUES (2, 'Концерт Арии', '2021-03-19 12:59:13+03', 'Группа д
        (2, 'Танцевальный мастер-класс в Парке Горького', '2021-03-01 18:34:53+03', 'Событие для молодых пар и тех,
         кто хочет научиться красиво танцевать', false, 'Марина', 15);
 UPDATE events SET title_tsv = setweight(to_tsvector(title), 'A') || setweight(to_tsvector(message), 'B');
+
+WITH chat_meta AS
+    (
+        SELECT uc.title, SUM(m.is_shown = TRUE) AS unseen
+        FROM user_chat uc JOIN messages m ON m.user_local_id = uc.user_local_id ORDER BY m.created LIMIT 1
+    ) SELECT
+
+
+SELECT uc.user_local_id, uc.title, SUM(m.is_shown = TRUE) AS unseen, MAX(m.created) AS last_date,  m.message
+FROM user_chat uc JOIN messages m ON m.user_local_id = uc.user_local_id WHERE uc.uid = $1 GROUP BY uc.user_local_id;

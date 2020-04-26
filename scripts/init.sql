@@ -138,6 +138,7 @@ CREATE TABLE IF NOT EXISTS user_chat
     user_local_id SERIAL PRIMARY KEY,
     chat_local_id INTEGER REFERENCES chat_user (chat_id),
     uid           INTEGER REFERENCES profile (uid), -- user id
+    -- TODO: add last loaded message id
     date          TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
 

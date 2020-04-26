@@ -6,6 +6,7 @@ import (
 )
 
 type Message struct {
+	Mid         int64     `json:"mid, omitempty"`
 	Uid         int64     `json:"uid"`
 	ULocalID    int64     `json:"u_local_id, omitempty"`
 	IsShown     bool      `json:"is_shown"`
