@@ -17,7 +17,7 @@ func NewSqlChatRepository(db *pgx.ConnPool) chat.Repository {
 	return &sqlChatRepository{db: db}
 }
 
-func (cr *sqlChatRepository) InsertDialogue(id1, id2 int) (int, error) {
+func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title string) (int64, error) {
 	// Create transaction
 	tx, err := cr.db.Begin()
 	if err != nil {
@@ -27,22 +27,24 @@ func (cr *sqlChatRepository) InsertDialogue(id1, id2 int) (int, error) {
 	defer tx.Rollback()
 
 	// Add row to chat_pair
-	var chatId int
-	sqlStatement1 := `
-		INSERT INTO chat_pair (id1, id2)
-		VALUES ($1, $2)
-		RETURNING chat_id;`
-	if err := tx.QueryRow(sqlStatement1, id1, id2).Scan(&chatId); err != nil {
+	var chatId int64
+	sqlStatement := `INSERT INTO chat_user (admin_id, user_count, title) VALUES ($1, $2, $3) RETURNING chat_id;`
+	if err := tx.QueryRow(sqlStatement, uid1, userCount, title).Scan(&chatId); err != nil {
+		log.Println(err)
+		return -1, nil
+	}
+
+	sqlStatement = `INSERT INTO user_chat (chat_local_id, uid) VALUES ($1, $2), ($3, $4);`
+	if _, err := tx.Exec(sqlStatement, chatId, uid1, chatId, uid2); err != nil {
 		log.Println(err)
 		return -1, nil
 	}
 
 	// Modify user_vote
 	sqlStatement2 := `
-		UPDATE user_vote
-		SET chat_id = $1
+		UPDATE user_vote SET chat_id = $1
 		WHERE (uid = $2 AND user_id = $3) OR (uid = $3 AND user_id = $2);`
-	if _, err = tx.Exec(sqlStatement2, chatId, id1, id2); err != nil {
+	if _, err = tx.Exec(sqlStatement2, chatId, uid1, uid2); err != nil {
 		log.Println(err)
 		return -1, nil
 	}

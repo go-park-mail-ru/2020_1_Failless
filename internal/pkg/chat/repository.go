@@ -6,7 +6,7 @@ import (
 )
 
 type Repository interface {
-	InsertDialogue(id1, id2 int) (int, error)
+	InsertDialogue(uid1, uid2, userCount int, title string) (int64, error)
 
 	GetUsersRooms(uid int64) ([]models.ChatRoom, error)
 	CheckRoom(cid int64, uid int64) (bool, error)
