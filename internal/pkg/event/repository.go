@@ -10,4 +10,6 @@ type Repository interface {
 	GetEventsByKeyWord(keyWords string, page int) ([]models.Event, error)
 	GetValidTags() ([]models.Tag, error)
 	GetNewEventsByTags(tags []int, uid int, limit int, page int) ([]models.Event, error)
+	FollowMidEvent(uid, eid int) error
+	FollowBigEvent(uid, eid int) error
 }

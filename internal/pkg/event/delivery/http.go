@@ -106,3 +106,20 @@ func GetEventsFeed(w http.ResponseWriter, r *http.Request, ps map[string]string)
 
 	network.Jsonify(w, events, http.StatusOK)
 }
+
+func FollowEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	if uid := security.CheckCredentials(w, r); uid < 0 {
+		return
+	}
+
+	var subscription models.EventFollow
+	if err := json.NewDecoder(r.Body).Decode(&subscription); err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	uc := usecase.GetUseCase()
+	message := uc.FollowEvent(&subscription)
+
+	network.Jsonify(w, message, http.StatusAccepted)
+}

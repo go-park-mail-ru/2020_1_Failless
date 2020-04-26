@@ -63,9 +63,6 @@ func VoteEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	network.Jsonify(w, message, message.Status)
 }
 
-func FollowEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-}
-
 func EventFollowers(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Println("follow for event")
 	uid := security.CheckCredentials(w, r)

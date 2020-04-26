@@ -88,7 +88,7 @@ var routesMap = map[string][]settings.MapHandler{
 	"/api/event/:id/follow": {
 		{
 			Type:         "POST",
-			Handler:      voteDelivery.FollowEvent,
+			Handler:      eventDelivery.FollowEvent,
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,
