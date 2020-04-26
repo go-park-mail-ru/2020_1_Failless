@@ -1,11 +1,11 @@
 package main
 
 import (
-	"failless/internal/app/auth"
+	"failless/internal/app/chat"
 	"log"
 )
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
-	auth.Start()
+	chat.Start()
 }
