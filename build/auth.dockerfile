@@ -12,4 +12,4 @@ RUN cp /tmp/protoc-$PROTOCV-linux-x86_64/bin/* /usr/bin/.
 
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go
 RUN /usr/bin/protoc -I /home/eventum/api/proto/ /home/eventum/api/proto/auth.proto --go_out=plugins=grpc:/home/eventum/api
-RUN go build -o bin/server ./cmd/server/main.go
+RUN go build -o bin/auth ./cmd/auth/main.go

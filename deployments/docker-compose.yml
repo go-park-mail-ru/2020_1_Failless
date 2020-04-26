@@ -1,7 +1,7 @@
 version: '3.3'
 services:
-  eventumbackend:
-    container_name: eventumbackend
+  eventum_serv:
+    container_name: eventumserv
     restart: always
     environment:
       - POSTGRES_USER
@@ -12,6 +12,7 @@ services:
       - AWS_REGION
     ports:
       - '3001:3001'
+    command: bin/server
     links:
       - eventumdb
     working_dir: /home/eventum
@@ -20,6 +21,25 @@ services:
     build:
       context: ../.
       dockerfile: ./build/server.dockerfile
+
+  eventum_auth:
+    container_name: eventumauth
+    restart: always
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    ports:
+      - '3002:3002'
+    command: bin/auth
+    links:
+      - eventumdb
+    working_dir: /home/eventum
+    networks:
+      - backend
+    build:
+      context: ../.
+      dockerfile: ./build/auth.dockerfile
 
   eventumdb:
     container_name: eventumdb
