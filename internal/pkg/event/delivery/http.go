@@ -121,5 +121,32 @@ func FollowEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uc := usecase.GetUseCase()
 	message := uc.FollowEvent(&subscription)
 
-	network.Jsonify(w, message, http.StatusAccepted)
+	network.Jsonify(w, message, http.StatusCreated)
 }
+
+
+func GetSearchEvents(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	var searchRequest models.EventRequest
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&searchRequest)
+	if err != nil {
+		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		return
+	}
+
+	log.Println(searchRequest)
+
+	if searchRequest.Page < 1 {
+		searchRequest.Page = 1
+	}
+
+	var events []models.EventResponse
+	uc := usecase.GetUseCase()
+	if code, err := uc.SearchEventsByUserPreferences(&events, &searchRequest); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
+		return
+	}
+
+	network.Jsonify(w, events, http.StatusOK)
+}
+

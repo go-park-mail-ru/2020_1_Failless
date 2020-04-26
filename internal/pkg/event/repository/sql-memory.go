@@ -5,6 +5,7 @@ import (
 	"failless/internal/pkg/event"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/settings"
+	"fmt"
 	"github.com/jackc/pgx"
 	"log"
 	"regexp"
@@ -272,6 +273,8 @@ func (er *sqlEventsRepository) FollowMidEvent(uid, eid int) error {
 		return err
 	}
 
+	fmt.Println("here")
+
 	return nil
 }
 func (er *sqlEventsRepository) FollowBigEvent(uid, eid int) error {
@@ -282,5 +285,46 @@ func (er *sqlEventsRepository) FollowBigEvent(uid, eid int) error {
 	if err != nil || rows.RowsAffected() == 0 {
 		return err
 	}
+	return nil
+}
+
+
+func (er *sqlEventsRepository) GetEventsWithFollowed(events *[]models.EventResponse, request *models.EventRequest) error {
+	sqlStatement := `
+		SELECT e.eid, e.uid, e.title, e.edate, e.message, e.is_edited, e.author, e.etype, e.range, e.photos,
+			   CASE WHEN ev.uid IS NULL THEN FALSE ELSE TRUE END AS followed
+		FROM events e
+		LEFT JOIN event_vote ev ON e.eid = ev.eid AND ev.uid = $1
+		LIMIT $2 OFFSET $3;`
+
+	rows, err := er.db.Query(sqlStatement, request.Uid, request.Limit, request.Page)
+	if err != nil {
+		log.Println(err)
+		fmt.Println(err)
+		return err
+	}
+
+	for rows.Next() {
+		tempEvent := models.EventResponse{}
+		err = rows.Scan(
+			&tempEvent.Event.EId,
+			&tempEvent.Event.AuthorId,
+			&tempEvent.Event.Title,
+			&tempEvent.Event.EDate,
+			&tempEvent.Event.Message,
+			&tempEvent.Event.Edited,
+			&tempEvent.Event.Author,
+			&tempEvent.Event.Type,
+			&tempEvent.Event.Limit,
+			&tempEvent.Event.Photos,
+			&tempEvent.Followed)
+		if err != nil {
+			log.Println(err)
+			fmt.Println(err)
+			return err
+		}
+		*events = append(*events, tempEvent)
+	}
+
 	return nil
 }

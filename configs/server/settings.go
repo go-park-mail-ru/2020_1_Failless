@@ -79,7 +79,7 @@ var routesMap = map[string][]settings.MapHandler{
 	},
 	"/api/events/search": {{
 		Type:         "POST",
-		Handler:      eventDelivery.GetEventsByKeyWords,
+		Handler:      eventDelivery.GetSearchEvents,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,

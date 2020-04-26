@@ -12,4 +12,5 @@ type Repository interface {
 	GetNewEventsByTags(tags []int, uid int, limit int, page int) ([]models.Event, error)
 	FollowMidEvent(uid, eid int) error
 	FollowBigEvent(uid, eid int) error
+	GetEventsWithFollowed(events *[]models.EventResponse, request *models.EventRequest) error
 }

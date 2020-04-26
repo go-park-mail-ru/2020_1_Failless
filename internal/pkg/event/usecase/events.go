@@ -8,6 +8,7 @@ import (
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/settings"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -127,4 +128,26 @@ func (ec *eventUseCase) FollowEvent(subscription *models.EventFollow) network.Me
 			Status:  http.StatusCreated,
 		}
 	}
+}
+
+func (ec *eventUseCase) SearchEventsByUserPreferences(events *[]models.EventResponse, request *models.EventRequest) (int, error) {
+	var err error
+	if request.Uid == 0 {
+		tempEvents, _ := ec.rep.GetAllEvents()
+		for _, tempEvent := range tempEvents {
+			tempEventResponse := models.EventResponse{
+				Event:    tempEvent,
+				Followed: false,
+			}
+			*events = append(*events, tempEventResponse)
+		}
+	} else {
+		err = ec.rep.GetEventsWithFollowed(events, request)
+		if err != nil {
+			fmt.Println(err)
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	return http.StatusOK, nil
 }

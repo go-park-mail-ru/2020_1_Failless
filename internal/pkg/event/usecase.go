@@ -12,4 +12,5 @@ type UseCase interface {
 	InitEventsByKeyWords(events *[]models.Event, keys string, page int) (int, error)
 	InitEventsByUserPreferences(events *[]models.Event, request *models.EventRequest) (int, error)
 	FollowEvent(subscription *models.EventFollow) network.Message
+	SearchEventsByUserPreferences(events *[]models.EventResponse, request *models.EventRequest) (int, error)
 }

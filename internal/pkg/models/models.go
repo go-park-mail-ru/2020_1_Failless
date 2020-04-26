@@ -158,6 +158,11 @@ type EventFollow struct {
 	Type	string	`json:"type"`
 }
 
+type EventResponse struct {
+	Event		Event
+	Followed	bool	`json:"followed"`
+}
+
 type Vote struct {
 	Uid   int       `json:"uid"`
 	Id    int       `json:"id"`
