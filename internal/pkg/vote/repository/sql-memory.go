@@ -84,8 +84,8 @@ func (vr *sqlVoteRepository) FindFollowers(eid int) ([]models.UserGeneral, error
 	return profiles, nil
 }
 
-func (vr *sqlVoteRepository) AddUserToChat(eid int, uid int) (models.Chat, error) {
-	return models.Chat{}, nil
+func (vr *sqlVoteRepository) AddUserToChat(eid int, uid int) (models.ChatRoom, error) {
+	return models.ChatRoom{}, nil
 }
 
 func (vr *sqlVoteRepository) CheckMatching(uid, id int) (bool, error) {

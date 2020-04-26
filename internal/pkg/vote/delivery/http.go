@@ -73,14 +73,14 @@ func EventFollowers(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	id := network.GetIdFromRequest(w, r, &ps)
+	id := network.GetIdFromRequest(w, r, ps)
 	if id < 0 {
 		network.GenErrorCode(w, r, "url id is incorrect", http.StatusBadRequest)
 		return
 	}
 
 	uc := usecase.GetUseCase()
-	followers, err := uc.GetEventFollowers(id)
+	followers, err := uc.GetEventFollowers(int(id))
 	if err != nil {
 		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return

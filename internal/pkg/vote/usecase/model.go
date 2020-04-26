@@ -6,7 +6,11 @@ import (
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/vote"
 	"failless/internal/pkg/vote/repository"
+	"fmt"
 	"net/http"
+	"strconv"
+
+	chatRep "failless/internal/pkg/chat/repository"
 )
 
 type voteUseCase struct {
@@ -38,19 +42,23 @@ func (vc *voteUseCase) VoteUser(vote models.Vote) network.Message {
 		if match {
 			// Create dialogue
 			// TODO: fix transaction bug
-			//cr := repository2.NewSqlChatRepository(db.ConnectToDB())
-			//if _, err = cr.InsertDialogue(vote.Uid, vote.Id); err != nil {
-			//	fmt.Println(err)
-			//	return network.Message{
-			//		Request: nil,
-			//		Message: err.Error(),
-			//		Status:  http.StatusBadRequest,
-			//	}
-			//}
+			cr := chatRep.NewSqlChatRepository(db.ConnectToDB())
+			if _, err = cr.InsertDialogue(
+				vote.Uid,
+				vote.Id,
+				2,
+				"Чат#"+strconv.Itoa(vote.Id)); err != nil {
+				fmt.Println(err)
+				return network.Message{
+					Request: nil,
+					Message: err.Error(),
+					Status:  http.StatusBadRequest,
+				}
+			}
 
 			return network.Message{
 				Request: nil,
-				Message: "You matched with someone! Check your mail!!",
+				Message: "You matched with someone! Check your messages!!",
 				Status:  http.StatusOK,
 			}
 		}
@@ -96,4 +104,3 @@ func (vc *voteUseCase) ValidateValue(value int8) int8 {
 func (vc *voteUseCase) GetEventFollowers(eid int) ([]models.UserGeneral, error) {
 	return vc.rep.FindFollowers(eid)
 }
-

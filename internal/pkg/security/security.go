@@ -2,6 +2,7 @@ package security
 
 import (
 	"crypto/rand"
+	"errors"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/settings"
 	"golang.org/x/crypto/bcrypt"
@@ -55,21 +56,35 @@ func CheckCredentials(w http.ResponseWriter, r *http.Request) int {
 	return cred.Uid
 }
 
+func GetUserFromCtx(r *http.Request) (UserClaims, error) {
+	data := r.Context().Value(CtxUserKey)
+	if data == nil {
+		return UserClaims{}, errors.New("Claims not found\n")
+	}
+
+	cred := data.(UserClaims)
+	if cred.Uid < 0 {
+		return UserClaims{}, errors.New("token uid is incorrect")
+	}
+
+	return cred, nil
+}
+
 func CompareUidsFromURLAndToken(w http.ResponseWriter, r *http.Request, ps map[string]string) int {
 	ctxUid := CheckCredentials(w, r)
 
-	uid := 0
-	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
+	uid := int64(0)
+	if uid = network.GetIdFromRequest(w, r, ps); uid < 0 {
 		network.GenErrorCode(w, r, "url uid is incorrect", http.StatusBadRequest)
 		return -1
 	}
 
-	if ctxUid != uid {
+	if ctxUid != int(uid) {
 		network.GenErrorCode(w, r, "forbidden", http.StatusForbidden)
 		return -1
 	}
 
-	return uid
+	return int(uid)
 }
 
 // Simple function that generate random sequence of bytes for

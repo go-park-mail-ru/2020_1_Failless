@@ -29,7 +29,6 @@ type UserGeneral struct {
 	Gender   int       `json:"gender, omitempty"`
 }
 
-
 type DBUserGeneral struct {
 	Uid      *int       `json:"uid, omitempty"`
 	Name     *string    `json:"name, omitempty"`
@@ -77,14 +76,90 @@ type JsonInfo struct {
 
 // For feed users
 type UserRequest struct {
+	Uid      int           `json:"uid, omitempty"`
+	Page     int           `json:"page"`
+	Limit    int           `json:"limit"`
+	Query    string        `json:"query, omitempty"`
+	Tags     []int         `json:"tags, omitempty"`
+	Location LocationPoint `json:"location, omitempty"`
+	MinAge   int           `json:"minAge"`
+	MaxAge   int           `json:"maxAge"`
+	Men      bool          `json:"men"`
+	Women    bool          `json:"women"`
+}
+
+type ChatRoom struct {
+	ChatID     int64     `json:"chat_id"`
+	AdminID    int64     `json:"admin_id"`
+	Created    time.Time `json:"created, omitempty"`
+	UsersCount int       `json:"users_count"`
+	Title      string    `json:"title, omitempty"`
+	EventID    int64     `json:"event_id, omitempty"`
+}
+
+type ChatMeta struct {
+	ChatID   int64     `json:"chat_id"`
+	Title    string    `json:"title, omitempty"`
+	Unseen   int       `json:"unseen"`
+	LastDate time.Time `json:"last_date"`
+	LastMsg  string    `json:"last_msg"`
+	Limit    int       `json:"limit"`
+	Page     int       `json:"page"`
+}
+
+type MessageRequest struct {
+	ChatID int64 `json:"chat_id"`
+	Uid    int64 `json:"uid"`
+	Limit  int   `json:"limit"`
+	Page   int   `json:"page"`
+}
+
+
+type ChatRequest struct {
+	Uid    int64 `json:"uid"`
+	Limit  int   `json:"limit"`
+	Page   int   `json:"page"`
+}
+
+type EType int
+
+type Event struct {
+	EId      int       `json:"eid"`
+	AuthorId int       `json:"author_id"`
+	Title    string    `json:"title"`
+	EDate    time.Time `json:"date"`
+	Message  string    `json:"description"`
+	Edited   bool      `json:"edited, omitempty"`
+	Author   string    `json:"author, omitempty"`
+	Type     int       `json:"type, omitempty"`
+	Limit    int       `json:"limit, omitempty"`
+	Photos   []string  `json:"photos, omitempty"`
+	Public   bool      `json:"public, omitempty"`
+	Tag      Tag       `json:"tag, omitempty"`
+}
+
+type EventRequest struct {
 	Uid       int           `json:"uid, omitempty"`
 	Page      int           `json:"page"`
 	Limit     int           `json:"limit"`
-	Query     string        `json:"query, omitempty"`
+	UserLimit int           `json:"user_limit, omitempty"`
+	Query     string        `json:"query"`
 	Tags      []int         `json:"tags, omitempty"`
 	Location  LocationPoint `json:"location, omitempty"`
 	MinAge    int           `json:"minAge"`
 	MaxAge    int           `json:"maxAge"`
 	Men       bool          `json:"men"`
 	Women     bool          `json:"women"`
+}
+
+type Vote struct {
+	Uid   int       `json:"uid"`
+	Id    int       `json:"id"`
+	Value int8      `json:"value"`
+	Date  time.Time `json:"-"`
+}
+
+type Tag struct {
+	Name  string `json:"name"`
+	TagId int    `json:"tag_id"`
 }
