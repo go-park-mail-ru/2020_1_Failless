@@ -38,3 +38,8 @@ type EventFollow struct {
 	Eid		int		`json:"eid"`
 	Type	string	`json:"type"`
 }
+
+type EventResponse struct {
+	Event		Event
+	Followed	bool	`json:"followed"`
+}

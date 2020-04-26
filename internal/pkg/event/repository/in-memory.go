@@ -50,3 +50,7 @@ func (er *eventsRepository) FollowMidEvent(uid, eid int) error {
 func (er *eventsRepository) FollowBigEvent(uid, eid int) error {
 	return nil
 }
+
+func (er *eventsRepository) GetEventsWithFollowed(events *[]models.EventResponse, request *models.EventRequest) error {
+	return nil
+}
