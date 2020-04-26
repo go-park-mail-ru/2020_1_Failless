@@ -6,13 +6,95 @@ import (
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
+	"failless/internal/pkg/network"
+	"failless/internal/pkg/security"
+	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	"sync"
+	"time"
 )
 
 type chatUseCase struct {
 	Rep chat.Repository
 }
+
+type Client struct {
+	Conn    *websocket.Conn
+	Request *http.Request
+	Id      string
+	ChatID  int64
+	Uid     int64
+}
+
+func (cc *Client) Run() {
+	uc := GetUseCase()
+	cc.Conn.WriteJSON(network.Message{Message: cc.Id, Status: http.StatusCreated})
+	lastMsgs, err := uc.GetMessagesForChat(&models.MessageRequest{
+		ChatID: cc.ChatID,
+		Uid:    cc.Uid,
+		Limit:  20,
+		Page:   0,
+	})
+	if err != nil {
+		cc.Conn.Close()
+		log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
+		return
+	}
+
+	cc.Conn.WriteJSON(lastMsgs)
+	for {
+		var message forms.Message
+		err := cc.Conn.ReadJSON(&message)
+		if err != nil {
+			cc.Conn.Close()
+			log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
+			return
+		}
+		user, err := security.GetUserFromCtx(cc.Request)
+		if err == nil {
+			message.Uid = int64(user.Uid)
+		}
+		message.Date = time.Now()
+
+		message.Mid, err = uc.AddNewMessage(&message)
+		if err != nil {
+			log.Println(err.Error())
+			err = cc.Conn.WriteJSON(
+				network.Message{
+					Message: err.Error(),
+					Status:  http.StatusInternalServerError})
+			if err != nil {
+				cc.Conn.Close()
+				log.Println(err.Error())
+				return
+			}
+		}
+		uc.Notify(&message)
+	}
+}
+
+type Handler struct {
+	Clients map[string]*Client
+}
+
+func (h *Handler) Notify(message *forms.Message) {
+	var broken []string
+	for _, client := range h.Clients {
+		err := client.Conn.WriteJSON(message)
+		if err != nil {
+			client.Conn.Close()
+			broken = append(broken, client.Id)
+		}
+	}
+	// TODO: check it
+	for _, detached := range broken {
+		delete(h.Clients, detached)
+	}
+}
+
+var MainHandler Handler
 
 func GetUseCase() chat.UseCase {
 	return &chatUseCase{
@@ -35,12 +117,18 @@ func (cc *chatUseCase) IsUserHasRoom(uid int64, cid int64) (bool, error) {
 	return cc.Rep.CheckRoom(cid, uid)
 }
 
-func (cc *chatUseCase) NotifyMembers(chatId int64) error {
+func (cc *chatUseCase) Subscribe(conn *websocket.Conn, r *http.Request) {
+	id := uuid.New().String()
+	cs := &Client{conn, sync.Mutex{}, r, id}
+	MainHandler.Clients[id] = cs
 	// TODO: implement it
-	return nil
+	cs.Run()
 }
 
-func (cc *chatUseCase) AddNewMessage(message *forms.Message) (int, error) {
+func (cc *chatUseCase) Notify(message *forms.Message) {
+}
+
+func (cc *chatUseCase) AddNewMessage(message *forms.Message) (int64, error) {
 	// check is user has this room
 	has, err := cc.IsUserHasRoom(message.Uid, message.ChatID)
 	if err != nil {
@@ -60,12 +148,6 @@ func (cc *chatUseCase) AddNewMessage(message *forms.Message) (int, error) {
 
 	// TODO: check it
 	message.ULocalID = msgID
-	// notify all chat members about it
-	err = cc.NotifyMembers(message.ChatID)
-	if err != nil {
-		// TODO: create cool handler or remove it
-		return http.StatusServiceUnavailable, nil
-	}
 	log.Println("AddNewMessage: OK")
 	return http.StatusOK, nil
 }

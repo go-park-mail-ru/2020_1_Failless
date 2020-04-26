@@ -187,7 +187,7 @@ func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]m
 						MAX(m.created) AS last_date, SUBSTR(MAX(CONCAT(m.created, m.message)), 20) last_msg
 						FROM user_chat uc JOIN chat_user c ON c.chat_id = uc.chat_local_id 
 						JOIN message m ON m.user_local_id = uc.user_local_id WHERE uc.uid = $1
-							GROUP BY c.chat_id ORDER BY last_date ASC LIMIT $2 OFFSET $3;`
+							GROUP BY c.chat_id ORDER BY last_date DESC LIMIT $2 OFFSET $3;`
 	rows, err := cr.db.Query(sqlStatement, uid, limit, page)
 	if err != nil {
 		return nil, err
@@ -216,6 +216,6 @@ func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]m
 func (cr *sqlChatRepository) GetRoomMessages(uid, cid int64, page, limit int) ([]forms.Message, error) {
 	sqlStatement := `SELECT ms.mid, ms.uid, ms.chat_id, ms.user_local_id, ms.message, ms.is_shown, ms.created 
 						FROM user_chat uc JOIN message ms ON uc.user_local_id = ms.user_local_id AND ms.chat_id = $1
-						WHERE uc.uid = $2 ORDER BY ms.created ASC LIMIT $3 OFFSET $4;`
+						WHERE uc.uid = $2 ORDER BY ms.created DESC LIMIT $3 OFFSET $4;`
 	return cr.getMessages(sqlStatement, cid, uid, limit, page)
 }
