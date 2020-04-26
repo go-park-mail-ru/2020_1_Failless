@@ -1,6 +1,7 @@
 package forms
 
 import (
+	pb "failless/api/proto/auth"
 	"failless/internal/pkg/models"
 	"log"
 	"regexp"
@@ -81,4 +82,12 @@ func (s *SignForm) FillFromModel(user *models.User) {
 	s.Email = user.Email
 	s.Phone = user.Phone
 	s.Uid = user.Uid
+}
+
+func (s *SignForm) FillFromAuthReply(user *pb.AuthorizeReply) {
+	s.Password = ""
+	s.Name = user.Cred.Name
+	s.Email = user.Cred.Email
+	s.Phone = user.Cred.Phone
+	s.Uid = int(user.Cred.Uid)
 }

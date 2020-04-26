@@ -6,3 +6,7 @@ media/data/*
 .DS_Store
 .env
 *.log
+*.pb.go
+run-auth
+run-server
+run-chat

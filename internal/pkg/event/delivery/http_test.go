@@ -77,7 +77,7 @@ func TestCreateNewEvent(t *testing.T) {
 
 		// Populate the request's context with our test data.
 		ctx := req.Context()
-		form := security.UserClaims{
+		form := pb.Credentials{
 			Uid:   1,
 			Phone: "88005553535",
 			Email: "aa@aa.aa",

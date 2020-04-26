@@ -2,11 +2,13 @@ package delivery
 
 import (
 	"encoding/json"
+	pb "failless/api/proto/auth"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/images"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
+	"failless/internal/pkg/settings"
 	"failless/internal/pkg/user/usecase"
 	"log"
 	"net/http"
@@ -177,29 +179,22 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		return
 	}
 
-	user := models.User{
-		Phone: form.Phone,
-		Email: form.Email,
+	authReply, err := settings.AuthClient.Authorize(r.Context(), &pb.AuthRequest{
+		Phone:    form.Phone,
+		Email:    form.Email,
+		Password: form.Password,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	uc := usecase.GetUseCase()
-	if code, err := uc.FillFormIfExist(&user); err != nil {
-		network.GenErrorCode(w, r, err.Error(), code)
+	if !authReply.Ok {
+		network.GenErrorCode(w, r, authReply.Message, http.StatusUnauthorized)
 		return
 	}
 
-	if security.ComparePasswords(user.Password, form.Password) {
-		err := network.CreateAuth(w, user)
-		if err != nil {
-			log.Println("cookie wasn't set")
-			network.GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		log.Println("cookie was set")
-	} else {
-		network.GenErrorCode(w, r, "Passwords is not equal", http.StatusUnauthorized)
-	}
-
-	form.FillFromModel(&user)
+	form.FillFromAuthReply(authReply)
 	network.Jsonify(w, form, http.StatusOK)
 }
 
@@ -256,16 +251,6 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 	form.Password = ""
 	network.Jsonify(w, form, http.StatusOK)
-}
-
-// debug&test func
-func UserDelete(mail string) {
-	//err := db.DeleteUser(db.ConnectToDB(), mail)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	os.Exit(1)
-	//}
-	//log.Println("Success 'UserDelete'")
 }
 
 ////////////// feed part //////////////////

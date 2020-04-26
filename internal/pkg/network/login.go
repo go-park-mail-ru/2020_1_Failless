@@ -21,7 +21,7 @@ type Claims struct {
 // todo: rewrite to env variables
 var JwtKey = []byte("removeAfterDebug")
 
-func createJWTToken(user models.User) (string, error) {
+func CreateJWTToken(user models.User) (string, error) {
 	expirationTime := time.Now().Add(time.Hour * 24 * 30)
 	claims := &Claims{
 		Email: user.Email,
@@ -42,7 +42,7 @@ func createJWTToken(user models.User) (string, error) {
 }
 
 func CreateAuth(w http.ResponseWriter, user models.User) error {
-	token, err := createJWTToken(user)
+	token, err := CreateJWTToken(user)
 	if err != nil {
 		return err
 	}
