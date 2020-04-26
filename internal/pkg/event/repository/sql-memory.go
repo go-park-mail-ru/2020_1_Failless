@@ -295,9 +295,23 @@ func (er *sqlEventsRepository) GetEventsWithFollowed(events *[]models.EventRespo
 			   CASE WHEN ev.uid IS NULL THEN FALSE ELSE TRUE END AS followed
 		FROM events e
 		LEFT JOIN event_vote ev ON e.eid = ev.eid AND ev.uid = $1
-		LIMIT $2 OFFSET $3;`
+		`
 
-	rows, err := er.db.Query(sqlStatement, request.Uid, request.Limit, request.Page)
+	var rows *pgx.Rows
+	var err error
+	if len(request.Query) > 0 {
+		var generator queryGenerator
+		if !generator.remove3PSymbols(request.Query) {
+			return errors.New("Incorrect symbols in the query\n")
+		}
+		args := generator.GenerateArgSlice(request.Limit, request.Page)
+		sqlStatement += "WHERE e.title_tsv @@ phraseto_tsquery( $2 ) LIMIT $3 OFFSET $4;"
+		args = append([]interface{}{request.Uid}, args...)
+		rows, err = er.db.Query(sqlStatement, args...)
+	} else {
+		sqlStatement += "LIMIT $2 OFFSET $3;"
+		rows, err = er.db.Query(sqlStatement, request.Uid, request.Limit, request.Page)
+	}
 	if err != nil {
 		log.Println(err)
 		fmt.Println(err)
