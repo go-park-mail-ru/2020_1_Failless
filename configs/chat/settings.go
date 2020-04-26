@@ -37,6 +37,13 @@ var routesMap = map[string][]settings.MapHandler{
 		AuthRequired: true,
 		CSRF:         false,
 	}},
+	"/ws/connect": {{
+		Type:         "GET",
+		Handler:      delivery.HandlerWS,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         false,
+	}},
 	"/ws/api/chat/:id": {
 		{
 			Type:         "GET",
@@ -109,7 +116,6 @@ func GetConfig() *settings.ServerSettings {
 		conf.InitConf(&settings.UseCaseConf)
 		router.InitRouter(&conf, httptreemux.New())
 	})
-
 
 	conn := ConnectToAuthMS(fmt.Sprintf("%s:%d", configs.IPAddress, configs.PortAuth))
 	settings.AuthClient = pb.NewAuthClient(conn)

@@ -35,6 +35,7 @@ func SendMessage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 	message.ChatID = cid
 	uc := usecase.GetUseCase()
+
 	if code, err := uc.AddNewMessage(&message); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return

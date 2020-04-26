@@ -12,7 +12,6 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 )
 
@@ -24,26 +23,63 @@ type Client struct {
 	Conn    *websocket.Conn
 	Request *http.Request
 	Id      string
-	ChatID  int64
+	ChatID  []int64
 	Uid     int64
 }
 
+type Handler struct {
+	Clients map[string]*Client
+}
+
+func (h *Handler) Notify(message *forms.Message) {
+	var broken []string
+	for _, client := range h.Clients {
+		for _, item := range client.ChatID {
+			if item == message.ChatID {
+				err := client.Conn.WriteJSON(message)
+				if err != nil {
+					client.Conn.Close()
+					broken = append(broken, client.Id)
+				}
+			}
+		}
+	}
+	// TODO: check it
+	for _, detached := range broken {
+		delete(h.Clients, detached)
+	}
+}
+
+var MainHandler Handler
+
 func (cc *Client) Run() {
 	uc := GetUseCase()
-	cc.Conn.WriteJSON(network.Message{Message: cc.Id, Status: http.StatusCreated})
-	lastMsgs, err := uc.GetMessagesForChat(&models.MessageRequest{
-		ChatID: cc.ChatID,
-		Uid:    cc.Uid,
-		Limit:  20,
-		Page:   0,
-	})
+	err := cc.Conn.WriteJSON(network.Message{Message: cc.Id, Status: http.StatusCreated})
 	if err != nil {
 		cc.Conn.Close()
 		log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
 		return
 	}
+	for _, room := range cc.ChatID {
+		lastMsgs, err := uc.GetMessagesForChat(&models.MessageRequest{
+			ChatID: room,
+			Uid:    cc.Uid,
+			Limit:  10,
+			Page:   0,
+		})
+		if err != nil {
+			cc.Conn.Close()
+			log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
+			return
+		}
+		err = cc.Conn.WriteJSON(lastMsgs)
+		if err != nil {
+			cc.Conn.Close()
+			log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
+			return
+		}
+	}
 
-	cc.Conn.WriteJSON(lastMsgs)
 	for {
 		var message forms.Message
 		err := cc.Conn.ReadJSON(&message)
@@ -58,43 +94,22 @@ func (cc *Client) Run() {
 		}
 		message.Date = time.Now()
 
-		message.Mid, err = uc.AddNewMessage(&message)
+		code, err := uc.AddNewMessage(&message)
 		if err != nil {
 			log.Println(err.Error())
 			err = cc.Conn.WriteJSON(
 				network.Message{
 					Message: err.Error(),
-					Status:  http.StatusInternalServerError})
+					Status:  code})
 			if err != nil {
 				cc.Conn.Close()
 				log.Println(err.Error())
 				return
 			}
 		}
-		uc.Notify(&message)
+		MainHandler.Notify(&message)
 	}
 }
-
-type Handler struct {
-	Clients map[string]*Client
-}
-
-func (h *Handler) Notify(message *forms.Message) {
-	var broken []string
-	for _, client := range h.Clients {
-		err := client.Conn.WriteJSON(message)
-		if err != nil {
-			client.Conn.Close()
-			broken = append(broken, client.Id)
-		}
-	}
-	// TODO: check it
-	for _, detached := range broken {
-		delete(h.Clients, detached)
-	}
-}
-
-var MainHandler Handler
 
 func GetUseCase() chat.UseCase {
 	return &chatUseCase{
@@ -117,18 +132,26 @@ func (cc *chatUseCase) IsUserHasRoom(uid int64, cid int64) (bool, error) {
 	return cc.Rep.CheckRoom(cid, uid)
 }
 
-func (cc *chatUseCase) Subscribe(conn *websocket.Conn, r *http.Request) {
+func (cc *chatUseCase) Subscribe(conn *websocket.Conn, r *http.Request, uid int64) {
 	id := uuid.New().String()
-	cs := &Client{conn, sync.Mutex{}, r, id}
+	rooms, err := cc.Rep.GetUsersRooms(uid)
+	if err != nil {
+		log.Println("Connection failed: ", err.Error())
+		return
+	}
+	var roomsIDs []int64
+	for _, room := range rooms {
+		roomsIDs = append(roomsIDs, room.ChatID)
+	}
+	cs := &Client{conn, r, id, roomsIDs, uid}
 	MainHandler.Clients[id] = cs
-	// TODO: implement it
 	cs.Run()
 }
 
 func (cc *chatUseCase) Notify(message *forms.Message) {
 }
 
-func (cc *chatUseCase) AddNewMessage(message *forms.Message) (int64, error) {
+func (cc *chatUseCase) AddNewMessage(message *forms.Message) (int, error) {
 	// check is user has this room
 	has, err := cc.IsUserHasRoom(message.Uid, message.ChatID)
 	if err != nil {
@@ -147,7 +170,7 @@ func (cc *chatUseCase) AddNewMessage(message *forms.Message) (int64, error) {
 	}
 
 	// TODO: check it
-	message.ULocalID = msgID
+	message.Mid = msgID
 	log.Println("AddNewMessage: OK")
 	return http.StatusOK, nil
 }
