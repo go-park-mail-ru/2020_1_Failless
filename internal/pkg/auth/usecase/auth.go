@@ -25,17 +25,17 @@ func GetUseCase() AuthService {
 }
 
 func (as *AuthService) Authorize(ctx context.Context, cred *pb.AuthRequest) (*pb.AuthorizeReply, error) {
+	log.Print("Authorize: ")
 	user, err := as.Rep.GetUserByPhoneOrEmail(cred.Phone, cred.Email)
 	if err == nil && user.Uid < 0 {
-		log.Println("user not found")
+		log.Println("client - user not found")
 		return &pb.AuthorizeReply{
 			Ok:      false,
 			Cred:    nil,
 			Message: "User doesn't exist",
 		}, nil
 	} else if err != nil {
-		log.Println("error was occurred")
-		log.Println(err.Error())
+		log.Println("error - ", err.Error())
 		return &pb.AuthorizeReply{
 			Ok:      false,
 			Cred:    nil,
@@ -44,21 +44,24 @@ func (as *AuthService) Authorize(ctx context.Context, cred *pb.AuthRequest) (*pb
 	}
 
 	if !security.ComparePasswords(user.Password, cred.Password) {
+		log.Println("client - passwords are not equal")
 		return &pb.AuthorizeReply{
 			Ok:      false,
 			Cred:    nil,
-			Message: "Passwords is not equal",
+			Message: "Passwords are not equal",
 		}, nil
 	}
 
 	token, err := network.CreateJWTToken(user)
 	if err != nil {
+		log.Println("error - ", err.Error())
 		return &pb.AuthorizeReply{
 			Ok:      false,
 			Cred:    nil,
 			Message: err.Error(),
 		}, nil
 	}
+	log.Println("OK")
 	return &pb.AuthorizeReply{
 		Ok: true,
 		Cred: &pb.Credentials{
@@ -72,6 +75,7 @@ func (as *AuthService) Authorize(ctx context.Context, cred *pb.AuthRequest) (*pb
 }
 
 func (*AuthService) CheckAuthorize(ctx context.Context, in *pb.Token) (*pb.AuthorizeReply, error) {
+	log.Print("CheckAuthorize: ")
 	// Get the JWT string from the cookie
 	tknStr := in.Token
 	claims := &network.Claims{}
@@ -81,12 +85,14 @@ func (*AuthService) CheckAuthorize(ctx context.Context, in *pb.Token) (*pb.Autho
 
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
+			log.Println("client - token signature invalid")
 			return &pb.AuthorizeReply{
 				Ok:      false,
 				Cred:    nil,
 				Message: "invalid token",
 			}, nil
 		}
+		log.Println("error - ", err.Error())
 		return &pb.AuthorizeReply{
 			Ok:      false,
 			Cred:    nil,
@@ -94,32 +100,33 @@ func (*AuthService) CheckAuthorize(ctx context.Context, in *pb.Token) (*pb.Autho
 		}, err
 	}
 
-	form := pb.Credentials{}
 	if !tkn.Valid {
+		log.Println("client - token invalid")
 		return &pb.AuthorizeReply{
 			Ok:      false,
 			Cred:    nil,
 			Message: "invalid token",
 		}, nil
-	} else { // success. user is authorized
-		form = pb.Credentials{
+	}
+	// success. user is authorized
+	log.Println("OK")
+	ctx = context.WithValue(ctx, security.CtxUserKey, claims)
+
+	return &pb.AuthorizeReply{
+		Ok: true,
+		Cred: &pb.Credentials{
 			Uid:   int64(claims.Uid),
 			Phone: claims.Phone,
 			Email: claims.Email,
 			Name:  claims.Name,
-		}
-		ctx = context.WithValue(ctx, security.CtxUserKey, form)
-	}
-
-	return &pb.AuthorizeReply{
-		Ok:      true,
-		Cred:    &form,
+		},
 		Message: "",
 	}, nil
 
 }
 
 func (*AuthService) GetToken(ctx context.Context, in *pb.AuthRequest) (*pb.Token, error) {
+	log.Print("GetToken: ")
 	user := models.User{
 		Uid:   int(in.Uid),
 		Name:  in.Name,
@@ -128,14 +135,16 @@ func (*AuthService) GetToken(ctx context.Context, in *pb.AuthRequest) (*pb.Token
 	}
 	pass, err := security.EncryptPassword(in.Password)
 	if err != nil {
+		log.Println("error - ", err.Error())
 		return nil, err
 	}
 
 	user.Password = pass
 	token, err := network.CreateJWTToken(user)
 	if err != nil {
+		log.Println("error - ", err.Error())
 		return nil, err
 	}
-
+	log.Println("OK")
 	return &pb.Token{Token: token}, err
 }

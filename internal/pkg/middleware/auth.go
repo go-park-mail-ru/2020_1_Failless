@@ -50,8 +50,7 @@ func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 			network.GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
 			return
 		} else {
-			authReply, err := settings.AuthClient.CheckAuthorize(
-				ctx, &pb.Token{Token: c.Value})
+			authReply, err := settings.AuthClient.CheckAuthorize(ctx, &pb.Token{Token: c.Value})
 			if err != nil {
 				ctx = context.WithValue(ctx, security.CtxUserKey, nil)
 				w.WriteHeader(http.StatusInternalServerError)
