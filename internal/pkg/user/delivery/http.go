@@ -126,14 +126,14 @@ func UploadNewImage(w http.ResponseWriter, r *http.Request, ps map[string]string
 }
 
 func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	uid := 0
-	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
+	uid := int64(0)
+	if uid = network.GetIdFromRequest(w, r, ps); uid < 0 {
 		network.GenErrorCode(w, r, "Uid is incorrect", http.StatusInternalServerError)
 		return
 	}
 
 	var profile forms.GeneralForm
-	profile.Uid = uid
+	profile.Uid = int(uid)
 	uc := usecase.GetUseCase()
 	if code, err := uc.GetUserInfo(&profile); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)

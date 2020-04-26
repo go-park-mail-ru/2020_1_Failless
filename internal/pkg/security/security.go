@@ -58,18 +58,18 @@ func CheckCredentials(w http.ResponseWriter, r *http.Request) int {
 func CompareUidsFromURLAndToken(w http.ResponseWriter, r *http.Request, ps map[string]string) int {
 	ctxUid := CheckCredentials(w, r)
 
-	uid := 0
-	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
+	uid := int64(0)
+	if uid = network.GetIdFromRequest(w, r, ps); uid < 0 {
 		network.GenErrorCode(w, r, "url uid is incorrect", http.StatusBadRequest)
 		return -1
 	}
 
-	if ctxUid != uid {
+	if ctxUid != int(uid) {
 		network.GenErrorCode(w, r, "forbidden", http.StatusForbidden)
 		return -1
 	}
 
-	return uid
+	return int(uid)
 }
 
 // Simple function that generate random sequence of bytes for
