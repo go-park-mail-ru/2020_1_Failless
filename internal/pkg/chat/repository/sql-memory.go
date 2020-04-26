@@ -67,7 +67,7 @@ func (cr *sqlChatRepository) getMessages(sqlStatement string, args ...interface{
 		err = rows.Scan(
 			&msg.Mid,
 			&msg.Uid,
-			&msg.ChatId,
+			&msg.ChatID,
 			&msg.ULocalID,
 			&msg.Text,
 			&msg.IsShown,
@@ -114,8 +114,8 @@ func (cr *sqlChatRepository) GetUsersRooms(uid int64) ([]models.ChatRoom, error)
 
 func (cr *sqlChatRepository) CheckRoom(cid int64, uid int64) (bool, error) {
 	sqlStatement := `SELECT cu.chat_id, cu.admin_id, cu.date, cu.user_count, cu.title FROM user_chat uc 
-						JOIN chat_user cu ON uc.chat_local_id = cu.chat_id WHERE uid = $1;`
-	rows, err := cr.db.Query(sqlStatement, uid)
+						JOIN chat_user cu ON uc.chat_local_id = $1 WHERE uid = $2;`
+	rows, err := cr.db.Query(sqlStatement, cid, uid)
 	if err != nil && rows != nil && !rows.Next() {
 		log.Println("CheckRoom: user has no rooms")
 		return false, nil
@@ -141,13 +141,13 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 	err = tx.QueryRow(
 		sqlStatement,
 		msg.Uid,
-		msg.ChatId,
+		msg.ChatID,
 		msg.ULocalID,
 		msg.Text,
 		true).Scan(&mID)
 	if err != nil {
 		log.Println("AddMessageToChat: error - ", err.Error())
-		log.Println(sqlStatement, msg.Uid, msg.ChatId, msg.ULocalID, true)
+		log.Println(sqlStatement, msg.Uid, msg.ChatID, msg.ULocalID, true)
 		return -1, err
 	}
 	sqlStatement = `INSERT INTO message (uid, chat_id, user_local_id, message, is_shown) VALUES `
@@ -164,7 +164,7 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 			}
 		}
 		valuesStr += ` ) `
-		values = append(values, msg.Uid, msg.ChatId, relatedChats[i], true)
+		values = append(values, msg.Uid, msg.ChatID, relatedChats[i], true)
 		if i != postNum-1 {
 			valuesStr += ` , `
 		}
@@ -182,13 +182,35 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 	return mID, nil
 }
 
-func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]forms.Message, error) {
+func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]models.ChatMeta, error) {
 	sqlStatement := `SELECT c.chat_id,, c.title, SUM(CASE WHEN m.is_shown = TRUE THEN 1 ELSE 0 END) AS unseen,
 						MAX(m.created) AS last_date, SUBSTR(MAX(CONCAT(m.created, m.message)), 20) last_msg
 						FROM user_chat uc JOIN chat_user c ON c.chat_id = uc.chat_local_id 
 						JOIN message m ON m.user_local_id = uc.user_local_id WHERE uc.uid = $1
 							GROUP BY c.chat_id ORDER BY last_date ASC LIMIT $2 OFFSET $3;`
-	return cr.getMessages(sqlStatement, uid, limit, page)
+	rows, err := cr.db.Query(sqlStatement, uid, limit, page)
+	if err != nil {
+		return nil, err
+	}
+	var chatsMeta []models.ChatMeta
+	for rows.Next() {
+		meta := models.ChatMeta{}
+		err = rows.Scan(
+			&meta.ChatID,
+			&meta.Title,
+			&meta.Unseen,
+			&meta.LastDate,
+			&meta.LastMsg)
+		if err != nil {
+			return nil, err
+		}
+		chatsMeta = append(chatsMeta, meta)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return chatsMeta, nil
 }
 
 func (cr *sqlChatRepository) GetRoomMessages(uid, cid int64, page, limit int) ([]forms.Message, error) {

@@ -31,7 +31,7 @@ func ConnectToAuthMS(addr string) *grpc.ClientConn {
 
 var routesMap = map[string][]settings.MapHandler{
 	"/api/chat/list": {{
-		Type:         "GET",
+		Type:         "POST",
 		Handler:      delivery.GetChatList,
 		CORS:         true,
 		AuthRequired: true,

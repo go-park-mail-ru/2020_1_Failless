@@ -2,7 +2,6 @@ package models
 
 import "time"
 
-
 // Gender types
 const (
 	Male = iota
@@ -29,7 +28,6 @@ type UserGeneral struct {
 	Birthday time.Time `json:"birthday, omitempty"`
 	Gender   int       `json:"gender, omitempty"`
 }
-
 
 type DBUserGeneral struct {
 	Uid      *int       `json:"uid, omitempty"`
@@ -78,18 +76,17 @@ type JsonInfo struct {
 
 // For feed users
 type UserRequest struct {
-	Uid       int           `json:"uid, omitempty"`
-	Page      int           `json:"page"`
-	Limit     int           `json:"limit"`
-	Query     string        `json:"query, omitempty"`
-	Tags      []int         `json:"tags, omitempty"`
-	Location  LocationPoint `json:"location, omitempty"`
-	MinAge    int           `json:"minAge"`
-	MaxAge    int           `json:"maxAge"`
-	Men       bool          `json:"men"`
-	Women     bool          `json:"women"`
+	Uid      int           `json:"uid, omitempty"`
+	Page     int           `json:"page"`
+	Limit    int           `json:"limit"`
+	Query    string        `json:"query, omitempty"`
+	Tags     []int         `json:"tags, omitempty"`
+	Location LocationPoint `json:"location, omitempty"`
+	MinAge   int           `json:"minAge"`
+	MaxAge   int           `json:"maxAge"`
+	Men      bool          `json:"men"`
+	Women    bool          `json:"women"`
 }
-
 
 type ChatRoom struct {
 	ChatID     int64     `json:"chat_id"`
@@ -98,6 +95,30 @@ type ChatRoom struct {
 	UsersCount int       `json:"users_count"`
 	Title      string    `json:"title, omitempty"`
 	EventID    int64     `json:"event_id, omitempty"`
+}
+
+type ChatMeta struct {
+	ChatID   int64     `json:"chat_id"`
+	Title    string    `json:"title, omitempty"`
+	Unseen   int       `json:"unseen"`
+	LastDate time.Time `json:"last_date"`
+	LastMsg  string    `json:"last_msg"`
+	Limit    int       `json:"limit"`
+	Page     int       `json:"page"`
+}
+
+type MessageRequest struct {
+	ChatID int64 `json:"chat_id"`
+	Uid    int64 `json:"uid"`
+	Limit  int   `json:"limit"`
+	Page   int   `json:"page"`
+}
+
+
+type ChatRequest struct {
+	Uid    int64 `json:"uid"`
+	Limit  int   `json:"limit"`
+	Page   int   `json:"page"`
 }
 
 type EType int
