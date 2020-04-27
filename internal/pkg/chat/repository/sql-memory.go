@@ -72,7 +72,6 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 
 	// Out of transaction due to update chat_user first
 	// Modify user_vote
-	println("TEST")
 	sqlStatement2 := `
 		UPDATE user_vote SET chat_id = $1
 		WHERE (uid = $2 AND user_id = $3) OR (uid = $3 AND user_id = $2);`
