@@ -112,8 +112,8 @@ CREATE TABLE IF NOT EXISTS user_vote
 (
     uid       INTEGER                     NOT NULL REFERENCES profile (uid),
     user_id   INTEGER                     NOT NULL REFERENCES profile (uid),
-    value     SMALLINT                    NOT NULL DEFAULT 0,
-    vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    value     SMALLINT                    NOT NULL   DEFAULT 0,
+    vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL   DEFAULT current_timestamp,
     chat_id   INTEGER REFERENCES chat_pair (chat_id) DEFAULT NULL,
     CONSTRAINT unique_user_vote UNIQUE (uid, user_id)
 );
@@ -124,10 +124,10 @@ CREATE TABLE IF NOT EXISTS user_vote
 
 CREATE TABLE IF NOT EXISTS chat_pair
 (
-    chat_id     SERIAL PRIMARY KEY,
-    id1         INTEGER REFERENCES profile (uid),
-    id2         INTEGER REFERENCES profile (uid),
-    date        TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+    chat_id SERIAL PRIMARY KEY,
+    id1     INTEGER REFERENCES profile (uid),
+    id2     INTEGER REFERENCES profile (uid),
+    date    TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
 
 CREATE TABLE IF NOT EXISTS chat_user
@@ -155,6 +155,7 @@ CREATE TABLE IF NOT EXISTS message
     uid           INTEGER REFERENCES profile (uid),
     chat_id       INTEGER REFERENCES chat_user (chat_id),
     user_local_id INTEGER REFERENCES user_chat (user_local_id),
+    is_shown      BOOLEAN                              DEFAULT NULL,
     message       TEXT,
     created       TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
