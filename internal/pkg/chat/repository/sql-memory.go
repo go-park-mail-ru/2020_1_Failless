@@ -52,16 +52,6 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 		userLocalIDs = append(userLocalIDs, tempUserLocalID)
 	}
 
-	// Modify user_vote
-	sqlStatement2 := `
-		UPDATE user_vote SET chat_id = $1
-		WHERE (uid = $2 AND user_id = $3) OR (uid = $3 AND user_id = $2);`
-	if row, err := tx.Exec(sqlStatement2, chatId, uid1, uid2); err != nil {
-		log.Println(err)
-		log.Println(row)
-		return -1, nil
-	}
-
 	//Insert first message
 	sqlStatement3 := `
 		INSERT INTO message (uid, chat_id, user_local_id, message, is_shown)
@@ -78,6 +68,18 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 	if err = tx.Commit(); err != nil {
 		log.Println(err)
 		return -1, err
+	}
+
+	// Out of transaction due to update chat_user first
+	// Modify user_vote
+	println("TEST")
+	sqlStatement2 := `
+		UPDATE user_vote SET chat_id = $1
+		WHERE (uid = $2 AND user_id = $3) OR (uid = $3 AND user_id = $2);`
+	if row, err := tx.Exec(sqlStatement2, chatId, uid1, uid2); err != nil {
+		log.Println(err)
+		log.Println(row)
+		return -1, nil
 	}
 
 	return chatId, nil
