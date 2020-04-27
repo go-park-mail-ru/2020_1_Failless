@@ -108,16 +108,6 @@ CREATE TABLE IF NOT EXISTS event_vote
     CONSTRAINT unique_event_vote UNIQUE (uid, eid)
 );
 
-CREATE TABLE IF NOT EXISTS user_vote
-(
-    uid       INTEGER                     NOT NULL REFERENCES profile (uid),
-    user_id   INTEGER                     NOT NULL REFERENCES profile (uid),
-    value     SMALLINT                    NOT NULL   DEFAULT 0,
-    vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL   DEFAULT current_timestamp,
-    chat_id   INTEGER REFERENCES chat_user (chat_id) DEFAULT NULL,
-    CONSTRAINT unique_user_vote UNIQUE (uid, user_id)
-);
-
 --------------------------------------------------------
 -------------------- CHAT PART -------------------------
 --------------------------------------------------------
@@ -159,6 +149,17 @@ CREATE TABLE IF NOT EXISTS message
     message       TEXT,
     created       TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
+
+CREATE TABLE IF NOT EXISTS user_vote
+(
+    uid       INTEGER                     NOT NULL REFERENCES profile (uid),
+    user_id   INTEGER                     NOT NULL REFERENCES profile (uid),
+    value     SMALLINT                    NOT NULL   DEFAULT 0,
+    vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL   DEFAULT current_timestamp,
+    chat_id   INTEGER REFERENCES chat_user (chat_id) DEFAULT NULL,
+    CONSTRAINT unique_user_vote UNIQUE (uid, user_id)
+);
+
 
 CREATE OR REPLACE PROCEDURE add_location(uid INT, latitude FLOAT, longitude FLOAT)
     LANGUAGE plpgsql AS
