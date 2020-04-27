@@ -34,19 +34,44 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 		return -1, nil
 	}
 
-	sqlStatement = `INSERT INTO user_chat (chat_local_id, uid) VALUES ($1, $2), ($3, $4);`
-	if _, err := tx.Exec(sqlStatement, chatId, uid1, chatId, uid2); err != nil {
+	var userLocalIDs []int
+	var rows *pgx.Rows
+	sqlStatement = `INSERT INTO user_chat (chat_local_id, uid) VALUES ($1, $2), ($3, $4) RETURNING user_local_id;`
+	if rows, err = tx.Query(sqlStatement, chatId, uid1, chatId, uid2); err != nil {
+		log.Println(rows)
 		log.Println(err)
 		return -1, nil
+	}
+	for rows.Next() {
+		var tempUserLocalID int
+		if err := rows.Scan(&tempUserLocalID); err != nil {
+			log.Println(rows)
+			log.Println(err)
+			return -1, nil
+		}
+		userLocalIDs = append(userLocalIDs, tempUserLocalID)
 	}
 
 	// Modify user_vote
 	sqlStatement2 := `
 		UPDATE user_vote SET chat_id = $1
 		WHERE (uid = $2 AND user_id = $3) OR (uid = $3 AND user_id = $2);`
-	if _, err = tx.Exec(sqlStatement2, chatId, uid1, uid2); err != nil {
+	if row, err := tx.Exec(sqlStatement2, chatId, uid1, uid2); err != nil {
 		log.Println(err)
+		log.Println(row)
 		return -1, nil
+	}
+
+	//Insert first message
+	sqlStatement3 := `
+		INSERT INTO message (uid, chat_id, user_local_id, message, is_shown)
+		VALUES ($1, $2, $3, 'Напишите первое сообщение!', FALSE);`
+	for _, userLocalID := range userLocalIDs {
+		if row, err := tx.Exec(sqlStatement3, uid1, chatId, userLocalID); err != nil {
+			log.Println(err)
+			log.Println(row)
+			return -1, nil
+		}
 	}
 
 	// Close transaction
