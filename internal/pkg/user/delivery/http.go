@@ -194,6 +194,16 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		return
 	}
 
+	token, err := settings.AuthClient.GetToken(r.Context(), &pb.AuthRequest{
+		Uid:      authReply.Cred.Uid,
+		Phone:    form.Phone,
+		Email:    form.Email,
+		Password: form.Password,
+	})
+	if token != nil {
+		network.CreateAuthMS(&w, token.Token)
+	}
+
 	form.FillFromAuthReply(authReply)
 	network.Jsonify(w, form, http.StatusOK)
 }
@@ -314,9 +324,9 @@ func GetUsersFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 	//Mix up of UserGeneral, GeneralForm and Subs
 	type kek struct {
 		models.UserGeneral
-		Events []models.Event		`json:"events"`
-		Tags []models.Tag			`json:"tags"`
-		Subs []models.Event			`json:"subscriptions"`
+		Events []models.Event `json:"events"`
+		Tags   []models.Tag   `json:"tags"`
+		Subs   []models.Event `json:"subscriptions"`
 	}
 
 	// Collecting all together

@@ -41,6 +41,7 @@ func CreateJWTToken(user models.User) (string, error) {
 	return tokenString, nil
 }
 
+// Deprecated:
 func CreateAuth(w http.ResponseWriter, user models.User) error {
 	token, err := CreateJWTToken(user)
 	if err != nil {
@@ -64,5 +65,16 @@ func CreateLogout(w http.ResponseWriter) {
 		Value:    "-",
 		MaxAge:   -1,
 		HttpOnly: true,
+	})
+}
+
+func CreateAuthMS(w *http.ResponseWriter, token string) {
+	expires := time.Now().Add(time.Hour * 24 * 30)
+	http.SetCookie(*w, &http.Cookie{
+		Name:     "token",
+		Value:    token,
+		Expires:  expires,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	})
 }
