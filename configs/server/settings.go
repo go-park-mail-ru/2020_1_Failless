@@ -79,7 +79,7 @@ var routesMap = map[string][]settings.MapHandler{
 	},
 	"/api/events/search": {{
 		Type:         "POST",
-		Handler:      eventDelivery.GetEventsByKeyWords,
+		Handler:      eventDelivery.GetSearchEvents,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
@@ -108,7 +108,7 @@ var routesMap = map[string][]settings.MapHandler{
 	"/api/event/:id/follow": {
 		{
 			Type:         "POST",
-			Handler:      voteDelivery.FollowEvent,
+			Handler:      eventDelivery.FollowEvent,
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,

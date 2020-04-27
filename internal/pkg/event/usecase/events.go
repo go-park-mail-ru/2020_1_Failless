@@ -6,7 +6,9 @@ import (
 	"failless/internal/pkg/event/repository"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
+	"failless/internal/pkg/network"
 	"failless/internal/pkg/settings"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -39,7 +41,7 @@ func (ec *eventUseCase) InitEventsByTime(events *[]models.Event) (status int, er
 
 func (ec *eventUseCase) InitEventsByKeyWords(events *[]models.Event, keyWords string, page int) (status int, err error) {
 	if keyWords == "" {
-		*events, err = ec.rep.GetFeedEvents(-1, 10, page)
+		*events, err = ec.rep.GetAllEvents()
 	} else {
 		*events, err = ec.rep.GetEventsByKeyWord(keyWords, page)
 	}
@@ -97,4 +99,55 @@ func (ec *eventUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int
 	}
 
 	return valid
+}
+
+func (ec *eventUseCase) FollowEvent(subscription *models.EventFollow) network.Message {
+	var err error
+	if subscription.Type == "mid-event" {
+		err = ec.rep.FollowMidEvent(subscription.Uid, subscription.Eid)
+	} else if subscription.Type == "big-event" {
+		err = ec.rep.FollowBigEvent(subscription.Uid, subscription.Eid)
+	} else {
+		return network.Message{
+			Request: nil,
+			Message: "Invalid subscription type",
+			Status:  http.StatusBadRequest,
+		}
+	}
+
+	if err != nil {
+		return network.Message{
+			Request: nil,
+			Message: err.Error(),
+			Status:  http.StatusConflict,
+		}
+	} else {
+		return network.Message{
+			Request: nil,
+			Message: "OK",
+			Status:  http.StatusCreated,
+		}
+	}
+}
+
+func (ec *eventUseCase) SearchEventsByUserPreferences(events *[]models.EventResponse, request *models.EventRequest) (int, error) {
+	var err error
+	if request.Uid == 0 {
+		tempEvents, _ := ec.rep.GetAllEvents()
+		for _, tempEvent := range tempEvents {
+			tempEventResponse := models.EventResponse{
+				Event:    tempEvent,
+				Followed: false,
+			}
+			*events = append(*events, tempEventResponse)
+		}
+	} else {
+		err = ec.rep.GetEventsWithFollowed(events, request)
+		if err != nil {
+			fmt.Println(err)
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	return http.StatusOK, nil
 }

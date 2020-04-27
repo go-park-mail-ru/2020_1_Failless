@@ -5,6 +5,7 @@ import (
 	"failless/internal/pkg/event"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/settings"
+	"fmt"
 	"github.com/jackc/pgx"
 	"log"
 	"regexp"
@@ -261,4 +262,83 @@ func (er *sqlEventsRepository) GetNewEventsByTags(tags []int, uid int, limit int
 	sqlStatement += generator.generateArgsSql(len(items), "OR", "e.etype =", 2)
 	sqlStatement += generator.getConstantCondition(len(items))
 	return er.getEvents(withCondition, sqlStatement, generator.JoinIntArgs(items, limit, page)...)
+}
+
+func (er *sqlEventsRepository) FollowMidEvent(uid, eid int) error {
+	sqlStatement := `INSERT INTO event_vote (uid, eid, value) VALUES ( $1 , $2 , 1 );`
+	rows, err := er.db.Exec(sqlStatement, uid, eid)
+	if err != nil || rows.RowsAffected() == 0 {
+		log.Println(err)
+		log.Println(sqlStatement, uid, eid)
+		return err
+	}
+
+	fmt.Println("here")
+
+	return nil
+}
+func (er *sqlEventsRepository) FollowBigEvent(uid, eid int) error {
+	sqlStatement := `
+		INSERT INTO subscribe (uid, table_id) VALUES ( $1, $2 );`
+
+	rows, err := er.db.Exec(sqlStatement, uid, eid)
+	if err != nil || rows.RowsAffected() == 0 {
+		return err
+	}
+	return nil
+}
+
+
+func (er *sqlEventsRepository) GetEventsWithFollowed(events *[]models.EventResponse, request *models.EventRequest) error {
+	sqlStatement := `
+		SELECT e.eid, e.uid, e.title, e.edate, e.message, e.is_edited, e.author, e.etype, e.range, e.photos,
+			   CASE WHEN ev.uid IS NULL THEN FALSE ELSE TRUE END AS followed
+		FROM events e
+		LEFT JOIN event_vote ev ON e.eid = ev.eid AND ev.uid = $1
+		`
+
+	var rows *pgx.Rows
+	var err error
+	if len(request.Query) > 0 {
+		var generator queryGenerator
+		if !generator.remove3PSymbols(request.Query) {
+			return errors.New("Incorrect symbols in the query\n")
+		}
+		args := generator.GenerateArgSlice(request.Limit, request.Page)
+		sqlStatement += "WHERE e.title_tsv @@ phraseto_tsquery( $2 ) LIMIT $3 OFFSET $4;"
+		args = append([]interface{}{request.Uid}, args...)
+		rows, err = er.db.Query(sqlStatement, args...)
+	} else {
+		sqlStatement += "LIMIT $2 OFFSET $3;"
+		rows, err = er.db.Query(sqlStatement, request.Uid, request.Limit, request.Page)
+	}
+	if err != nil {
+		log.Println(err)
+		fmt.Println(err)
+		return err
+	}
+
+	for rows.Next() {
+		tempEvent := models.EventResponse{}
+		err = rows.Scan(
+			&tempEvent.Event.EId,
+			&tempEvent.Event.AuthorId,
+			&tempEvent.Event.Title,
+			&tempEvent.Event.EDate,
+			&tempEvent.Event.Message,
+			&tempEvent.Event.Edited,
+			&tempEvent.Event.Author,
+			&tempEvent.Event.Type,
+			&tempEvent.Event.Limit,
+			&tempEvent.Event.Photos,
+			&tempEvent.Followed)
+		if err != nil {
+			log.Println(err)
+			fmt.Println(err)
+			return err
+		}
+		*events = append(*events, tempEvent)
+	}
+
+	return nil
 }

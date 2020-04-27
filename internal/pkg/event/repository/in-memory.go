@@ -43,3 +43,14 @@ func (er *eventsRepository) GetValidTags() ([]models.Tag, error) {
 func (er *eventsRepository) GetNewEventsByTags(tags []int, uid int, limit int, page int) ([]models.Event, error) {
 	return nil, nil
 }
+
+func (er *eventsRepository) FollowMidEvent(uid, eid int) error {
+	return nil
+}
+func (er *eventsRepository) FollowBigEvent(uid, eid int) error {
+	return nil
+}
+
+func (er *eventsRepository) GetEventsWithFollowed(events *[]models.EventResponse, request *models.EventRequest) error {
+	return nil
+}
