@@ -41,6 +41,28 @@ services:
       context: ../.
       dockerfile: ./build/auth.dockerfile
 
+  eventum_chat:
+    container_name: eventumchat
+    restart: always
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_REGION
+    ports:
+      - '3003:3003'
+    command: bin/chat
+    links:
+      - eventumdb
+    working_dir: /home/eventum
+    networks:
+      - backend
+    build:
+      context: ../.
+      dockerfile: ./build/chat.dockerfile
+
   eventumdb:
     container_name: eventumdb
     restart: always
