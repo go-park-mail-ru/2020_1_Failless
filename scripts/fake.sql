@@ -48,12 +48,18 @@ VALUES (2, 'Концерт Арии', '2021-03-19 12:59:13+03', 'Группа д
         кто хочет научиться красиво танцевать', false, 'Марина', 15);
 UPDATE events SET title_tsv = setweight(to_tsvector(title), 'A') || setweight(to_tsvector(message), 'B');
 
-WITH chat_meta AS
-    (
-        SELECT uc.title, SUM(m.is_shown = TRUE) AS unseen
-        FROM user_chat uc JOIN messages m ON m.user_local_id = uc.user_local_id ORDER BY m.created LIMIT 1
-    ) SELECT
+-- WITH chat_meta AS
+--     (
+--         SELECT uc.title, SUM(m.is_shown = TRUE) AS unseen
+--         FROM user_chat uc JOIN messages m ON m.user_local_id = uc.user_local_id ORDER BY m.created LIMIT 1
+--     ) SELECT
+--
+--
+-- SELECT uc.user_local_id, uc.title, SUM(m.is_shown = TRUE) AS unseen, MAX(m.created) AS last_date,  m.message
+-- FROM user_chat uc JOIN messages m ON m.user_local_id = uc.user_local_id WHERE uc.uid = $1 GROUP BY uc.user_local_id;
 
-
-SELECT uc.user_local_id, uc.title, SUM(m.is_shown = TRUE) AS unseen, MAX(m.created) AS last_date,  m.message
-FROM user_chat uc JOIN messages m ON m.user_local_id = uc.user_local_id WHERE uc.uid = $1 GROUP BY uc.user_local_id;
+INSERT INTO chat_user (chat_id, admin_id, user_count, title) VALUES (1, 1, 2, 'title');
+INSERT INTO user_chat (chat_local_id, uid) VALUES (1, 1), (1, 2);
+UPDATE user_vote SET chat_id = 1 WHERE (uid = 1 AND user_id = 2) OR (uid = 2 AND user_id = 1);
+INSERT INTO message (uid, chat_id, user_local_id, message, is_shown) VALUES (1, 1, 1, 'Hello world!', FALSE) RETURNING mid;
+INSERT INTO message (uid, chat_id, user_local_id, message, is_shown) VALUES (1, 1, 2, 'Hello world!', FALSE) RETURNING mid;
