@@ -76,5 +76,6 @@ func CreateAuthMS(w *http.ResponseWriter, token string) {
 		Expires:  expires,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
+		Path:     "/api",
 	})
 }
