@@ -40,14 +40,15 @@ type authError struct {
 // If user is not authorized it write failed checker to the authError structure
 func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+		log.Print("Middleware - Auth: ")
 		ctx := context.Background()
 		c, err := r.Cookie("token")
 
 		// error - no cookie was found
 		if err != nil {
 			ctx = context.WithValue(ctx, security.CtxUserKey, nil)
-			log.Print(err.Error())
-			network.GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
+			log.Printf("client:  no cookie was found")
+			network.GenErrorCode(w, r.WithContext(ctx), err.Error(), http.StatusUnauthorized)
 			return
 		} else {
 			authReply, err := settings.AuthClient.CheckAuthorize(ctx, &pb.Token{Token: c.Value})
