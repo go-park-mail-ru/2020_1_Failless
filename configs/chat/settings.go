@@ -117,7 +117,7 @@ func GetConfig() *settings.ServerSettings {
 		router.InitRouter(&conf, httptreemux.New())
 	})
 
-	conn := ConnectToAuthMS(fmt.Sprintf("%s:%d", configs.IPAddress, configs.PortAuth))
+	conn := ConnectToAuthMS(fmt.Sprintf("%s:%d", configs.AuthIP, configs.PortAuth))
 	settings.AuthClient = pb.NewAuthClient(conn)
 	return &conf
 }
