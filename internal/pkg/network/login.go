@@ -65,7 +65,7 @@ func CreateLogout(w http.ResponseWriter) {
 		Value:    "-",
 		MaxAge:   -1,
 		HttpOnly: true,
-		Path:     "api/",
+		Path:     "/api",
 	})
 }
 

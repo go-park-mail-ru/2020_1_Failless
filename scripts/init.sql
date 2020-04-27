@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS user_vote
     user_id   INTEGER                     NOT NULL REFERENCES profile (uid),
     value     SMALLINT                    NOT NULL   DEFAULT 0,
     vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL   DEFAULT current_timestamp,
-    chat_id   INTEGER REFERENCES chat_pair (chat_id) DEFAULT NULL,
+    chat_id   INTEGER REFERENCES chat_user (chat_id) DEFAULT NULL,
     CONSTRAINT unique_user_vote UNIQUE (uid, user_id)
 );
 
