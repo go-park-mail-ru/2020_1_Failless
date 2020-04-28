@@ -211,18 +211,18 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 }
 
 func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]models.ChatMeta, error) {
-	sqlStatement := `SELECT * FROM
-				(SELECT c.chat_id, c.title, SUM(CASE WHEN m.is_shown = FALSE THEN 1 ELSE 0 END) AS unseen,
-										MAX(m.created) AS last_date, SUBSTR(MAX(CONCAT(m.created, m.message)), 20) last_msg
-										FROM user_chat uc JOIN chat_user c ON c.chat_id = uc.chat_local_id
-										JOIN message m ON m.user_local_id = uc.user_local_id  WHERE uc.uid = $1
-										GROUP BY c.chat_id ORDER BY last_date DESC LIMIT $2 OFFSET $3) j1
-				JOIN
-				(SELECT p.name, p.uid, pi.photos, uc.chat_local_id
-										FROM user_chat uc
-										JOIN profile p ON p.uid = uc.uid
-										JOIN profile_info pi on p.uid = pi.pid
-										WHERE p.uid <> $1) j2 ON j1.chat_id = j2.chat_local_id;`
+	sqlStatement := `SELECT j1.chat_id, j1.title, j1.unseen, j1.last_date, j1.last_msg, j2.uid, j2.name, j2.photos FROM
+			(SELECT c.chat_id, c.title, SUM(CASE WHEN m.is_shown = FALSE THEN 1 ELSE 0 END) AS unseen,
+									MAX(m.created) AS last_date, SUBSTR(MAX(CONCAT(m.created, m.message)), 20) last_msg
+									FROM user_chat uc JOIN chat_user c ON c.chat_id = uc.chat_local_id
+									JOIN message m ON m.user_local_id = uc.user_local_id  WHERE uc.uid = 1
+									GROUP BY c.chat_id ORDER BY last_date DESC LIMIT 10 OFFSET 0) j1
+			JOIN
+			(SELECT p.name, p.uid, pi.photos, uc.chat_local_id
+									FROM user_chat uc
+									JOIN profile p ON p.uid = uc.uid
+									JOIN profile_info pi on p.uid = pi.pid
+									WHERE p.uid <> 1) j2 ON j1.chat_id = j2.chat_local_id`
 	rows, err := cr.db.Query(sqlStatement, uid, limit, page)
 	if err != nil {
 		return nil, err
@@ -236,10 +236,9 @@ func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]m
 			&meta.Unseen,
 			&meta.LastDate,
 			&meta.LastMsg,
-			&meta.Name,
 			&meta.Uid,
-			&meta.Photos,
-			&meta.Test)
+			&meta.Name,
+			&meta.Photos)
 		if err != nil {
 			return nil, err
 		}
