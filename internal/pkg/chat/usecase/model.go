@@ -133,6 +133,10 @@ func (cc *chatUseCase) IsUserHasRoom(uid int64, cid int64) (bool, error) {
 }
 
 func (cc *chatUseCase) Subscribe(conn *websocket.Conn, r *http.Request, uid int64) {
+	if len(MainHandler.Clients) == 0 {
+		MainHandler.Clients = make(map[string]*Client)
+	}
+
 	id := uuid.New().String()
 	rooms, err := cc.Rep.GetUsersRooms(uid)
 	if err != nil {
