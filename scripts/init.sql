@@ -1,7 +1,7 @@
 -- CREATE DATABASE eventum WITH OWNER = postgres;
 -- CREATE ROLE eventum WITH SUPERUSER PASSWORD 'eventum' LOGIN CONNECTION LIMIT -1;
 
--- CREATE EXTENSION IF NOT EXISTS CITEXT;
+CREATE EXTENSION IF NOT EXISTS CITEXT;
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS postgis_topology;
 
@@ -112,20 +112,12 @@ CREATE TABLE IF NOT EXISTS event_vote
 -------------------- CHAT PART -------------------------
 --------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS chat_pair
-(
-    chat_id SERIAL PRIMARY KEY,
-    id1     INTEGER REFERENCES profile (uid),
-    id2     INTEGER REFERENCES profile (uid),
-    date    TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
-);
-
 CREATE TABLE IF NOT EXISTS chat_user
 (
     chat_id    SERIAL PRIMARY KEY,
     admin_id   INTEGER REFERENCES profile (uid),
     date       TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
-    user_count INTEGER                              DEFAULT 1,
+    user_count INTEGER                              DEFAULT 2,
     title      VARCHAR(128)                NOT NULL CHECK ( title <> '' ),
     eid        INTEGER REFERENCES events (eid)
 );
