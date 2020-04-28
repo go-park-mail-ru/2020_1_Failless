@@ -119,7 +119,8 @@ CREATE TABLE IF NOT EXISTS chat_user
     date       TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     user_count INTEGER                              DEFAULT 2,
     title      VARCHAR(128)                NOT NULL CHECK ( title <> '' ),
-    eid        INTEGER REFERENCES events (eid)
+    eid        INTEGER REFERENCES events (eid),
+    avatar     VARCHAR(64)
 );
 
 CREATE TABLE IF NOT EXISTS user_chat
@@ -127,7 +128,9 @@ CREATE TABLE IF NOT EXISTS user_chat
     user_local_id SERIAL PRIMARY KEY,
     chat_local_id INTEGER REFERENCES chat_user (chat_id),
     uid           INTEGER REFERENCES profile (uid), -- user id
-    date          TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+    date          TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    avatar        VARCHAR(64),
+    title         VARCHAR(128)
 );
 
 

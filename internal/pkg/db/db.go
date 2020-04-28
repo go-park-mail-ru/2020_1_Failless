@@ -31,7 +31,7 @@ func ConnectToDB() *pgx.ConnPool {
 			Password: password,
 		}
 		pgxConnPoolConfig := pgx.ConnPoolConfig{
-			MaxConnections: 1,
+			MaxConnections: 100,
 			ConnConfig: pgxConfig,
 		}
 		dbase, err := pgx.NewConnPool(pgxConnPoolConfig)
