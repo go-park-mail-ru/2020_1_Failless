@@ -215,14 +215,14 @@ func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]m
 			(SELECT c.chat_id, c.title, SUM(CASE WHEN m.is_shown = FALSE THEN 1 ELSE 0 END) AS unseen,
 									MAX(m.created) AS last_date, SUBSTR(MAX(CONCAT(m.created, m.message)), 20) last_msg
 									FROM user_chat uc JOIN chat_user c ON c.chat_id = uc.chat_local_id
-									JOIN message m ON m.user_local_id = uc.user_local_id  WHERE uc.uid = 1
-									GROUP BY c.chat_id ORDER BY last_date DESC LIMIT 10 OFFSET 0) j1
+									JOIN message m ON m.user_local_id = uc.user_local_id  WHERE uc.uid = $1
+									GROUP BY c.chat_id ORDER BY last_date DESC LIMIT $2 OFFSET $3) j1
 			JOIN
 			(SELECT p.name, p.uid, pi.photos, uc.chat_local_id
 									FROM user_chat uc
 									JOIN profile p ON p.uid = uc.uid
 									JOIN profile_info pi on p.uid = pi.pid
-									WHERE p.uid <> 1) j2 ON j1.chat_id = j2.chat_local_id`
+									WHERE p.uid <> $1) j2 ON j1.chat_id = j2.chat_local_id;`
 	rows, err := cr.db.Query(sqlStatement, uid, limit, page)
 	if err != nil {
 		return nil, err
