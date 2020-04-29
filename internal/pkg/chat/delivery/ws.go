@@ -35,5 +35,5 @@ func HandlerWS(w http.ResponseWriter, r *http.Request, m map[string]string) {
 	}
 
 	uc := usecase.GetUseCase()
-	uc.Subscribe(conn, r, uid.Uid)
+	uc.Subscribe(conn, uid.Uid)
 }
