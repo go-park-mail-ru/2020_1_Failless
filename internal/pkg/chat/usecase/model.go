@@ -78,16 +78,16 @@ func (cc *Client) Run() {
 		}
 	}
 
-	//for {
+	for {
 		message := forms.Message{}
-		//err := cc.Conn.ReadJSON(&message)
+		err := cc.Conn.ReadJSON(&message)
 		//fmt.Println("START READING MESSAGESD3", message)
 		//
-		//if err != nil {
-		//	cc.Conn.Close()
-		//	log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
-		//	return
-		//}
+		if err != nil {
+			cc.Conn.Close()
+			log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
+			return
+		}
 		//println("START READING MESSAGESD4", message.Text)
 		message.Uid = msg.Uid
 		message.Text = msg.Text
@@ -112,7 +112,7 @@ func (cc *Client) Run() {
 			}
 		}
 		MainHandler.Notify(&message)
-	//}
+	}
 }
 
 func GetUseCase() chat.UseCase {
@@ -153,9 +153,7 @@ func (cc *chatUseCase) Subscribe(conn *websocket.Conn, uid int64) {
 	}
 	cs := &Client{conn, id, roomsIDs, uid}
 	MainHandler.Clients[id] = cs
-	for {
-		cs.Run()
-	}
+	cs.Run()
 }
 
 func (cc *chatUseCase) Notify(message *forms.Message) {
