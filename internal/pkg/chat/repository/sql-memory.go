@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/jackc/pgx"
 	"log"
-	"strconv"
 )
 
 type sqlChatRepository struct {
@@ -95,8 +94,8 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 	return chatId, nil
 }
 
-func (cr *sqlChatRepository) getMessages(sqlStatement string, args ...interface{}) ([]forms.Message, error) {
-	rows, err := cr.db.Query(sqlStatement, args...)
+func (cr *sqlChatRepository) getMessages(sqlStatement string, cid int64, uid int64, limit int, page int) ([]forms.Message, error) {
+	rows, err := cr.db.Query(sqlStatement, cid, uid, limit, page)
 	if err != nil {
 		return nil, err
 	}
@@ -177,14 +176,14 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 	// the tx commits successfully, this is a no-op
 	defer tx.Rollback()
 
-	sqlStatement := `INSERT INTO message (uid, chat_id, user_local_id, message, is_shown) 
-							VALUES ($1, $2, $3, $4, $5) RETURNING mid;`
+	sqlStatement := `INSERT INTO message (uid, chat_id, user_local_id, message, is_shown)
+						SELECT $1, uc.chat_local_id, uc.user_local_id, $2, $3 FROM user_chat uc
+						WHERE $1 = uc.uid RETURNING mid;`
+	fmt.Println("Params", msg.Uid, msg.Text)
 	mID := int64(0)
 	err = tx.QueryRow(
 		sqlStatement,
 		msg.Uid,
-		msg.ChatID,
-		msg.ULocalID,
 		msg.Text,
 		true).Scan(&mID)
 	if err != nil {
@@ -192,29 +191,29 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 		log.Println(sqlStatement, msg.Uid, msg.ChatID, msg.ULocalID, true)
 		return -1, err
 	}
-	sqlStatement = `INSERT INTO message (uid, chat_id, user_local_id, message, is_shown) VALUES `
-	valuesStr := ``
-	values := []interface{}{}
-	itemNum := 5
-	postNum := len(relatedChats)
-	for i := 0; i < postNum; i++ {
-		valuesStr += ` ( `
-		for j := 1; j <= itemNum; j++ {
-			valuesStr += `$` + strconv.Itoa(i*itemNum+j)
-			if j != itemNum {
-				valuesStr += `, `
-			}
-		}
-		valuesStr += ` ) `
-		values = append(values, msg.Uid, msg.ChatID, relatedChats[i], true)
-		if i != postNum-1 {
-			valuesStr += ` , `
-		}
-	}
-	_, err = tx.Exec(sqlStatement+valuesStr+" ;", values...)
-	if err != nil {
-		return -1, err
-	}
+	//sqlStatement = `INSERT INTO message (uid, chat_id, user_local_id, message, is_shown) VALUES `
+	//valuesStr := ``
+	//values := []interface{}{}
+	//itemNum := 5
+	//postNum := len(relatedChats)
+	//for i := 0; i < postNum; i++ {
+	//	valuesStr += ` ( `
+	//	for j := 1; j <= itemNum; j++ {
+	//		valuesStr += `$` + strconv.Itoa(i*itemNum+j)
+	//		if j != itemNum {
+	//			valuesStr += `, `
+	//		}
+	//	}
+	//	valuesStr += ` ) `
+	//	values = append(values, msg.Uid, msg.ChatID, relatedChats[i], true)
+	//	if i != postNum-1 {
+	//		valuesStr += ` , `
+	//	}
+	//}
+	//_, err = tx.Exec(sqlStatement+valuesStr+" ;", values...)
+	//if err != nil {
+	//	return -1, err
+	//}
 
 	err = tx.Commit()
 	if err != nil {
