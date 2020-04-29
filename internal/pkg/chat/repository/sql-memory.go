@@ -37,18 +37,11 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 	// Insert into user_chat joining name of person + avatar
 	var userLocalIDs [2]int
 	sqlStatement = `
-		INSERT INTO 
-			user_chat (chat_local_id, uid, avatar, title)
-    	SELECT 
-			$1, $2, pi.photos[1], p.name
-    	FROM 
-			profile_info pi
-        	JOIN profile p
-				ON p.uid = pi.pid
-    	WHERE
-			pi.pid = $3
-		RETURNING
-			user_local_id;`
+		INSERT INTO user_chat (chat_local_id, uid, avatar, title)
+    		SELECT $1, $2, pi.photos[1], p.name
+    			FROM profile_info pi
+					JOIN profile p ON p.uid = pi.pid
+				WHERE pi.pid = $3 RETURNING user_local_id;`
 	if err := tx.QueryRow(sqlStatement, chatId, uid1, uid2).Scan(
 		&userLocalIDs[0]); err != nil {
 		log.Println(err)

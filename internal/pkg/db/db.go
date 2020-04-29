@@ -20,29 +20,53 @@ var (
 
 var db *pgx.ConnPool = nil
 var syncOnce = sync.Once{}
-
+func init() {
+	pgxConfig := pgx.ConnConfig{
+		Host:     host,
+		Port:     port,
+		Database: dbname,
+		User:     user,
+		Password: password,
+	}
+	pgxConnPoolConfig := pgx.ConnPoolConfig{
+		MaxConnections: 100,
+		ConnConfig: pgxConfig,
+	}
+	dbase, err := pgx.NewConnPool(pgxConnPoolConfig)
+	if err != nil {
+		if settings.UseCaseConf.InHDD {
+			log.Fatal("Connection to database was failed")
+		}
+		db = nil
+	} else {
+		db = dbase
+	}
+}
 func ConnectToDB() *pgx.ConnPool {
-	syncOnce.Do(func() {
-		pgxConfig := pgx.ConnConfig{
-			Host:     host,
-			Port:     port,
-			Database: dbname,
-			User:     user,
-			Password: password,
-		}
-		pgxConnPoolConfig := pgx.ConnPoolConfig{
-			MaxConnections: 100,
-			ConnConfig: pgxConfig,
-		}
-		dbase, err := pgx.NewConnPool(pgxConnPoolConfig)
-		if err != nil {
-			if settings.UseCaseConf.InHDD {
-				log.Fatal("Connection to database was failed")
-			}
-			db = nil
-		} else {
-			db = dbase
-		}
-	})
+	if db == nil {
+		log.Fatal("Connection to database was failed")
+	}
+	//syncOnce.Do(func() {
+	//	pgxConfig := pgx.ConnConfig{
+	//		Host:     host,
+	//		Port:     port,
+	//		Database: dbname,
+	//		User:     user,
+	//		Password: password,
+	//	}
+	//	pgxConnPoolConfig := pgx.ConnPoolConfig{
+	//		MaxConnections: 100,
+	//		ConnConfig: pgxConfig,
+	//	}
+	//	dbase, err := pgx.NewConnPool(pgxConnPoolConfig)
+	//	if err != nil {
+	//		if settings.UseCaseConf.InHDD {
+	//			log.Fatal("Connection to database was failed")
+	//		}
+	//		db = nil
+	//	} else {
+	//		db = dbase
+	//	}
+	//})
 	return db
 }
