@@ -146,8 +146,10 @@ func (er *sqlEventsRepository) getEvents(withCondition string, sqlStatement stri
 }
 
 func (er *sqlEventsRepository) SaveNewEvent(event *models.Event) error {
-	sqlStatement := `INSERT INTO events (uid, title, message, author, etype, is_public, range, edate)
-							VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING eid;`
+	sqlStatement := `INSERT INTO events (uid, title, message, author, etype, is_public, range, edate, title_tsv)
+							VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+							setweight(to_tsvector($2), 'A') || 
+							setweight(to_tsvector($3), 'B')) RETURNING eid;`
 	err := er.db.QueryRow(sqlStatement,
 		event.AuthorId,
 		event.Title,
