@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS message
     uid           INTEGER REFERENCES profile (uid),
     chat_id       INTEGER REFERENCES chat_user (chat_id),
     user_local_id INTEGER REFERENCES user_chat (user_local_id),
-    is_shown      BOOLEAN                              DEFAULT NULL,
+    is_shown      BOOLEAN                              DEFAULT FALSE,
     message       TEXT,
     created       TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
