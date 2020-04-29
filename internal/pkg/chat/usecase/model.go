@@ -7,6 +7,7 @@ import (
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
@@ -58,37 +59,38 @@ func (cc *Client) Run() {
 		log.Println("Error with JSON unpack from SW", err)
 		return
 	}
-	for _, room := range cc.ChatID {
-		lastMsgs, err := uc.GetMessagesForChat(&models.MessageRequest{
-			ChatID: room,
-			Uid:    cc.Uid,
-			Limit:  10,
-			Page:   0,
-		})
-		if err != nil {
-			cc.Conn.Close()
-			log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
-			return
-		}
-		err = cc.Conn.WriteJSON(lastMsgs)
-		if err != nil {
-			cc.Conn.Close()
-			log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
-			return
-		}
-	}
+	//for _, room := range cc.ChatID {
+	//	lastMsgs, err := uc.GetMessagesForChat(&models.MessageRequest{
+	//		ChatID: room,
+	//		Uid:    cc.Uid,
+	//		Limit:  10,
+	//		Page:   0,
+	//	})
+	//	fmt.Println("uc.GetMessagesForChat(&models.MessageRequest{", lastMsgs)
+	//	if err != nil {
+	//		cc.Conn.Close()
+	//		log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
+	//		return
+	//	}
+	//	err = cc.Conn.WriteJSON(lastMsgs)
+	//	if err != nil {
+	//		cc.Conn.Close()
+	//		log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
+	//		return
+	//	}
+	//}
 
 	for {
 		message := forms.Message{}
 		err := cc.Conn.ReadJSON(&message)
-		//fmt.Println("START READING MESSAGESD3", message)
-		//
+		fmt.Println("cc.Conn.ReadJSON(&message)", message)
+
 		if err != nil {
 			cc.Conn.Close()
 			log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
 			return
 		}
-		//println("START READING MESSAGESD4", message.Text)
+
 		message.Uid = msg.Uid
 		message.Text = msg.Text
 		message.ChatID = msg.ChatID
