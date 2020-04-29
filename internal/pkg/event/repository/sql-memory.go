@@ -156,7 +156,9 @@ func (er *sqlEventsRepository) SaveNewEvent(event *models.Event) error {
 		event.Type,
 		event.Public,
 		event.Limit,
-		event.EDate).Scan(&event.EId)
+		event.EDate,
+		event.Title,
+		event.Message).Scan(&event.EId)
 	if err != nil {
 		log.Println(err.Error())
 		log.Println(sqlStatement, event.AuthorId, event.Title, event.Message,  event.Author,
