@@ -15,6 +15,7 @@ services:
     command: bin/server
     links:
       - eventumdb
+      - eventum_auth
     working_dir: /home/eventum
     networks:
       - backend
@@ -56,6 +57,7 @@ services:
     command: bin/chat
     links:
       - eventumdb
+      - eventum_auth
     working_dir: /home/eventum
     networks:
       - backend
