@@ -177,13 +177,15 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 	defer tx.Rollback()
 
 	sqlStatement := `INSERT INTO message (uid, chat_id, user_local_id, message, is_shown)
-						SELECT $1, uc.chat_local_id, uc.user_local_id, $2, $3 FROM user_chat uc
-						WHERE $1 = uc.uid RETURNING mid;`
-	fmt.Println("Params", msg.Uid, msg.Text)
+						SELECT $1, chat_local_id, user_local_id, $3, $4 FROM 
+							(SELECT * FROM user_chat uc WHERE $2 = uc.chat_local_id) AS s1
+					RETURNING mid`
+	fmt.Println("Params", msg)
 	mID := int64(0)
 	err = tx.QueryRow(
 		sqlStatement,
 		msg.Uid,
+		msg.ChatID,
 		msg.Text,
 		true).Scan(&mID)
 	if err != nil {
