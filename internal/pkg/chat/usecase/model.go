@@ -53,12 +53,12 @@ var MainHandler Handler
 
 func (cc *Client) Run() {
 	uc := GetUseCase()
-	msg := forms.UserMsg{}
-	err := cc.Conn.ReadJSON(&msg)
-	if err != nil {
-		log.Println("Error with JSON unpack from SW", err)
-		return
-	}
+	//msg := forms.UserMsg{}
+	//err := cc.Conn.ReadJSON(&msg)
+	//if err != nil {
+	//	log.Println("Error with JSON unpack from SW", err)
+	//	return
+	//}
 	//for _, room := range cc.ChatID {
 	//	lastMsgs, err := uc.GetMessagesForChat(&models.MessageRequest{
 	//		ChatID: room,
@@ -91,15 +91,12 @@ func (cc *Client) Run() {
 			return
 		}
 
-		message.Uid = msg.Uid
-		message.Text = msg.Text
-		message.ChatID = msg.ChatID
-
 		//user, err := security.GetUserFromCtx(cc.Request)
 		//if err == nil {
 		//	message.Uid = int64(user.Uid)
 		//}
 		message.Date = time.Now()
+		fmt.Println("Before uc.AddNewMessage(&message)", message)
 		code, err := uc.AddNewMessage(&message)
 		if err != nil {
 			log.Println(err.Error())
