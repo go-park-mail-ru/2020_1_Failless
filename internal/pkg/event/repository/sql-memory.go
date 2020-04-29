@@ -273,8 +273,6 @@ func (er *sqlEventsRepository) FollowMidEvent(uid, eid int) error {
 		return err
 	}
 
-	fmt.Println("here")
-
 	return nil
 }
 func (er *sqlEventsRepository) FollowBigEvent(uid, eid int) error {
