@@ -69,8 +69,9 @@ func TestUploadToAWS(t *testing.T) {
 		return
 	}
 
-	buf, err := correctImage(path, testImageName)
+	buf, err := correctImage(path)
 	if err != nil {
+		fmt.Println(err)
 		t.Fail()
 		return
 	}
@@ -89,8 +90,8 @@ func TestUploadToAWS(t *testing.T) {
 	}
 }
 
-func correctImage(path, name string) (*bytes.Buffer, error) {
-	img, err := imaging.Open(path + name)
+func correctImage(path string) (*bytes.Buffer, error) {
+	img, err := imaging.Open(path)
 	if err != nil {
 		return nil, err
 	}
