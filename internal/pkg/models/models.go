@@ -99,6 +99,8 @@ type ChatRoom struct {
 
 type ChatMeta struct {
 	ChatID   int64     `json:"chat_id"`
+	Name     string    `json:"name"`
+	Photos   []string  `json:"photos"`
 	Title    string    `json:"title, omitempty"`
 	Unseen   int       `json:"unseen"`
 	LastDate time.Time `json:"last_date"`

@@ -65,6 +65,7 @@ func CreateLogout(w http.ResponseWriter) {
 		Value:    "-",
 		MaxAge:   -1,
 		HttpOnly: true,
+		Path:     "/api",
 	})
 }
 
@@ -76,5 +77,6 @@ func CreateAuthMS(w *http.ResponseWriter, token string) {
 		Expires:  expires,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
+		Path:     "/api",
 	})
 }
