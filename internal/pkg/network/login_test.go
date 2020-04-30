@@ -18,6 +18,7 @@ func TestCreateLogout(t *testing.T) {
 		Value:    "-",
 		MaxAge:   -1,
 		HttpOnly: true,
+		Path: "/api",
 	}
 	assert.Equal(t, rr.Header().Get("Set-Cookie"), correctCookie.String())
 }
