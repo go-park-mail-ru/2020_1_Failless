@@ -15,5 +15,9 @@ RUN go get github.com/prometheus/client_golang/prometheus/promhttp
 RUN go get github.com/prometheus/client_golang/prometheus/promhttp
 RUN go get -u github.com/mailru/easyjson/...
 
+RUN easyjson -all internal/pkg/models/models.go
+RUN easyjson -all internal/pkg/forms/form_*.go
+RUN easyjson internal/pkg/security/security.go
+
 RUN protoc -I /home/eventum/api/proto/ /home/eventum/api/proto/auth.proto --go_out=plugins=grpc:/home/eventum/api
 RUN go build -o bin/chat ./cmd/chat/main.go

@@ -4,10 +4,17 @@ global:
     monitor: 'codelab-monitor'
 
 scrape_configs:
-  - job_name: 'eventum'
+  - job_name: 'eventum_server'
     scrape_interval: 5s
     metrics_path: /metrics
     static_configs:
-      - targets: ['localhost:3001', 'localhost:3003']
+      - targets: ['localhost:3001']
+        labels:
+          group: 'production'
+  - job_name: 'eventum_chat'
+    scrape_interval: 5s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['localhost:3003']
         labels:
           group: 'production'

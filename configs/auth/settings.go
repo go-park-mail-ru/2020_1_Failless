@@ -19,8 +19,8 @@ var conf settings.ServerSettings
 func GetConfig() *settings.ServerSettings {
 	doOnce.Do(func() {
 		conf = settings.ServerSettings{
-			Port:   configs.PortAuth,
-			Ip:     configs.IPAddress,
+			Port: configs.PortAuth,
+			Ip:   configs.IPAddress,
 		}
 		settings.SecureSettings = settings.GlobalSecure{
 			CORSMethods: "",
@@ -40,6 +40,7 @@ func GetConfig() *settings.ServerSettings {
 			CSRFTokenLen: 20,
 			CSRFTokenTTL: 1, // one hour
 			EnableCSRF:   true,
+			MetricsHost:  configs.Prometheus,
 		}
 		settings.UseCaseConf = settings.GlobalConfig{
 			PageLimit: 10,

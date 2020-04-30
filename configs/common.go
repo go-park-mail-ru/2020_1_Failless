@@ -6,4 +6,5 @@ const (
 	PortAuth   = 3002
 	PortChat   = 3003
 	AuthIP     = "eventumauth"
+	Prometheus = "http://prometheus:9090"
 )
