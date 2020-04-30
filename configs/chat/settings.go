@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	pb "failless/api/proto/auth"
+	mDelivery "failless/internal/pkg/metrics/delivery"
 )
 
 var authConn *grpc.ClientConn
@@ -53,7 +54,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/metrics": {{
 		Type:         "GET",
-		Handler:      router.MetricsHandler,
+		Handler:      mDelivery.MetricsHandler,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,

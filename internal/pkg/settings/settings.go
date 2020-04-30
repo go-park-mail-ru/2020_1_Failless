@@ -23,6 +23,7 @@ type GlobalSecure struct {
 	EnableCSRF   bool
 	CSRFTokenLen int
 	CSRFTokenTTL time.Duration
+	MetricsHost  string
 }
 
 type GlobalConfig struct {

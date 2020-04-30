@@ -2,6 +2,7 @@ package server
 
 import (
 	"failless/configs"
+	"failless/internal/pkg/metrics/delivery"
 	"failless/internal/pkg/router"
 	"failless/internal/pkg/settings"
 	"fmt"
@@ -188,7 +189,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/metrics": {{
 		Type:         "GET",
-		Handler:      router.MetricsHandler,
+		Handler:      delivery.MetricsHandler,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
