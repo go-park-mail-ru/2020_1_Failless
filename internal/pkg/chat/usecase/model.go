@@ -6,7 +6,6 @@ import (
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
-	"failless/internal/pkg/network"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -101,7 +100,7 @@ func (cc *Client) Run() {
 		if err != nil {
 			log.Println(err.Error())
 			err = cc.Conn.WriteJSON(
-				network.Message{
+				models.WorkMessage{
 					Message: err.Error(),
 					Status:  code})
 			if err != nil {
@@ -182,7 +181,7 @@ func (cc *chatUseCase) AddNewMessage(message *forms.Message) (int, error) {
 	return http.StatusOK, nil
 }
 
-func (cc *chatUseCase) GetMessagesForChat(msgRequest *models.MessageRequest) ([]forms.Message, error) {
+func (cc *chatUseCase) GetMessagesForChat(msgRequest *models.MessageRequest) (forms.MessageList, error) {
 	has, err := cc.IsUserHasRoom(msgRequest.Uid, msgRequest.ChatID)
 	if err != nil || !has {
 		return nil, err
@@ -190,6 +189,6 @@ func (cc *chatUseCase) GetMessagesForChat(msgRequest *models.MessageRequest) ([]
 	return cc.Rep.GetRoomMessages(msgRequest.Uid, msgRequest.ChatID, msgRequest.Page, msgRequest.Limit)
 }
 
-func (cc *chatUseCase) GetUserRooms(msgRequest *models.ChatRequest) ([]models.ChatMeta, error) {
+func (cc *chatUseCase) GetUserRooms(msgRequest *models.ChatRequest) (models.ChatList, error) {
 	return cc.Rep.GetUserTopMessages(msgRequest.Uid, msgRequest.Page, msgRequest.Limit)
 }

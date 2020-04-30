@@ -1,13 +1,14 @@
 package delivery
 
 import (
-	"encoding/json"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
 	"failless/internal/pkg/vote/usecase"
 	"log"
 	"net/http"
+
+	json "github.com/mailru/easyjson"
 )
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -20,9 +21,8 @@ func VoteUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	decoder := json.NewDecoder(r.Body)
 	var vote models.Vote
-	err := decoder.Decode(&vote)
+	err := json.UnmarshalFromReader(r.Body, &vote)
 	if err != nil {
 		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
 		return
@@ -45,9 +45,8 @@ func VoteEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	decoder := json.NewDecoder(r.Body)
 	var vote models.Vote
-	err := decoder.Decode(&vote)
+	err := json.UnmarshalFromReader(r.Body, &vote)
 	if err != nil {
 		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
 		return

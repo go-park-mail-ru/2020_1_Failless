@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+//easyjson:json
 type UserClaims struct {
 	Uid   int    `json:"uid"`
 	Phone string `json:"phone"`

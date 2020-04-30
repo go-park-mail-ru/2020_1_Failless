@@ -37,7 +37,7 @@ func TestEventUseCase_InitEventsByTime(t *testing.T) {
 	//	EId: 1,
 	//	AuthorId: 1,
 	//	Title: "qqq",
-	//	Message: "qqq",
+	//	WorkMessage: "qqq",
 	//	EDate:  time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
 	//}
 	var testEvent []models.Event

@@ -6,7 +6,6 @@ import (
 	"failless/internal/pkg/event/repository"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
-	"failless/internal/pkg/network"
 	"failless/internal/pkg/settings"
 	"fmt"
 	"log"
@@ -31,7 +30,7 @@ func GetUseCase() event.UseCase {
 	}
 }
 
-func (ec *eventUseCase) InitEventsByTime(events *[]models.Event) (status int, err error) {
+func (ec *eventUseCase) InitEventsByTime(events *models.EventList) (status int, err error) {
 	*events, err = ec.rep.GetAllEvents()
 	if err != nil {
 		return http.StatusInternalServerError, err
@@ -39,11 +38,11 @@ func (ec *eventUseCase) InitEventsByTime(events *[]models.Event) (status int, er
 	return http.StatusOK, nil
 }
 
-func (ec *eventUseCase) InitEventsByKeyWords(events *[]models.Event, keyWords string, page int) (status int, err error) {
-	if keyWords == "" {
+func (ec *eventUseCase) InitEventsByKeyWords(events *models.EventList, keys string, page int) (status int, err error) {
+	if keys == "" {
 		*events, err = ec.rep.GetAllEvents()
 	} else {
-		*events, err = ec.rep.GetEventsByKeyWord(keyWords, page)
+		*events, err = ec.rep.GetEventsByKeyWord(keys, page)
 	}
 	log.Println(events)
 	if err != nil {
@@ -61,7 +60,7 @@ func (ec *eventUseCase) CreateEvent(event forms.EventForm) (models.Event, error)
 	return model, err
 }
 
-func (ec *eventUseCase) InitEventsByUserPreferences(events *[]models.Event, request *models.EventRequest) (int, error) {
+func (ec *eventUseCase) InitEventsByUserPreferences(events *models.EventList, request *models.EventRequest) (int, error) {
 	dbTags, err := ec.rep.GetValidTags()
 	if err != nil {
 		return http.StatusBadRequest, err
@@ -81,7 +80,7 @@ func (ec *eventUseCase) InitEventsByUserPreferences(events *[]models.Event, requ
 
 	for i := 0; i < len(*events); i++ {
 		(*events)[i].Tag = dbTags[(*events)[i].Type-1]
-		log.Println(dbTags[(*events)[i].Type - 1])
+		log.Println(dbTags[(*events)[i].Type-1])
 	}
 
 	log.Println(events)
@@ -101,14 +100,14 @@ func (ec *eventUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int
 	return valid
 }
 
-func (ec *eventUseCase) FollowEvent(subscription *models.EventFollow) network.Message {
+func (ec *eventUseCase) FollowEvent(subscription *models.EventFollow) models.WorkMessage {
 	var err error
 	if subscription.Type == "mid-event" {
 		err = ec.rep.FollowMidEvent(subscription.Uid, subscription.Eid)
 	} else if subscription.Type == "big-event" {
 		err = ec.rep.FollowBigEvent(subscription.Uid, subscription.Eid)
 	} else {
-		return network.Message{
+		return models.WorkMessage{
 			Request: nil,
 			Message: "Invalid subscription type",
 			Status:  http.StatusBadRequest,
@@ -116,13 +115,13 @@ func (ec *eventUseCase) FollowEvent(subscription *models.EventFollow) network.Me
 	}
 
 	if err != nil {
-		return network.Message{
+		return models.WorkMessage{
 			Request: nil,
 			Message: err.Error(),
 			Status:  http.StatusConflict,
 		}
 	} else {
-		return network.Message{
+		return models.WorkMessage{
 			Request: nil,
 			Message: "OK",
 			Status:  http.StatusCreated,
@@ -130,7 +129,7 @@ func (ec *eventUseCase) FollowEvent(subscription *models.EventFollow) network.Me
 	}
 }
 
-func (ec *eventUseCase) SearchEventsByUserPreferences(events *[]models.EventResponse, request *models.EventRequest) (int, error) {
+func (ec *eventUseCase) SearchEventsByUserPreferences(events *models.EventResponseList, request *models.EventRequest) (int, error) {
 	var err error
 	if request.Uid == 0 {
 		tempEvents, _ := ec.rep.GetAllEvents()

@@ -15,7 +15,6 @@ require (
 	github.com/envoyproxy/go-control-plane v0.9.5 // indirect
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20200420212212-258d9bec320e // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
-	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.4.0
 	github.com/google/pprof v0.0.0-20200429164031-e11b8033daa0 // indirect
@@ -28,7 +27,8 @@ require (
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.4.0 // indirect
-	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/mailru/easyjson v0.7.1
+	github.com/prometheus/client_golang v1.6.0
 	github.com/rogpeppe/go-internal v1.5.2 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect

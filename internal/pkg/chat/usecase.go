@@ -12,7 +12,7 @@ type UseCase interface {
 	IsUserHasRoom(uid int64, cid int64) (bool, error)
 	Subscribe(conn *websocket.Conn, uid int64)
 	Notify(message *forms.Message)
-	GetMessagesForChat(msgRequest *models.MessageRequest) ([]forms.Message, error)
-	GetUserRooms(msgRequest *models.ChatRequest) ([]models.ChatMeta, error)
+	GetMessagesForChat(msgRequest *models.MessageRequest) (forms.MessageList, error)
+	GetUserRooms(msgRequest *models.ChatRequest) (models.ChatList, error)
 }
 
