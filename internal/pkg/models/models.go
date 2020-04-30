@@ -193,3 +193,6 @@ type Tag struct {
 	Name  string `json:"name"`
 	TagId int    `json:"tag_id"`
 }
+
+//easyjson:json
+type TagList []Tag
