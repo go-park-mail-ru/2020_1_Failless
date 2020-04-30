@@ -111,26 +111,26 @@ func TestSignUp(t *testing.T) {
 	signFormCheck(t, rr.Body, mcPostBody["name"])
 }
 
-func TestSignIn(t *testing.T) {
-	mcPostBody := map[string]interface{}{
-		"uid":      0,
-		"name":     "mrTester",
-		"phone":    "88005553535",
-		"email":    "mrtester@test.com",
-		"password": "qwerty12345",
-	}
-	body, _ := json.Marshal(mcPostBody)
-	req, err := http.NewRequest("POST", "/api/signin", bytes.NewReader(body))
-	if err != nil {
-		t.Fail()
-		return
-	}
-
-	rr := httptest.NewRecorder()
-	var ps map[string]string
-	SignIn(rr, req, ps)
-	signFormCheck(t, rr.Body, mcPostBody["name"])
-}
+//func TestSignIn(t *testing.T) {
+//	mcPostBody := map[string]interface{}{
+//		"uid":      0,
+//		"name":     "mrTester",
+//		"phone":    "88005553535",
+//		"email":    "mrtester@test.com",
+//		"password": "qwerty12345",
+//	}
+//	body, _ := json.Marshal(mcPostBody)
+//	req, err := http.NewRequest("POST", "/api/signin", bytes.NewReader(body))
+//	if err != nil {
+//		t.Fail()
+//		return
+//	}
+//
+//	rr := httptest.NewRecorder()
+//	var ps map[string]string
+//	SignIn(rr, req, ps)
+//	signFormCheck(t, rr.Body, mcPostBody["name"])
+//}
 
 func TestLogout(t *testing.T) {
 	req, err := http.NewRequest("GET", "/api/logout", nil)
@@ -204,8 +204,6 @@ func TestGetProfilePage(t *testing.T) {
 	}
 
 	assert.Equal(t, profile.Uid, user.Uid)
-	assert.Equal(t, profile.Phone, user.Phone)
-	assert.Equal(t, profile.Email, user.Email)
 }
 
 func TestUploadNewImage(t *testing.T) {

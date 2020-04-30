@@ -4,6 +4,7 @@ import (
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/security"
+	"log"
 )
 
 func (uc *UserUseCase) RegisterNewUser(user *forms.SignForm) error {
@@ -19,6 +20,7 @@ func (uc *UserUseCase) RegisterNewUser(user *forms.SignForm) error {
 		Email:    user.Email,
 		Password: bPass,
 	}
-
+	log.Println("ORIGINAL: ", user.Password)
+	log.Println("ORIGINAL: ", bPass)
 	return uc.Rep.AddNewUser(&dbUser)
 }
