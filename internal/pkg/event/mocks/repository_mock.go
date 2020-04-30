@@ -33,6 +33,34 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// FollowBigEvent mocks base method
+func (m *MockRepository) FollowBigEvent(arg0, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FollowBigEvent", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// FollowBigEvent indicates an expected call of FollowBigEvent
+func (mr *MockRepositoryMockRecorder) FollowBigEvent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FollowBigEvent", reflect.TypeOf((*MockRepository)(nil).FollowBigEvent), arg0, arg1)
+}
+
+// FollowMidEvent mocks base method
+func (m *MockRepository) FollowMidEvent(arg0, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FollowMidEvent", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// FollowMidEvent indicates an expected call of FollowMidEvent
+func (mr *MockRepositoryMockRecorder) FollowMidEvent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FollowMidEvent", reflect.TypeOf((*MockRepository)(nil).FollowMidEvent), arg0, arg1)
+}
+
 // GetAllEvents mocks base method
 func (m *MockRepository) GetAllEvents() ([]models.Event, error) {
 	m.ctrl.T.Helper()
@@ -49,10 +77,10 @@ func (mr *MockRepositoryMockRecorder) GetAllEvents() *gomock.Call {
 }
 
 // GetEventsByKeyWord mocks base method
-func (m *MockRepository) GetEventsByKeyWord(arg0 string, arg1 int) ([]models.Event, error) {
+func (m *MockRepository) GetEventsByKeyWord(arg0 string, arg1 int) (models.EventList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEventsByKeyWord", arg0, arg1)
-	ret0, _ := ret[0].([]models.Event)
+	ret0, _ := ret[0].(models.EventList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -61,6 +89,20 @@ func (m *MockRepository) GetEventsByKeyWord(arg0 string, arg1 int) ([]models.Eve
 func (mr *MockRepositoryMockRecorder) GetEventsByKeyWord(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventsByKeyWord", reflect.TypeOf((*MockRepository)(nil).GetEventsByKeyWord), arg0, arg1)
+}
+
+// GetEventsWithFollowed mocks base method
+func (m *MockRepository) GetEventsWithFollowed(arg0 *models.EventResponseList, arg1 *models.EventRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEventsWithFollowed", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// GetEventsWithFollowed indicates an expected call of GetEventsWithFollowed
+func (mr *MockRepositoryMockRecorder) GetEventsWithFollowed(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEventsWithFollowed", reflect.TypeOf((*MockRepository)(nil).GetEventsWithFollowed), arg0, arg1)
 }
 
 // GetFeedEvents mocks base method
@@ -94,10 +136,10 @@ func (mr *MockRepositoryMockRecorder) GetNameByID(arg0 interface{}) *gomock.Call
 }
 
 // GetNewEventsByTags mocks base method
-func (m *MockRepository) GetNewEventsByTags(arg0 []int, arg1, arg2, arg3 int) ([]models.Event, error) {
+func (m *MockRepository) GetNewEventsByTags(arg0 []int, arg1, arg2, arg3 int) (models.EventList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNewEventsByTags", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].([]models.Event)
+	ret0, _ := ret[0].(models.EventList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

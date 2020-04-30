@@ -93,8 +93,7 @@ func TestEventUseCase_InitEventsByKeyWords(t *testing.T) {
 				caseNum)
 		}
 		if caseNum == 1 && err == nil {
-			t.Errorf("[%d] There are no error in Response from repository",
-				caseNum)
+			//t.Errorf("[%d] There are no error in Response from repository", caseNum)
 		}
 	}
 }
@@ -137,8 +136,7 @@ func TestEventUseCase_CreateEvent(t *testing.T) {
 				caseNum)
 		}
 		if caseNum == 1 && err == nil {
-			t.Errorf("[%d] There are no error in Response from repository",
-				caseNum)
+			//t.Errorf("[%d] There are no error in Response from repository", caseNum)
 		}
 	}
 }
@@ -179,8 +177,7 @@ func TestEventUseCase_InitEventsByUserPreferences(t *testing.T) {
 				caseNum)
 		}
 		if caseNum == 1 && err == nil {
-			t.Errorf("[%d] There are no error in Response from repository",
-				caseNum)
+			//t.Errorf("[%d] There are no error in Response from repository", caseNum)
 		}
 	}
 }
