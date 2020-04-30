@@ -25,7 +25,7 @@ func TestTagUseCase_InitEventsByTime(t *testing.T) {
 
 	mockRep.EXPECT().GetAllTags()
 
-	status, err := vc.InitEventsByTime(new([]models.Tag))
+	status, err := vc.InitEventsByTime(new(models.TagList))
 
 	assert.Equal(t, http.StatusOK, status)
 	assert.Equal(t, nil, err)

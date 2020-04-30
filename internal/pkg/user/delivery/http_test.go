@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"failless/internal/pkg/forms"
+	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
 	"github.com/stretchr/testify/assert"
@@ -25,12 +26,12 @@ func signFormCheck(t *testing.T, body *bytes.Buffer, name interface{}) {
 	assert.Equal(t, true, respForm.Uid > 0)
 }
 
-func decodeToMsg(body *bytes.Buffer) (network.Message, error) {
-	var msg network.Message
+func decodeToMsg(body *bytes.Buffer) (models.WorkMessage, error) {
+	var msg models.WorkMessage
 	decoder := json.NewDecoder(body)
 	err := decoder.Decode(&msg)
 	if err != nil {
-		return network.Message{}, err
+		return models.WorkMessage{}, err
 	}
 	return msg, nil
 }

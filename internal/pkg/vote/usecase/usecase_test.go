@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"failless/internal/pkg/models"
-	"failless/internal/pkg/network"
 	"failless/internal/pkg/vote"
 	"failless/internal/pkg/vote/mocks"
 	"github.com/golang/mock/gomock"
@@ -41,7 +40,7 @@ func TestVoteUseCase_VoteEvent(t *testing.T) {
 
 	res := vc.VoteEvent(testVote)
 	assert.Equal(t,
-		network.Message{
+		models.WorkMessage{
 			Request: nil,
 			Message: "OK",
 			Status:  http.StatusOK,

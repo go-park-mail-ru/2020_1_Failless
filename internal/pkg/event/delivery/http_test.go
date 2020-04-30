@@ -20,7 +20,7 @@ type TestCaseEvents struct {
 func TestFeedEvents(t *testing.T) {
 	cases := []TestCaseEvents{
 		TestCaseEvents{
-			Request: "",
+			Request:    "",
 			Response:   `{"status": 200}`,
 			StatusCode: http.StatusOK,
 		},
@@ -42,7 +42,7 @@ func TestFeedEvents(t *testing.T) {
 
 func TestCreateNewEvent(t *testing.T) {
 	type response1 struct {
-		Message string   `json:"description"`
+		Message string `json:"description"`
 	}
 	cases := []TestCaseEvents{
 		TestCaseEvents{
@@ -66,7 +66,7 @@ func TestCreateNewEvent(t *testing.T) {
 			StatusCode: http.StatusOK,
 		},
 		TestCaseEvents{
-			Request: `{}`,
+			Request:    `{}`,
 			Response:   "",
 			StatusCode: http.StatusOK,
 		},
@@ -77,7 +77,7 @@ func TestCreateNewEvent(t *testing.T) {
 
 		// Populate the request's context with our test data.
 		ctx := req.Context()
-		form := pb.Credentials{
+		form := security.UserClaims{
 			Uid:   1,
 			Phone: "88005553535",
 			Email: "aa@aa.aa",
@@ -107,7 +107,7 @@ func TestCreateNewEvent(t *testing.T) {
 
 func TestGetEventsByKeyWords(t *testing.T) {
 	type response1 struct {
-		Message string   `json:"description"`
+		Message string `json:"description"`
 	}
 	cases := []TestCaseEvents{
 		TestCaseEvents{
@@ -131,7 +131,7 @@ func TestGetEventsByKeyWords(t *testing.T) {
 			StatusCode: http.StatusOK,
 		},
 		TestCaseEvents{
-			Request: `{}`,
+			Request:    `{}`,
 			Response:   `I know really nice place for go out and I like to find a company for that`,
 			StatusCode: http.StatusOK,
 		},
@@ -178,7 +178,7 @@ func TestGetEventsByKeyWords(t *testing.T) {
 
 func TestGetEventsFeed(t *testing.T) {
 	type response1 struct {
-		Message string   `json:"description"`
+		Message string `json:"description"`
 	}
 	cases := []TestCaseEvents{
 		TestCaseEvents{
@@ -198,7 +198,7 @@ func TestGetEventsFeed(t *testing.T) {
 			StatusCode: http.StatusOK,
 		},
 		TestCaseEvents{
-			Request: `{}`,
+			Request:    `{}`,
 			Response:   "",
 			StatusCode: http.StatusOK,
 		},

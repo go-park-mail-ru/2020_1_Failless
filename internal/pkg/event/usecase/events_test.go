@@ -12,7 +12,7 @@ import (
 )
 
 type TestCaseEvents struct {
-	Request    string
+	Request string
 }
 
 func getTestUseCase(mockRep *mocks.MockRepository) event.UseCase {
@@ -24,7 +24,6 @@ func getTestUseCase(mockRep *mocks.MockRepository) event.UseCase {
 func TestGetUseCase(t *testing.T) {
 
 }
-
 
 func TestEventUseCase_InitEventsByTime(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -44,7 +43,7 @@ func TestEventUseCase_InitEventsByTime(t *testing.T) {
 
 	mockRepository.EXPECT().GetAllEvents().Return(testEvent, nil).Times(1)
 
-	var events []models.Event
+	var events models.EventList
 
 	//uc := GetUseCase()
 	_, err := uc.InitEventsByTime(&events)
@@ -84,7 +83,7 @@ func TestEventUseCase_InitEventsByKeyWords(t *testing.T) {
 		decoder := json.NewDecoder(bytes.NewBuffer([]byte(item.Request)))
 		_ = decoder.Decode(&searchRequest)
 
-		var events []models.Event
+		var events models.EventList
 
 		uc := GetUseCase()
 		_, err := uc.InitEventsByKeyWords(&events, searchRequest.Query, searchRequest.Page)
@@ -170,7 +169,7 @@ func TestEventUseCase_InitEventsByUserPreferences(t *testing.T) {
 		decoder := json.NewDecoder(bytes.NewBuffer([]byte(item.Request)))
 		_ = decoder.Decode(&searchRequest)
 
-		var events []models.Event
+		var events models.EventList
 
 		uc := GetUseCase()
 		_, err := uc.InitEventsByUserPreferences(&events, &searchRequest)

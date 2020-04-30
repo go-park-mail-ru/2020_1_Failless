@@ -47,6 +47,35 @@ func (mr *MockRepositoryMockRecorder) AddEventVote(arg0, arg1, arg2 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEventVote", reflect.TypeOf((*MockRepository)(nil).AddEventVote), arg0, arg1, arg2)
 }
 
+// AddUserVote mocks base method
+func (m *MockRepository) AddUserVote(arg0, arg1 int, arg2 int8) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddUserVote", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddUserVote indicates an expected call of AddUserVote
+func (mr *MockRepositoryMockRecorder) AddUserVote(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUserVote", reflect.TypeOf((*MockRepository)(nil).AddUserVote), arg0, arg1, arg2)
+}
+
+// CheckMatching mocks base method
+func (m *MockRepository) CheckMatching(arg0, arg1 int) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckMatching", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckMatching indicates an expected call of CheckMatching
+func (mr *MockRepositoryMockRecorder) CheckMatching(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckMatching", reflect.TypeOf((*MockRepository)(nil).CheckMatching), arg0, arg1)
+}
+
 // FindFollowers mocks base method
 func (m *MockRepository) FindFollowers(arg0 int) ([]models.UserGeneral, error) {
 	m.ctrl.T.Helper()
