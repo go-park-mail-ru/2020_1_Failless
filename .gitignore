@@ -3,10 +3,10 @@ bin/*
 configs/ssl-bundle
 media/images/*
 media/data/*
+data/*
 .DS_Store
 .env
+*_easyjson.go
 *.log
 *.pb.go
-run-auth
-run-server
-run-chat
+
