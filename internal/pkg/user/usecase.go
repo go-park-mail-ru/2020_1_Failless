@@ -14,7 +14,8 @@ type UseCase interface {
 	AddImageToProfile(uid int, name string) error
 	UpdateUserBase(form *forms.SignForm) (int, error)
 	InitUsersByUserPreferences(users *[]models.UserGeneral, request *models.UserRequest) (int, error)
-	GetUserSubscriptions(events *[]models.Event, uid int) (int, error)
+	GetUserSubscriptions(events *models.EventList, uid int) (int, error)
+	GetFeedResults(users *[]models.UserGeneral, form *[]forms.GeneralForm) (models.FeedResults, error)
 }
 
 // Get gender string by int id

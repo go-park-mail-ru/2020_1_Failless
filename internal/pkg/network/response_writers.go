@@ -1,18 +1,14 @@
 package network
 
 import (
-	"encoding/json"
+	"failless/internal/pkg/models"
 	"log"
 	"net/http"
+
+	json "github.com/mailru/easyjson"
 )
 
-type Message struct {
-	Request *http.Request `json:"-"`
-	Message string        `json:"message"`
-	Status  int           `json:"status"`
-}
-
-func Jsonify(w http.ResponseWriter, object interface{}, status int) {
+func Jsonify(w http.ResponseWriter, object json.Marshaler, status int) {
 	output, err := json.Marshal(object)
 	if err != nil {
 		http.Error(w, err.Error(), status)
@@ -31,7 +27,7 @@ func Jsonify(w http.ResponseWriter, object interface{}, status int) {
 
 func GenErrorCode(w http.ResponseWriter, r *http.Request, what string, status int) {
 	w.WriteHeader(http.StatusOK)
-	page := Message{r, what, status}
+	page := models.WorkMessage{Request: r, Message: what, Status: status}
 	output, err := json.Marshal(page)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

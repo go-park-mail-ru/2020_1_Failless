@@ -26,7 +26,7 @@ func GetUseCase() tag.UseCase {
 	}
 }
 
-func (uc *tagUseCase) InitEventsByTime(tags *[]models.Tag) (status int, err error) {
+func (uc *tagUseCase) InitEventsByTime(tags *models.TagList) (status int, err error) {
 	*tags, err = uc.rep.GetAllTags()
 	if err != nil {
 		return http.StatusInternalServerError, err

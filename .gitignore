@@ -3,10 +3,9 @@ bin/*
 configs/ssl-bundle
 media/images/*
 media/data/*
-data/*
+data
 .DS_Store
 .env
-*_easyjson.go
 *.log
 *.pb.go
-
+*_easyjson.go

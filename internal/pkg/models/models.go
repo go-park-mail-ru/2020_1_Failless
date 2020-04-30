@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"net/http"
+	"time"
+)
 
 // Gender types
 const (
@@ -8,6 +11,12 @@ const (
 	Female
 	Other
 )
+
+type WorkMessage struct {
+	Request *http.Request `json:"-"`
+	Message string        `json:"message"`
+	Status  int           `json:"status"`
+}
 
 // Base user struct for storage user data
 // It has a difference with the User struct into delivery package
@@ -28,6 +37,9 @@ type UserGeneral struct {
 	Birthday time.Time `json:"birthday, omitempty"`
 	Gender   int       `json:"gender, omitempty"`
 }
+
+//easyjson:json
+type UserGeneralList []UserGeneral
 
 type DBUserGeneral struct {
 	Uid      *int       `json:"uid, omitempty"`
@@ -99,6 +111,8 @@ type ChatRoom struct {
 
 type ChatMeta struct {
 	ChatID   int64     `json:"chat_id"`
+	Name     string    `json:"name"`
+	Photos   []string  `json:"photos"`
 	Title    string    `json:"title, omitempty"`
 	Unseen   int       `json:"unseen"`
 	LastDate time.Time `json:"last_date"`
@@ -107,6 +121,9 @@ type ChatMeta struct {
 	Page     int       `json:"page"`
 }
 
+//easyjson:json
+type ChatList []ChatMeta
+
 type MessageRequest struct {
 	ChatID int64 `json:"chat_id"`
 	Uid    int64 `json:"uid"`
@@ -114,11 +131,10 @@ type MessageRequest struct {
 	Page   int   `json:"page"`
 }
 
-
 type ChatRequest struct {
-	Uid    int64 `json:"uid"`
-	Limit  int   `json:"limit"`
-	Page   int   `json:"page"`
+	Uid   int64 `json:"uid"`
+	Limit int   `json:"limit"`
+	Page  int   `json:"page"`
 }
 
 type EType int
@@ -138,6 +154,9 @@ type Event struct {
 	Tag      Tag       `json:"tag, omitempty"`
 }
 
+//easyjson:json
+type EventList []Event
+
 type EventRequest struct {
 	Uid       int           `json:"uid, omitempty"`
 	Page      int           `json:"page"`
@@ -153,15 +172,18 @@ type EventRequest struct {
 }
 
 type EventFollow struct {
-	Uid		int		`json:"uid"`
-	Eid		int		`json:"eid"`
-	Type	string	`json:"type"`
+	Uid  int    `json:"uid"`
+	Eid  int    `json:"eid"`
+	Type string `json:"type"`
 }
 
 type EventResponse struct {
-	Event		Event
-	Followed	bool	`json:"followed"`
+	Event    Event
+	Followed bool `json:"followed"`
 }
+
+//easyjson:json
+type EventResponseList []EventResponse
 
 type Vote struct {
 	Uid   int       `json:"uid"`
@@ -174,3 +196,17 @@ type Tag struct {
 	Name  string `json:"name"`
 	TagId int    `json:"tag_id"`
 }
+
+//easyjson:json
+type TagList []Tag
+
+//Mix up of UserGeneral, GeneralForm and Subs
+type FeedPost struct {
+	UserGeneral
+	Events []Event `json:"events"`
+	Tags   []Tag   `json:"tags"`
+	Subs   []Event `json:"subscriptions"`
+}
+
+//easyjson:json
+type FeedResults []FeedPost

@@ -88,24 +88,22 @@ func (qg *queryGenerator) GenerateArgSlice(limit int, page int) []interface{} {
 	return args
 }
 
-
 func (qg *queryGenerator) JoinIntArgs(items []int, limit int, page int) []interface{} {
 	keys := []int{
 		limit,
 		limit * (page - 1),
 	}
 
-	args := make([]interface{}, 2 + len(items))
+	args := make([]interface{}, 2+len(items))
 	for i, v := range items {
 		args[i] = v
 	}
 
 	for i, v := range keys {
-		args[i + len(items)] = v
+		args[i+len(items)] = v
 	}
 	return args
 }
-
 
 // +/- universal method for getting events array by condition (aka sqlStatement)
 // and parameters in args (interface array)
@@ -146,8 +144,10 @@ func (er *sqlEventsRepository) getEvents(withCondition string, sqlStatement stri
 }
 
 func (er *sqlEventsRepository) SaveNewEvent(event *models.Event) error {
-	sqlStatement := `INSERT INTO events (uid, title, message, author, etype, is_public, range, edate)
-							VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING eid;`
+	sqlStatement := `INSERT INTO events (uid, title, message, author, etype, is_public, range, edate, title_tsv)
+							VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+							setweight(to_tsvector($9), 'A') || 
+							setweight(to_tsvector($10), 'B')) RETURNING eid;`
 	err := er.db.QueryRow(sqlStatement,
 		event.AuthorId,
 		event.Title,
@@ -156,9 +156,13 @@ func (er *sqlEventsRepository) SaveNewEvent(event *models.Event) error {
 		event.Type,
 		event.Public,
 		event.Limit,
-		event.EDate).Scan(&event.EId)
+		event.EDate,
+		event.Title,
+		event.Message).Scan(&event.EId)
 	if err != nil {
 		log.Println(err.Error())
+		log.Println(sqlStatement, event.AuthorId, event.Title, event.Message,  event.Author,
+			event.Type, event.Public,  event.Limit,  event.EDate)
 		return err
 	}
 
@@ -200,8 +204,8 @@ func (er *sqlEventsRepository) GetFeedEvents(uid int, limit int, page int) ([]mo
 	return er.getEvents(withCondition, sqlCondition, uid, uid, limit, page)
 }
 
-func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page int) ([]models.Event, error) {
-	log.Println(keyWordsString)
+func (er *sqlEventsRepository) GetEventsByKeyWord(keyWords string, page int) (models.EventList, error) {
+	log.Println(keyWords)
 	log.Println(page)
 	if page < 1 {
 		return nil, errors.New("Page number can't be less than 1\n")
@@ -211,7 +215,7 @@ func (er *sqlEventsRepository) GetEventsByKeyWord(keyWordsString string, page in
 							ORDER BY e.edate ASC LIMIT $2 OFFSET $3 ;`
 
 	var generator queryGenerator
-	ok := generator.remove3PSymbols(keyWordsString)
+	ok := generator.remove3PSymbols(keyWords)
 	if !ok {
 		return nil, errors.New("Incorrect symbols in the query\n")
 	}
@@ -254,7 +258,7 @@ func (er *sqlEventsRepository) generateORStatement(fieldName string, length int)
 	return sql
 }
 
-func (er *sqlEventsRepository) GetNewEventsByTags(tags []int, uid int, limit int, page int) ([]models.Event, error) {
+func (er *sqlEventsRepository) GetNewEventsByTags(tags []int, uid int, limit int, page int) (models.EventList, error) {
 	var generator queryGenerator
 	withCondition := `WITH voted_events AS ( SELECT eid FROM event_vote WHERE uid = $1 ) `
 	sqlStatement := ` LEFT JOIN voted_events AS v ON e.eid = v.eid WHERE e.uid != $2 AND `
@@ -273,8 +277,6 @@ func (er *sqlEventsRepository) FollowMidEvent(uid, eid int) error {
 		return err
 	}
 
-	fmt.Println("here")
-
 	return nil
 }
 func (er *sqlEventsRepository) FollowBigEvent(uid, eid int) error {
@@ -288,8 +290,7 @@ func (er *sqlEventsRepository) FollowBigEvent(uid, eid int) error {
 	return nil
 }
 
-
-func (er *sqlEventsRepository) GetEventsWithFollowed(events *[]models.EventResponse, request *models.EventRequest) error {
+func (er *sqlEventsRepository) GetEventsWithFollowed(events *models.EventResponseList, request *models.EventRequest) error {
 	sqlStatement := `
 		SELECT e.eid, e.uid, e.title, e.edate, e.message, e.is_edited, e.author, e.etype, e.range, e.photos,
 			   CASE WHEN ev.uid IS NULL THEN FALSE ELSE TRUE END AS followed
