@@ -186,8 +186,8 @@ var routesMap = map[string][]settings.MapHandler{
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/srv/metrics": {{
-		Type:         "POST",
+	"/metrics": {{
+		Type:         "GET",
 		Handler:      router.MetricsHandler,
 		CORS:         true,
 		AuthRequired: false,

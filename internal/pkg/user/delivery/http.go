@@ -273,7 +273,7 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 ////////////// feed part //////////////////
 
-func GetUsersFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func GetUsersFeed(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return

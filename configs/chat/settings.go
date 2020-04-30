@@ -44,15 +44,20 @@ var routesMap = map[string][]settings.MapHandler{
 		AuthRequired: false,
 		CSRF:         false,
 	}},
-	"/api/chats/:id": {
-		{
-			Type:         "PUT",
-			Handler:      delivery.GetMessages,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         false,
-		},
-	},
+	"/api/chats/:id": {{
+		Type:         "PUT",
+		Handler:      delivery.GetMessages,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         false,
+	}},
+	"/metrics": {{
+		Type:         "GET",
+		Handler:      router.MetricsHandler,
+		CORS:         true,
+		AuthRequired: false,
+		CSRF:         false,
+	}},
 	"/api": {{
 		Type:         "OPTIONS",
 		Handler:      router.OptionsReq,
