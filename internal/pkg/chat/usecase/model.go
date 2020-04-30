@@ -6,7 +6,6 @@ import (
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
-	"failless/internal/pkg/network"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -101,7 +100,7 @@ func (cc *Client) Run() {
 		if err != nil {
 			log.Println(err.Error())
 			err = cc.Conn.WriteJSON(
-				network.Message{
+				models.WorkMessage{
 					Message: err.Error(),
 					Status:  code})
 			if err != nil {

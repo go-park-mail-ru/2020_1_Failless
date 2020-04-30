@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"failless/internal/pkg/db"
+	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/settings"
 	"failless/internal/pkg/user"
@@ -57,7 +58,7 @@ func (uc *UserUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int 
 	return valid
 }
 
-func (uc *UserUseCase) GetUserSubscriptions(events *[]models.Event, uid int) (int, error) {
+func (uc *UserUseCase) GetUserSubscriptions(events *models.EventList, uid int) (int, error) {
 	var err error
 	*events, err = uc.Rep.GetUserSubscriptions(uid)
 
@@ -66,4 +67,38 @@ func (uc *UserUseCase) GetUserSubscriptions(events *[]models.Event, uid int) (in
 	}
 
 	return http.StatusOK, nil
+}
+
+func (uc *UserUseCase) GetFeedResults(
+	users *[]models.UserGeneral,
+	form *[]forms.GeneralForm) (models.FeedResults, error) {
+	// Get subscriptions for FeedUsers
+	var events [][]models.Event
+	for i := 0; i < len(*users); i++ {
+		var userEvents models.EventList
+		if _, err := uc.GetUserSubscriptions(&userEvents, (*users)[i].Uid); err != nil {
+			return nil, err
+		}
+		events = append(events, userEvents)
+	}
+
+	// Collecting all together
+	var result models.FeedResults
+	for i := 0; i < len(*users); i++ {
+		post := models.FeedPost{}
+		post.Uid = (*users)[i].Uid
+		post.Name = (*users)[i].Name
+		post.Photos = (*users)[i].Photos
+		post.About = (*users)[i].About
+		post.Birthday = (*users)[i].Birthday
+		post.Gender = (*users)[i].Gender
+		post.Events = (*form)[i].Events
+		post.Tags = (*form)[i].Tags
+		if events != nil {
+			post.Subs = events[i]
+		}
+		result = append(result, post)
+	}
+
+	return result, nil
 }

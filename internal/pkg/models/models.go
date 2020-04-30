@@ -38,6 +38,9 @@ type UserGeneral struct {
 	Gender   int       `json:"gender, omitempty"`
 }
 
+//easyjson:json
+type UserGeneralList []UserGeneral
+
 type DBUserGeneral struct {
 	Uid      *int       `json:"uid, omitempty"`
 	Name     *string    `json:"name, omitempty"`
@@ -196,3 +199,14 @@ type Tag struct {
 
 //easyjson:json
 type TagList []Tag
+
+//Mix up of UserGeneral, GeneralForm and Subs
+type FeedPost struct {
+	UserGeneral
+	Events []Event `json:"events"`
+	Tags   []Tag   `json:"tags"`
+	Subs   []Event `json:"subscriptions"`
+}
+
+//easyjson:json
+type FeedResults []FeedPost
