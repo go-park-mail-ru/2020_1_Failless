@@ -4,7 +4,6 @@ import (
 	"failless/internal/pkg/chat"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
-	"fmt"
 	"github.com/jackc/pgx"
 	"log"
 )
@@ -173,7 +172,7 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 						SELECT $1, chat_local_id, user_local_id, $3, $4 FROM 
 							(SELECT * FROM user_chat uc WHERE $2 = uc.chat_local_id) AS s1
 					RETURNING mid`
-	fmt.Println("Params", msg)
+	//fmt.Println("Params", msg)
 	mID := int64(0)
 	err = tx.QueryRow(
 		sqlStatement,
@@ -225,7 +224,7 @@ func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]m
 			c.title,
 			SUM(CASE WHEN m.is_shown = FALSE THEN 1 ELSE 0 END) AS unseen,
 			MAX(m.created) AS last_date,
-			SUBSTR(MAX(CONCAT(m.created, m.message)), 20) last_msg,
+			SUBSTRING(MAX(m.created || '-----' || m.message) from '%#"-----%#"%' for '#') last_msg,
 			uc.avatar,
 			uc.title
 		FROM 
