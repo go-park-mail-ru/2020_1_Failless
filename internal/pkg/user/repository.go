@@ -23,5 +23,8 @@ type Repository interface {
 	GetProfileInfo(uid int) (models.JsonInfo, error)
 	GetUserEvents(uid int) ([]models.Event, error)
 	GetUserTags(uid int) ([]models.Tag, error)
+	GetUserSubscriptions(uid int) ([]models.Event, error)
 	DeleteUser(mail string) error
+	GetValidTags() ([]models.Tag, error)
+	GetRandomFeedUsers(uid int, limit int, page int) ([]models.UserGeneral, error)
 }

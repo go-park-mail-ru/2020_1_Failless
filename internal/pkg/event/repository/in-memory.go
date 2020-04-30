@@ -32,7 +32,7 @@ func (er *eventsRepository) GetFeedEvents(uid int, limit int, page int) ([]model
 	return nil, nil
 }
 
-func (er *eventsRepository) GetEventsByKeyWord(keyWordsString string, page int) ([]models.Event, error) {
+func (er *eventsRepository) GetEventsByKeyWord(keyWords string, page int) (models.EventList, error) {
 	return nil, nil
 }
 
@@ -40,6 +40,17 @@ func (er *eventsRepository) GetValidTags() ([]models.Tag, error) {
 	return nil, nil
 }
 
-func (er *eventsRepository) GetNewEventsByTags(tags []int, uid int, limit int, page int) ([]models.Event, error) {
+func (er *eventsRepository) GetNewEventsByTags(tags []int, uid int, limit int, page int) (models.EventList, error) {
 	return nil, nil
+}
+
+func (er *eventsRepository) FollowMidEvent(uid, eid int) error {
+	return nil
+}
+func (er *eventsRepository) FollowBigEvent(uid, eid int) error {
+	return nil
+}
+
+func (er *eventsRepository) GetEventsWithFollowed(events *models.EventResponseList, request *models.EventRequest) error {
+	return nil
 }

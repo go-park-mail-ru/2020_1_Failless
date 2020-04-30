@@ -7,6 +7,7 @@ import (
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/settings"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -29,19 +30,19 @@ func GetUseCase() event.UseCase {
 	}
 }
 
-func (uc *eventUseCase) InitEventsByTime(events *[]models.Event) (status int, err error) {
-	*events, err = uc.rep.GetAllEvents()
+func (ec *eventUseCase) InitEventsByTime(events *models.EventList) (status int, err error) {
+	*events, err = ec.rep.GetAllEvents()
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
 	return http.StatusOK, nil
 }
 
-func (uc *eventUseCase) InitEventsByKeyWords(events *[]models.Event, keyWords string, page int) (status int, err error) {
-	if keyWords == "" {
-		*events, err = uc.rep.GetFeedEvents(-1, 10, page)
+func (ec *eventUseCase) InitEventsByKeyWords(events *models.EventList, keys string, page int) (status int, err error) {
+	if keys == "" {
+		*events, err = ec.rep.GetAllEvents()
 	} else {
-		*events, err = uc.rep.GetEventsByKeyWord(keyWords, page)
+		*events, err = ec.rep.GetEventsByKeyWord(keys, page)
 	}
 	log.Println(events)
 	if err != nil {
@@ -50,27 +51,27 @@ func (uc *eventUseCase) InitEventsByKeyWords(events *[]models.Event, keyWords st
 	return http.StatusOK, nil
 }
 
-func (uc *eventUseCase) CreateEvent(event forms.EventForm) (models.Event, error) {
-	user, err := uc.rep.GetNameByID(event.UId)
+func (ec *eventUseCase) CreateEvent(event forms.EventForm) (models.Event, error) {
+	user, err := ec.rep.GetNameByID(event.UId)
 	model := models.Event{}
 	event.GetDBFormat(&model)
 	model.Author = user
-	err = uc.rep.SaveNewEvent(&model)
+	err = ec.rep.SaveNewEvent(&model)
 	return model, err
 }
 
-func (uc *eventUseCase) InitEventsByUserPreferences(events *[]models.Event, request *models.EventRequest) (int, error) {
-	dbTags, err := uc.rep.GetValidTags()
+func (ec *eventUseCase) InitEventsByUserPreferences(events *models.EventList, request *models.EventRequest) (int, error) {
+	dbTags, err := ec.rep.GetValidTags()
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
 
-	valid := uc.TakeValidTagsOnly(request.Tags, dbTags)
+	valid := ec.TakeValidTagsOnly(request.Tags, dbTags)
 	log.Println(request)
 	if valid != nil {
-		*events, err = uc.rep.GetNewEventsByTags(valid, request.Uid, request.Limit, request.Page)
+		*events, err = ec.rep.GetNewEventsByTags(valid, request.Uid, request.Limit, request.Page)
 	} else {
-		*events, err = uc.rep.GetFeedEvents(request.Uid, request.Limit, request.Page)
+		*events, err = ec.rep.GetFeedEvents(request.Uid, request.Limit, request.Page)
 	}
 
 	if err != nil {
@@ -79,14 +80,14 @@ func (uc *eventUseCase) InitEventsByUserPreferences(events *[]models.Event, requ
 
 	for i := 0; i < len(*events); i++ {
 		(*events)[i].Tag = dbTags[(*events)[i].Type-1]
-		log.Println(dbTags[(*events)[i].Type - 1])
+		log.Println(dbTags[(*events)[i].Type-1])
 	}
 
 	log.Println(events)
 	return http.StatusOK, nil
 }
 
-func (uc *eventUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int {
+func (ec *eventUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int {
 	var valid []int = nil
 	for _, tagId := range tagIds {
 		for _, tag := range tags {
@@ -97,4 +98,55 @@ func (uc *eventUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int
 	}
 
 	return valid
+}
+
+func (ec *eventUseCase) FollowEvent(subscription *models.EventFollow) models.WorkMessage {
+	var err error
+	if subscription.Type == "mid-event" {
+		err = ec.rep.FollowMidEvent(subscription.Uid, subscription.Eid)
+	} else if subscription.Type == "big-event" {
+		err = ec.rep.FollowBigEvent(subscription.Uid, subscription.Eid)
+	} else {
+		return models.WorkMessage{
+			Request: nil,
+			Message: "Invalid subscription type",
+			Status:  http.StatusBadRequest,
+		}
+	}
+
+	if err != nil {
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  http.StatusConflict,
+		}
+	} else {
+		return models.WorkMessage{
+			Request: nil,
+			Message: "OK",
+			Status:  http.StatusCreated,
+		}
+	}
+}
+
+func (ec *eventUseCase) SearchEventsByUserPreferences(events *models.EventResponseList, request *models.EventRequest) (int, error) {
+	var err error
+	if request.Uid == 0 {
+		tempEvents, _ := ec.rep.GetAllEvents()
+		for _, tempEvent := range tempEvents {
+			tempEventResponse := models.EventResponse{
+				Event:    tempEvent,
+				Followed: false,
+			}
+			*events = append(*events, tempEventResponse)
+		}
+	} else {
+		err = ec.rep.GetEventsWithFollowed(events, request)
+		if err != nil {
+			fmt.Println(err)
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	return http.StatusOK, nil
 }

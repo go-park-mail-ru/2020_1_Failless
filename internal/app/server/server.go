@@ -12,7 +12,7 @@ import (
 )
 
 func Start() {
-	file := logger.OpenLogFile()
+	file := logger.OpenLogFile("server")
 	defer file.Close()
 
 	if ok := settings.CheckSecretes(server.Secrets); !ok {
@@ -31,7 +31,6 @@ func Start() {
 	}
 
 	log.Println("server is running on " + strconv.Itoa(serverSettings.Port))
-	//err := serve.ListenAndServeTLS("./configs/ssl-bundle/bundle.crt", "./configs/ssl-bundle/private.key.pem")
 	err := serve.ListenAndServe()
 	if err != nil {
 		fmt.Println(err)

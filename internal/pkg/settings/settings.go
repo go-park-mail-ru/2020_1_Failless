@@ -1,6 +1,7 @@
 package settings
 
 import (
+	pb "failless/api/proto/auth"
 	"net/http"
 	"time"
 )
@@ -22,6 +23,7 @@ type GlobalSecure struct {
 	EnableCSRF   bool
 	CSRFTokenLen int
 	CSRFTokenTTL time.Duration
+	MetricsHost  string
 }
 
 type GlobalConfig struct {
@@ -31,6 +33,7 @@ type GlobalConfig struct {
 
 var SecureSettings GlobalSecure
 var UseCaseConf GlobalConfig
+var AuthClient pb.AuthClient
 
 type ServerSettings struct {
 	Port   int

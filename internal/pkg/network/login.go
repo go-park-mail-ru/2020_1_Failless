@@ -21,7 +21,7 @@ type Claims struct {
 // todo: rewrite to env variables
 var JwtKey = []byte("removeAfterDebug")
 
-func createJWTToken(user models.User) (string, error) {
+func CreateJWTToken(user models.User) (string, error) {
 	expirationTime := time.Now().Add(time.Hour * 24 * 30)
 	claims := &Claims{
 		Email: user.Email,
@@ -41,8 +41,9 @@ func createJWTToken(user models.User) (string, error) {
 	return tokenString, nil
 }
 
+// Deprecated:
 func CreateAuth(w http.ResponseWriter, user models.User) error {
-	token, err := createJWTToken(user)
+	token, err := CreateJWTToken(user)
 	if err != nil {
 		return err
 	}
@@ -64,5 +65,18 @@ func CreateLogout(w http.ResponseWriter) {
 		Value:    "-",
 		MaxAge:   -1,
 		HttpOnly: true,
+		Path:     "/api",
+	})
+}
+
+func CreateAuthMS(w *http.ResponseWriter, token string) {
+	expires := time.Now().Add(time.Hour * 24 * 30)
+	http.SetCookie(*w, &http.Cookie{
+		Name:     "token",
+		Value:    token,
+		Expires:  expires,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/api",
 	})
 }

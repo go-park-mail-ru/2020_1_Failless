@@ -1,47 +1,68 @@
 package server
 
 import (
+	"failless/configs"
+	"failless/internal/pkg/metrics/delivery"
 	"failless/internal/pkg/router"
 	"failless/internal/pkg/settings"
+	"fmt"
 	"github.com/dimfeld/httptreemux"
+	"google.golang.org/grpc"
+	"log"
 	"sync"
 
+	pb "failless/api/proto/auth"
 	eventDelivery "failless/internal/pkg/event/delivery"
 	tagDelivery "failless/internal/pkg/tag/delivery"
 	userDelivery "failless/internal/pkg/user/delivery"
 	voteDelivery "failless/internal/pkg/vote/delivery"
 )
 
+var authConn *grpc.ClientConn
+var dialAuthOnce sync.Once
+
+func ConnectToAuthMS(addr string) *grpc.ClientConn {
+	dialAuthOnce.Do(
+		func() {
+			var err error
+			authConn, err = grpc.Dial(addr, grpc.WithInsecure())
+			if err != nil {
+				log.Fatalf("Failed to dial the auth server: %v", err)
+			}
+		})
+	return authConn
+}
+
 var routesMap = map[string][]settings.MapHandler{
-	"/api/getuser": {{
+	"/api/srv/getuser": {{
 		Type:         "GET",
 		Handler:      userDelivery.GetUserInfo,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         false,
 	}},
-	"/api/logout": {{
+	"/api/srv/logout": {{
 		Type:         "GET",
 		Handler:      userDelivery.Logout,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         false,
 	}},
-	"/api/signin": {{
+	"/api/srv/signin": {{
 		Type:         "POST",
 		Handler:      userDelivery.SignIn,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
 	}},
-	"/api/signup": {{
+	"/api/srv/signup": {{
 		Type:         "POST",
 		Handler:      userDelivery.SignUp,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
 	}},
-	"/api/events/feed": {
+	"/api/srv/events/feed": {
 		{
 			Type:         "GET",
 			Handler:      eventDelivery.FeedEvents,
@@ -57,38 +78,38 @@ var routesMap = map[string][]settings.MapHandler{
 			CSRF:         false,
 		},
 	},
-	"/api/events/search": {{
+	"/api/srv/events/search": {{
 		Type:         "POST",
-		Handler:      eventDelivery.GetEventsByKeyWords,
+		Handler:      eventDelivery.GetSearchEvents,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
 	}},
-	"/api/event/new": {{
+	"/api/srv/event/new": {{
 		Type:         "POST",
 		Handler:      eventDelivery.CreateNewEvent,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/event/:id/like": {{
+	"/api/srv/event/:id/like": {{
 		Type:         "POST",
 		Handler:      voteDelivery.VoteEvent,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/event/:id/dislike": {{
+	"/api/srv/event/:id/dislike": {{
 		Type:         "POST",
 		Handler:      voteDelivery.VoteEvent,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/event/:id/follow": {
+	"/api/srv/event/:id/follow": {
 		{
 			Type:         "POST",
-			Handler:      voteDelivery.FollowEvent,
+			Handler:      eventDelivery.FollowEvent,
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,
@@ -101,35 +122,42 @@ var routesMap = map[string][]settings.MapHandler{
 			CSRF:         false,
 		},
 	},
-	"/api/tags/feed": {{
+	"/api/srv/tags/feed": {{
 		Type:         "GET",
 		Handler:      tagDelivery.FeedTags,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
 	}},
-	"/api/profile/:id/upload": {{
+	"/api/srv/profile/:id/upload": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UploadNewImage,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/profile/:id/meta": {{
+	"/api/srv/profile/:id/meta": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UpdUserMetaData,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/profile/:id/general": {{
+	"/api/srv/profile/:id/general": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UpdProfileGeneral,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/profile/:id": {
+	"/api/srv/profile/:id/subscriptions": {{
+		Type:         "GET",
+		Handler:      userDelivery.GetProfileSubscriptions,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+	}},
+	"/api/srv/profile/:id": {
 		{
 			Type:         "PUT",
 			Handler:      userDelivery.UpdProfilePage,
@@ -145,12 +173,26 @@ var routesMap = map[string][]settings.MapHandler{
 			CSRF:         false,
 		},
 	},
-	"/api/user/:action": {{
-		Type:         "POST",
+	"/api/srv/users/:vote": {{
+		Type:         "PUT",
 		Handler:      voteDelivery.VoteUser,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+	}},
+	"/api/srv/users/feed": {{
+		Type:         "POST",
+		Handler:      userDelivery.GetUsersFeed,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+	}},
+	"/metrics": {{
+		Type:         "GET",
+		Handler:      delivery.MetricsHandler,
+		CORS:         true,
+		AuthRequired: false,
+		CSRF:         false,
 	}},
 	"/api": {{
 		Type:         "OPTIONS",
@@ -177,8 +219,8 @@ var conf settings.ServerSettings
 func GetConfig() *settings.ServerSettings {
 	doOnce.Do(func() {
 		conf = settings.ServerSettings{
-			Port:   3001,
-			Ip:     "0.0.0.0",
+			Port:   configs.PortServer,
+			Ip:     configs.IPAddress,
 			Routes: routesMap,
 		}
 		settings.SecureSettings = settings.GlobalSecure{
@@ -208,5 +250,7 @@ func GetConfig() *settings.ServerSettings {
 		conf.InitConf(&settings.UseCaseConf)
 		router.InitRouter(&conf, httptreemux.New())
 	})
+	conn := ConnectToAuthMS(fmt.Sprintf("%s:%d", configs.AuthIP, configs.PortAuth))
+	settings.AuthClient = pb.NewAuthClient(conn)
 	return &conf
 }

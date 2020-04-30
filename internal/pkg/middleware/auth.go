@@ -5,9 +5,10 @@ import (
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
 	"failless/internal/pkg/settings"
-	"github.com/dgrijalva/jwt-go"
 	"log"
 	"net/http"
+
+	pb "failless/api/proto/auth"
 )
 
 // Structure for describe an error
@@ -39,52 +40,33 @@ type authError struct {
 // If user is not authorized it write failed checker to the authError structure
 func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-		var errMsg authError
+		log.Print("Middleware - Auth: ")
 		ctx := context.Background()
 		c, err := r.Cookie("token")
 
 		// error - no cookie was found
 		if err != nil {
 			ctx = context.WithValue(ctx, security.CtxUserKey, nil)
-			errMsg.code = 1
-			errMsg.msg = err.Error()
-			log.Print(err.Error())
+			log.Printf("client:  no cookie was found")
+			network.GenErrorCode(w, r.WithContext(ctx), err.Error(), http.StatusUnauthorized)
+			return
 		} else {
-
-			// Get the JWT string from the cookie
-			tknStr := c.Value
-			claims := &network.Claims{}
-			tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {
-				return network.JwtKey, nil
-			})
-
+			authReply, err := settings.AuthClient.CheckAuthorize(ctx, &pb.Token{Token: c.Value})
 			if err != nil {
-				if err == jwt.ErrSignatureInvalid {
-					errMsg.code = 3
-					ctx = context.WithValue(ctx, security.CtxUserKey, nil)
-					w.WriteHeader(http.StatusUnauthorized)
-				} else {
-					errMsg.code = 5
-				}
-				errMsg.msg = err.Error()
+				ctx = context.WithValue(ctx, security.CtxUserKey, nil)
+				w.WriteHeader(http.StatusInternalServerError)
+				network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+				return
 			}
 
-			if errMsg.code == 0 {
-				if !tkn.Valid {
-					ctx = context.WithValue(ctx, "auth", nil)
-					w.WriteHeader(http.StatusUnauthorized)
-					errMsg.code = 5
-					errMsg.msg = "Token invalid"
-				} else { // success. user is authorized
-					form := security.UserClaims{
-						Uid:   claims.Uid,
-						Phone: claims.Phone,
-						Email: claims.Email,
-						Name:  claims.Name,
-					}
-					ctx = context.WithValue(ctx, security.CtxUserKey, form)
-				}
+			uClaims := security.UserClaims{
+				Uid:   int(authReply.Cred.Uid),
+				Phone: authReply.Cred.Phone,
+				Email: authReply.Cred.Email,
+				Name:  authReply.Cred.Name,
 			}
+			ctx = context.WithValue(ctx, security.CtxUserKey, uClaims)
+
 		}
 		next(w, r.WithContext(ctx), ps)
 	}

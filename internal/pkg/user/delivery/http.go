@@ -1,15 +1,18 @@
 package delivery
 
 import (
-	"encoding/json"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/images"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
+	"failless/internal/pkg/settings"
 	"failless/internal/pkg/user/usecase"
 	"log"
 	"net/http"
+
+	pb "failless/api/proto/auth"
+	json "github.com/mailru/easyjson"
 )
 
 ////////////// profile part //////////////////
@@ -20,11 +23,10 @@ func UpdProfileGeneral(w http.ResponseWriter, r *http.Request, ps map[string]str
 		return
 	}
 
-	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm
-	err := decoder.Decode(&form)
+	err := json.UnmarshalFromReader(r.Body, &form)
 	if err != nil {
-		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
 		return
 	}
 
@@ -44,11 +46,10 @@ func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]strin
 		return
 	}
 
-	decoder := json.NewDecoder(r.Body)
 	var form forms.MetaForm
-	err := decoder.Decode(&form)
+	err := json.UnmarshalFromReader(r.Body, &form)
 	if err != nil {
-		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
 		return
 	}
 
@@ -68,11 +69,10 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	decoder := json.NewDecoder(r.Body)
 	var form forms.GeneralForm
-	err := decoder.Decode(&form)
+	err := json.UnmarshalFromReader(r.Body, &form)
 	if err != nil {
-		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
 		return
 	}
 
@@ -99,11 +99,10 @@ func UploadNewImage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	decoder := json.NewDecoder(r.Body)
 	var form forms.UploadedImage
-	err := decoder.Decode(&form)
+	err := json.UnmarshalFromReader(r.Body, &form)
 	if err != nil {
-		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
 		return
 	}
 
@@ -120,18 +119,18 @@ func UploadNewImage(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	network.Jsonify(w, network.Message{Message: "ok", Status: 200}, http.StatusOK)
+	network.Jsonify(w, models.WorkMessage{Message: "ok", Status: 200}, http.StatusOK)
 }
 
 func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	uid := 0
-	if uid = network.GetIdFromRequest(w, r, &ps); uid < 0 {
+	uid := int64(0)
+	if uid = network.GetIdFromRequest(w, r, ps); uid < 0 {
 		network.GenErrorCode(w, r, "Uid is incorrect", http.StatusInternalServerError)
 		return
 	}
 
 	var profile forms.GeneralForm
-	profile.Uid = uid
+	profile.Uid = int(uid)
 	uc := usecase.GetUseCase()
 	if code, err := uc.GetUserInfo(&profile); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
@@ -139,6 +138,24 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	}
 
 	network.Jsonify(w, profile, http.StatusOK)
+}
+
+func GetProfileSubscriptions(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := network.GetIdFromRequest(w, r, ps)
+	if uid < 0 {
+		network.GenErrorCode(w, r, "Uid is incorrect", http.StatusInternalServerError)
+		return
+	}
+
+	var events models.EventList
+	uc := usecase.GetUseCase()
+	code, err := uc.GetUserSubscriptions(&events, int(uid))
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
+		return
+	}
+
+	network.Jsonify(w, events, code)
 }
 
 ////////////// user part //////////////////
@@ -150,8 +167,7 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		network.GenErrorCode(w, r, "User is not authorised", http.StatusUnauthorized)
 		return
 	}
-
-	network.Jsonify(w, data, http.StatusOK)
+	network.Jsonify(w, data.(security.UserClaims), http.StatusOK)
 }
 
 ////////////// authorization part //////////////////
@@ -159,11 +175,10 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	network.CreateLogout(w)
 
-	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm
-	err := decoder.Decode(&form)
+	err := json.UnmarshalFromReader(r.Body, &form)
 	if err != nil {
-		network.GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
+		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
 		return
 	}
 
@@ -173,35 +188,38 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		return
 	}
 
-	user := models.User{
-		Phone: form.Phone,
-		Email: form.Email,
+	authReply, err := settings.AuthClient.Authorize(r.Context(), &pb.AuthRequest{
+		Phone:    form.Phone,
+		Email:    form.Email,
+		Password: form.Password,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	uc := usecase.GetUseCase()
-	if code, err := uc.FillFormIfExist(&user); err != nil {
-		network.GenErrorCode(w, r, err.Error(), code)
+	if !authReply.Ok {
+		network.GenErrorCode(w, r, authReply.Message, http.StatusUnauthorized)
 		return
 	}
 
-	if security.ComparePasswords(user.Password, form.Password) {
-		err := network.CreateAuth(w, user)
-		if err != nil {
-			log.Println("cookie wasn't set")
-			network.GenErrorCode(w, r, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		log.Println("cookie was set")
-	} else {
-		network.GenErrorCode(w, r, "Passwords is not equal", http.StatusUnauthorized)
+	token, err := settings.AuthClient.GetToken(r.Context(), &pb.AuthRequest{
+		Uid:      authReply.Cred.Uid,
+		Phone:    form.Phone,
+		Email:    form.Email,
+		Password: form.Password,
+	})
+	if token != nil {
+		network.CreateAuthMS(&w, token.Token)
 	}
 
-	form.FillFromModel(&user)
+	form.FillFromAuthReply(authReply)
 	network.Jsonify(w, form, http.StatusOK)
 }
 
-func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func Logout(w http.ResponseWriter, _ *http.Request, _ map[string]string) {
 	network.CreateLogout(w)
-	network.Jsonify(w, network.Message{Message: "Successfully logout", Status: 200}, 200)
+	network.Jsonify(w, models.WorkMessage{Message: "Successfully logout", Status: 200}, 200)
 }
 
 ////////////// registration part //////////////////
@@ -209,15 +227,14 @@ func Logout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	data := r.Context().Value(security.CtxUserKey)
 	if data != nil {
-		network.Jsonify(w, data, http.StatusNotModified)
+		network.Jsonify(w, data.(security.UserClaims), http.StatusNotModified)
 		return
 	}
 
-	decoder := json.NewDecoder(r.Body)
 	var form forms.SignForm
-	err := decoder.Decode(&form)
+	err := json.UnmarshalFromReader(r.Body, &form)
 	if err != nil {
-		network.GenErrorCode(w, r, "Invalid Json", http.StatusNotAcceptable)
+		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
 		return
 	}
 
@@ -252,4 +269,51 @@ func SignUp(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 	form.Password = ""
 	network.Jsonify(w, form, http.StatusOK)
+}
+
+////////////// feed part //////////////////
+
+func GetUsersFeed(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
+	var searchRequest models.UserRequest
+	err := json.UnmarshalFromReader(r.Body, &searchRequest)
+	if err != nil {
+		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
+		return
+	}
+
+	log.Println(searchRequest)
+
+	if searchRequest.Page < 1 {
+		searchRequest.Page = 1
+	}
+
+	// Get FeedUsers to show
+	var users []models.UserGeneral
+	uc := usecase.GetUseCase()
+	if code, err := uc.InitUsersByUserPreferences(&users, &searchRequest); err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
+		return
+	}
+	// Get events and tags about FeedUsers
+	var info []forms.GeneralForm
+	for i := 0; i < len(users); i++ {
+		userForm := forms.GeneralForm{}
+		userForm.Uid = (users)[i].Uid
+		if code, err := uc.GetUserInfo(&userForm); err != nil {
+			network.GenErrorCode(w, r, err.Error(), code)
+			return
+		}
+		info = append(info, userForm)
+	}
+	feed, err := uc.GetFeedResults(&users, &info)
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+	}
+
+	network.Jsonify(w, feed, http.StatusOK)
 }

@@ -6,6 +6,7 @@ import (
 	"failless/internal/pkg/user"
 	"github.com/jackc/pgx"
 	"log"
+	"time"
 )
 
 type sqlUserRepository struct {
@@ -190,7 +191,7 @@ func (ur *sqlUserRepository) DeleteUser(mail string) error {
 
 // TODO: move it to event pkg
 func (ur *sqlUserRepository) GetUserEvents(uid int) ([]models.Event, error) {
-	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events WHERE uid = $1 ;`
+	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events WHERE uid = $1 LIMIT 10;`
 	return ur.getEvents(sqlStatement, uid)
 }
 
@@ -270,4 +271,128 @@ func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.Use
 	}
 
 	return nil
+}
+
+func (ur *sqlUserRepository) GetValidTags() ([]models.Tag, error) {
+	sqlStatement := `SELECT tag_id, name FROM tag ORDER BY tag_id;`
+	rows, err := ur.db.Query(sqlStatement)
+	if err != nil {
+		return nil, err
+	}
+
+	var tags []models.Tag
+	for rows.Next() {
+		tag := models.Tag{}
+		err = rows.Scan(&tag.TagId, &tag.Name)
+		if err != nil {
+			return nil, err
+		}
+		tags = append(tags, tag)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return tags, nil
+}
+
+func (ur *sqlUserRepository) GetRandomFeedUsers(uid int, limit int, page int) ([]models.UserGeneral, error) {
+	if page < 1 || limit < 1 {
+		return nil, errors.New("Page number can't be less than 1\n")
+	}
+	withCondition := `
+		WITH voted_users AS ( SELECT user_id FROM user_vote WHERE uid = $1 ) `
+	sqlCondition := ` 
+		LEFT JOIN voted_users AS v 
+		ON p.pid = v.user_id 
+		WHERE v.user_id IS NULL 
+		AND
+		p.pid != $2
+		LIMIT $3 ; `
+	// TODO: add cool vote algorithm (aka select)
+	return ur.getUsers(withCondition, sqlCondition, uid, uid, limit)
+}
+
+// +/- universal method for getting users array by condition (aka sqlStatement)
+// and parameters in args (interface array)
+func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string, args ...interface{}) ([]models.UserGeneral, error) {
+	baseSql := withCondition + `
+		SELECT p.pid, u.name, p.photos, p.about, p.birthday, p.gender
+		FROM profile_info as p
+		JOIN profile as u
+		ON p.pid = u.uid `
+	baseSql += sqlStatement
+	log.Println(baseSql, args)
+	rows, err := ur.db.Query(baseSql, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	var users []models.UserGeneral
+	for rows.Next() {
+		userInfo := models.UserGeneral{}
+		gender := ""
+		genderPtr := &gender
+		bday := time.Time{}
+		bdayPtr := &bday
+		err = rows.Scan(
+			&userInfo.Uid,
+			&userInfo.Name,
+			&userInfo.Photos,
+			&userInfo.About,
+			&bdayPtr,
+			&genderPtr)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, userInfo)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (ur *sqlUserRepository) GetUserSubscriptions(uid int) ([]models.Event, error) {
+	sqlStatement := `
+		SELECT
+			events.eid, events.uid, title, edate, message, events.is_edited, author, etype, range
+		FROM
+			events
+			JOIN event_vote 
+				ON events.eid = event_vote.eid
+		WHERE
+			event_vote.uid = $1
+			AND
+			event_vote.value = 1;`
+	rows, err := ur.db.Query(sqlStatement, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	var subs []models.Event
+	for rows.Next() {
+		event := models.Event{}
+		err = rows.Scan(
+			&event.EId,
+			&event.AuthorId,
+			&event.Title,
+			&event.EDate,
+			&event.Message,
+			&event.Edited,
+			&event.Author,
+			&event.Type,
+			&event.Limit)
+		if err != nil {
+			return nil, err
+		}
+		subs = append(subs, event)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return subs, nil
 }

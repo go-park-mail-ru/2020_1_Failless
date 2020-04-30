@@ -1,7 +1,7 @@
 -- CREATE DATABASE eventum WITH OWNER = postgres;
 -- CREATE ROLE eventum WITH SUPERUSER PASSWORD 'eventum' LOGIN CONNECTION LIMIT -1;
 
--- CREATE EXTENSION IF NOT EXISTS CITEXT;
+CREATE EXTENSION IF NOT EXISTS CITEXT;
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS postgis_topology;
 
@@ -58,6 +58,10 @@ CREATE TABLE IF NOT EXISTS profile_info
     login_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
 
+--------------------------------------------------------
+-------------------- EVENT PART ------------------------
+--------------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS timetable
 (
     table_id  SERIAL PRIMARY KEY,
@@ -89,7 +93,8 @@ CREATE TABLE IF NOT EXISTS events
 CREATE TABLE IF NOT EXISTS subscribe
 (
     uid      INTEGER NOT NULL REFERENCES profile (uid),
-    table_id INTEGER NOT NULL REFERENCES timetable (table_id)
+    table_id INTEGER NOT NULL REFERENCES timetable (table_id),
+    CONSTRAINT unique_subscription UNIQUE (uid, table_id)
 );
 
 CREATE TABLE IF NOT EXISTS event_vote
@@ -99,16 +104,8 @@ CREATE TABLE IF NOT EXISTS event_vote
     is_edited BOOLEAN                     NOT NULL DEFAULT FALSE,
     value     SMALLINT                    NOT NULL DEFAULT 0,
     vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
-    chat_id   INTEGER                              DEFAULT NULL
-);
-
-CREATE TABLE IF NOT EXISTS user_vote
-(
-    uid       INTEGER                     NOT NULL REFERENCES profile (uid),
-    user_id   INTEGER                     NOT NULL REFERENCES profile (uid),
-    value     SMALLINT                    NOT NULL DEFAULT 0,
-    vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
-    chat_id   INTEGER                              DEFAULT NULL
+    chat_id   INTEGER                              DEFAULT NULL,
+    CONSTRAINT unique_event_vote UNIQUE (uid, eid)
 );
 
 --------------------------------------------------------
@@ -120,9 +117,10 @@ CREATE TABLE IF NOT EXISTS chat_user
     chat_id    SERIAL PRIMARY KEY,
     admin_id   INTEGER REFERENCES profile (uid),
     date       TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
-    user_count INTEGER                              DEFAULT 1,
+    user_count INTEGER                              DEFAULT 2,
     title      VARCHAR(128)                NOT NULL CHECK ( title <> '' ),
-    eid        INTEGER REFERENCES events (eid)
+    eid        INTEGER REFERENCES events (eid),
+    avatar     VARCHAR(64)
 );
 
 CREATE TABLE IF NOT EXISTS user_chat
@@ -130,7 +128,9 @@ CREATE TABLE IF NOT EXISTS user_chat
     user_local_id SERIAL PRIMARY KEY,
     chat_local_id INTEGER REFERENCES chat_user (chat_id),
     uid           INTEGER REFERENCES profile (uid), -- user id
-    date          TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+    date          TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    avatar        VARCHAR(64),
+    title         VARCHAR(128)
 );
 
 
@@ -140,9 +140,21 @@ CREATE TABLE IF NOT EXISTS message
     uid           INTEGER REFERENCES profile (uid),
     chat_id       INTEGER REFERENCES chat_user (chat_id),
     user_local_id INTEGER REFERENCES user_chat (user_local_id),
+    is_shown      BOOLEAN                              DEFAULT FALSE,
     message       TEXT,
     created       TIMESTAMP(3) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
+
+CREATE TABLE IF NOT EXISTS user_vote
+(
+    uid       INTEGER                     NOT NULL REFERENCES profile (uid),
+    user_id   INTEGER                     NOT NULL REFERENCES profile (uid),
+    value     SMALLINT                    NOT NULL   DEFAULT 0,
+    vote_date TIMESTAMP(0) WITH TIME ZONE NOT NULL   DEFAULT current_timestamp,
+    chat_id   INTEGER REFERENCES chat_user (chat_id) DEFAULT NULL,
+    CONSTRAINT unique_user_vote UNIQUE (uid, user_id)
+);
+
 
 CREATE OR REPLACE PROCEDURE add_location(uid INT, latitude FLOAT, longitude FLOAT)
     LANGUAGE plpgsql AS
