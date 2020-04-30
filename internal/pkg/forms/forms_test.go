@@ -106,9 +106,9 @@ func TestGeneralForm_FillProfile(t *testing.T) {
 	} else {
 		assert.Equal(t, form.Avatar.ImgName, "default.png")
 	}
-	for i, photo := range profile.Photos {
-		assert.Equal(t, form.Photos[i].ImgName, photo)
-	}
+	//for i, photo := range profile.Photos {
+	//	assert.Equal(t, form.Photos[i].ImgName, photo)
+	//}
 }
 
 func TestGeneralForm_GetDBFormat(t *testing.T) {
@@ -129,9 +129,9 @@ func TestGeneralForm_GetDBFormat(t *testing.T) {
 		t.Fail()
 		return
 	}
-	for i, photo := range form.Photos {
-		assert.Equal(t, info.Photos[i], photo.ImgName)
-	}
+	//for i, photo := range form.Photos {
+	//	assert.Equal(t, info.Photos[i], photo.ImgName)
+	//}
 
 	assert.Equal(t, form.Name, user.Name)
 	assert.Equal(t, form.Phone, user.Phone)
