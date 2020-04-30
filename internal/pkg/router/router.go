@@ -35,6 +35,7 @@ func InitRouter(s *settings.ServerSettings, router *httptreemux.TreeMux) {
 				handler = middleware.CORS(handler)
 			}
 
+			handler = middleware.Metrics(handler)
 
 			switch pack.Type {
 			case "GET":
