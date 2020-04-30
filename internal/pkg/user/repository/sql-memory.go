@@ -191,7 +191,7 @@ func (ur *sqlUserRepository) DeleteUser(mail string) error {
 
 // TODO: move it to event pkg
 func (ur *sqlUserRepository) GetUserEvents(uid int) ([]models.Event, error) {
-	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events WHERE uid = $1 ;`
+	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events WHERE uid = $1 LIMIT 10;`
 	return ur.getEvents(sqlStatement, uid)
 }
 
