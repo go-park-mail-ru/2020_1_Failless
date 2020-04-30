@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"net/http"
+	"time"
+)
 
 // Gender types
 const (
@@ -8,6 +11,12 @@ const (
 	Female
 	Other
 )
+
+type WorkMessage struct {
+	Request *http.Request `json:"-"`
+	Message string        `json:"message"`
+	Status  int           `json:"status"`
+}
 
 // Base user struct for storage user data
 // It has a difference with the User struct into delivery package
@@ -109,6 +118,9 @@ type ChatMeta struct {
 	Page     int       `json:"page"`
 }
 
+//easyjson:json
+type ChatList []ChatMeta
+
 type MessageRequest struct {
 	ChatID int64 `json:"chat_id"`
 	Uid    int64 `json:"uid"`
@@ -116,11 +128,10 @@ type MessageRequest struct {
 	Page   int   `json:"page"`
 }
 
-
 type ChatRequest struct {
-	Uid    int64 `json:"uid"`
-	Limit  int   `json:"limit"`
-	Page   int   `json:"page"`
+	Uid   int64 `json:"uid"`
+	Limit int   `json:"limit"`
+	Page  int   `json:"page"`
 }
 
 type EType int
@@ -155,14 +166,14 @@ type EventRequest struct {
 }
 
 type EventFollow struct {
-	Uid		int		`json:"uid"`
-	Eid		int		`json:"eid"`
-	Type	string	`json:"type"`
+	Uid  int    `json:"uid"`
+	Eid  int    `json:"eid"`
+	Type string `json:"type"`
 }
 
 type EventResponse struct {
-	Event		Event
-	Followed	bool	`json:"followed"`
+	Event    Event
+	Followed bool `json:"followed"`
 }
 
 type Vote struct {

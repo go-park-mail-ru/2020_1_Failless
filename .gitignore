@@ -7,6 +7,7 @@ media/data/*
 .env
 *.log
 *.pb.go
-run-auth
-run-server
-run-chat
+*_easyjson.go
+auth
+server
+chat

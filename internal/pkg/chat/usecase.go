@@ -13,6 +13,6 @@ type UseCase interface {
 	Subscribe(conn *websocket.Conn, uid int64)
 	Notify(message *forms.Message)
 	GetMessagesForChat(msgRequest *models.MessageRequest) ([]forms.Message, error)
-	GetUserRooms(msgRequest *models.ChatRequest) ([]models.ChatMeta, error)
+	GetUserRooms(msgRequest *models.ChatRequest) (models.ChatList, error)
 }
 

@@ -190,6 +190,6 @@ func (cc *chatUseCase) GetMessagesForChat(msgRequest *models.MessageRequest) ([]
 	return cc.Rep.GetRoomMessages(msgRequest.Uid, msgRequest.ChatID, msgRequest.Page, msgRequest.Limit)
 }
 
-func (cc *chatUseCase) GetUserRooms(msgRequest *models.ChatRequest) ([]models.ChatMeta, error) {
+func (cc *chatUseCase) GetUserRooms(msgRequest *models.ChatRequest) (models.ChatList, error) {
 	return cc.Rep.GetUserTopMessages(msgRequest.Uid, msgRequest.Page, msgRequest.Limit)
 }
