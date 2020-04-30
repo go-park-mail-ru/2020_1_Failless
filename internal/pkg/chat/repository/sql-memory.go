@@ -250,6 +250,7 @@ func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]m
 	}
 	var chatsMeta []models.ChatMeta
 	for rows.Next() {
+		photo := ""
 		meta := models.ChatMeta{}
 		err = rows.Scan(
 			&meta.ChatID,
@@ -257,12 +258,13 @@ func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]m
 			&meta.Unseen,
 			&meta.LastDate,
 			&meta.LastMsg,
-			&meta.Photos,
+			&photo,
 			&meta.Name)
 		if err != nil {
 			log.Println(err)
 			return nil, err
 		}
+		meta.Photos = append(meta.Photos, photo)
 		chatsMeta = append(chatsMeta, meta)
 	}
 	err = rows.Err()
