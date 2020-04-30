@@ -6,7 +6,7 @@ import (
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/vote"
 	"failless/internal/pkg/vote/repository"
-	"log"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -40,15 +40,15 @@ func (vc *voteUseCase) VoteUser(vote models.Vote) network.Message {
 	if vote.Value == 1 {
 		match, _ := vc.rep.CheckMatching(vote.Uid, vote.Id)
 		if match {
-			log.Println("Match occured between", vote.Uid, "and", vote.Id)
 			// Create dialogue
+			// TODO: fix transaction bug
 			cr := chatRep.NewSqlChatRepository(db.ConnectToDB())
 			if _, err = cr.InsertDialogue(
 				vote.Uid,
 				vote.Id,
 				2,
 				"Чат#"+strconv.Itoa(vote.Id)); err != nil {
-				log.Println(err)
+				fmt.Println(err)
 				return network.Message{
 					Request: nil,
 					Message: err.Error(),

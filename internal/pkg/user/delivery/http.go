@@ -143,22 +143,8 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	network.Jsonify(w, profile, http.StatusOK)
 }
 
-func GetProfileSubscriptions(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	uid := network.GetIdFromRequest(w, r, ps);
-	if uid < 0 {
-		network.GenErrorCode(w, r, "Uid is incorrect", http.StatusInternalServerError)
-		return
-	}
-
-	var events []models.Event
-	uc := usecase.GetUseCase()
-	code, err := uc.GetUserSubscriptions(&events, int(uid))
-	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), code)
-		return
-	}
-
-	network.Jsonify(w, events, code)
+func GetProfileSubscriptions(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	// TODO: do it in the future
 }
 
 ////////////// user part //////////////////

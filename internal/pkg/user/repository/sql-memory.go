@@ -191,7 +191,7 @@ func (ur *sqlUserRepository) DeleteUser(mail string) error {
 
 // TODO: move it to event pkg
 func (ur *sqlUserRepository) GetUserEvents(uid int) ([]models.Event, error) {
-	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events WHERE uid = $1 LIMIT 10;`
+	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events WHERE uid = $1 ;`
 	return ur.getEvents(sqlStatement, uid)
 }
 
@@ -357,16 +357,9 @@ func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string,
 
 func (ur *sqlUserRepository) GetUserSubscriptions(uid int) ([]models.Event, error) {
 	sqlStatement := `
-		SELECT
-			events.eid, events.uid, title, edate, message, events.is_edited, author, etype, range
-		FROM
-			events
-			JOIN event_vote 
-				ON events.eid = event_vote.eid
-		WHERE
-			event_vote.uid = $1
-			AND
-			event_vote.value = 1;`
+		SELECT events.eid, events.uid, title, edate, message, events.is_edited, author, etype, range
+			FROM events JOIN event_vote ON events.eid = event_vote.eid
+			WHERE event_vote.uid = $1 AND event_vote.value = 1;`
 	rows, err := ur.db.Query(sqlStatement, uid)
 	if err != nil {
 		return nil, err

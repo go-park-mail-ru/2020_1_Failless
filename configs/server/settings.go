@@ -33,35 +33,35 @@ func ConnectToAuthMS(addr string) *grpc.ClientConn {
 }
 
 var routesMap = map[string][]settings.MapHandler{
-	"/api/srv/getuser": {{
+	"/api/getuser": {{
 		Type:         "GET",
 		Handler:      userDelivery.GetUserInfo,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         false,
 	}},
-	"/api/srv/logout": {{
+	"/api/logout": {{
 		Type:         "GET",
 		Handler:      userDelivery.Logout,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         false,
 	}},
-	"/api/srv/signin": {{
+	"/api/signin": {{
 		Type:         "POST",
 		Handler:      userDelivery.SignIn,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
 	}},
-	"/api/srv/signup": {{
+	"/api/signup": {{
 		Type:         "POST",
 		Handler:      userDelivery.SignUp,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
 	}},
-	"/api/srv/events/feed": {
+	"/api/events/feed": {
 		{
 			Type:         "GET",
 			Handler:      eventDelivery.FeedEvents,
@@ -77,35 +77,35 @@ var routesMap = map[string][]settings.MapHandler{
 			CSRF:         false,
 		},
 	},
-	"/api/srv/events/search": {{
+	"/api/events/search": {{
 		Type:         "POST",
 		Handler:      eventDelivery.GetSearchEvents,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
 	}},
-	"/api/srv/event/new": {{
+	"/api/event/new": {{
 		Type:         "POST",
 		Handler:      eventDelivery.CreateNewEvent,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/srv/event/:id/like": {{
+	"/api/event/:id/like": {{
 		Type:         "POST",
 		Handler:      voteDelivery.VoteEvent,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/srv/event/:id/dislike": {{
+	"/api/event/:id/dislike": {{
 		Type:         "POST",
 		Handler:      voteDelivery.VoteEvent,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/srv/event/:id/follow": {
+	"/api/event/:id/follow": {
 		{
 			Type:         "POST",
 			Handler:      eventDelivery.FollowEvent,
@@ -121,42 +121,42 @@ var routesMap = map[string][]settings.MapHandler{
 			CSRF:         false,
 		},
 	},
-	"/api/srv/tags/feed": {{
+	"/api/tags/feed": {{
 		Type:         "GET",
 		Handler:      tagDelivery.FeedTags,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
 	}},
-	"/api/srv/profile/:id/upload": {{
+	"/api/profile/:id/upload": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UploadNewImage,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/srv/profile/:id/meta": {{
+	"/api/profile/:id/meta": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UpdUserMetaData,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/srv/profile/:id/general": {{
+	"/api/profile/:id/general": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UpdProfileGeneral,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/srv/profile/:id/subscriptions": {{
+	"/api/profile/:id/subscriptions": {{
 		Type:         "GET",
 		Handler:      userDelivery.GetProfileSubscriptions,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/srv/profile/:id": {
+	"/api/profile/:id": {
 		{
 			Type:         "PUT",
 			Handler:      userDelivery.UpdProfilePage,
@@ -172,14 +172,14 @@ var routesMap = map[string][]settings.MapHandler{
 			CSRF:         false,
 		},
 	},
-	"/api/srv/users/:vote": {{
+	"/api/users/:vote": {{
 		Type:         "PUT",
 		Handler:      voteDelivery.VoteUser,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 	}},
-	"/api/srv/users/feed": {{
+	"/api/users/feed": {{
 		Type:         "POST",
 		Handler:      userDelivery.GetUsersFeed,
 		CORS:         true,
@@ -242,7 +242,7 @@ func GetConfig() *settings.ServerSettings {
 		conf.InitConf(&settings.UseCaseConf)
 		router.InitRouter(&conf, httptreemux.New())
 	})
-	conn := ConnectToAuthMS(fmt.Sprintf("%s:%d", configs.AuthIP, configs.PortAuth))
+	conn := ConnectToAuthMS(fmt.Sprintf("%s:%d", configs.IPAddress, configs.PortAuth))
 	settings.AuthClient = pb.NewAuthClient(conn)
 	return &conf
 }

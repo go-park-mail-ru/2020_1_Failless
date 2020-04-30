@@ -30,7 +30,7 @@ func ConnectToAuthMS(addr string) *grpc.ClientConn {
 }
 
 var routesMap = map[string][]settings.MapHandler{
-	"/api/chats/list": {{
+	"/api/chat/list": {{
 		Type:         "POST",
 		Handler:      delivery.GetChatList,
 		CORS:         true,
@@ -41,16 +41,23 @@ var routesMap = map[string][]settings.MapHandler{
 		Type:         "GET",
 		Handler:      delivery.HandlerWS,
 		CORS:         true,
-		AuthRequired: false,
+		AuthRequired: true,
 		CSRF:         false,
 	}},
-	"/api/chats/:id": {
+	"/api/chat/:id": {
 		{
-			Type:         "PUT",
+			Type:         "GET",
 			Handler:      delivery.GetMessages,
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         false,
+		},
+		{
+			Type:         "POST",
+			Handler:      delivery.SendMessage,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
 		},
 	},
 	"/api": {{
@@ -110,7 +117,7 @@ func GetConfig() *settings.ServerSettings {
 		router.InitRouter(&conf, httptreemux.New())
 	})
 
-	conn := ConnectToAuthMS(fmt.Sprintf("%s:%d", configs.AuthIP, configs.PortAuth))
+	conn := ConnectToAuthMS(fmt.Sprintf("%s:%d", configs.IPAddress, configs.PortAuth))
 	settings.AuthClient = pb.NewAuthClient(conn)
 	return &conf
 }

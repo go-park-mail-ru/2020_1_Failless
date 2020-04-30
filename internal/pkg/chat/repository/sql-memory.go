@@ -6,6 +6,7 @@ import (
 	"failless/internal/pkg/models"
 	"github.com/jackc/pgx"
 	"log"
+	"strconv"
 )
 
 type sqlChatRepository struct {
@@ -33,21 +34,8 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 		return -1, nil
 	}
 
-	// Insert into user_chat joining name of person + avatar
-	var userLocalIDs [2]int
-	sqlStatement = `
-		INSERT INTO user_chat (chat_local_id, uid, avatar, title)
-    		SELECT $1, $2, pi.photos[1], p.name
-    			FROM profile_info pi
-					JOIN profile p ON p.uid = pi.pid
-				WHERE pi.pid = $3 RETURNING user_local_id;`
-	if err := tx.QueryRow(sqlStatement, chatId, uid1, uid2).Scan(
-		&userLocalIDs[0]); err != nil {
-		log.Println(err)
-		return -1, nil
-	}
-	if err := tx.QueryRow(sqlStatement, chatId, uid2, uid1).Scan(
-		&userLocalIDs[1]); err != nil {
+	sqlStatement = `INSERT INTO user_chat (chat_local_id, uid) VALUES ($1, $2), ($3, $4);`
+	if _, err := tx.Exec(sqlStatement, chatId, uid1, chatId, uid2); err != nil {
 		log.Println(err)
 		return -1, nil
 	}
@@ -56,23 +44,9 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 	sqlStatement2 := `
 		UPDATE user_vote SET chat_id = $1
 		WHERE (uid = $2 AND user_id = $3) OR (uid = $3 AND user_id = $2);`
-	if row, err := tx.Exec(sqlStatement2, chatId, uid1, uid2); err != nil {
+	if _, err = tx.Exec(sqlStatement2, chatId, uid1, uid2); err != nil {
 		log.Println(err)
-		log.Println(sqlStatement2, chatId, uid1, uid2)
-		log.Println(row)
 		return -1, nil
-	}
-
-	//Insert first message
-	sqlStatement3 := `
-		INSERT INTO message (uid, chat_id, user_local_id, message, is_shown)
-		VALUES ($1, $2, $3, 'Напишите первое сообщение!', FALSE);`
-	for _, userLocalID := range userLocalIDs {
-		if row, err := tx.Exec(sqlStatement3, uid1, chatId, userLocalID); err != nil {
-			log.Println(err)
-			log.Println(row)
-			return -1, nil
-		}
 	}
 
 	// Close transaction
@@ -81,13 +55,11 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 		return -1, err
 	}
 
-	log.Println("New chat has been created")
-
 	return chatId, nil
 }
 
-func (cr *sqlChatRepository) getMessages(sqlStatement string, cid int64, uid int64, limit int, page int) ([]forms.Message, error) {
-	rows, err := cr.db.Query(sqlStatement, cid, uid, limit, page)
+func (cr *sqlChatRepository) getMessages(sqlStatement string, args ...interface{}) ([]forms.Message, error) {
+	rows, err := cr.db.Query(sqlStatement, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -143,11 +115,8 @@ func (cr *sqlChatRepository) GetUsersRooms(uid int64) ([]models.ChatRoom, error)
 }
 
 func (cr *sqlChatRepository) CheckRoom(cid int64, uid int64) (bool, error) {
-	sqlStatement := `
-		SELECT cu.chat_id, cu.admin_id, cu.date, cu.user_count, cu.title
-		FROM user_chat uc 
-		JOIN chat_user cu ON uc.chat_local_id = $1
-		WHERE uid = $2;`
+	sqlStatement := `SELECT cu.chat_id, cu.admin_id, cu.date, cu.user_count, cu.title FROM user_chat uc 
+						JOIN chat_user cu ON uc.chat_local_id = $1 WHERE uid = $2;`
 	rows, err := cr.db.Query(sqlStatement, cid, uid)
 	if err != nil && rows != nil && !rows.Next() {
 		log.Println("CheckRoom: user has no rooms")
@@ -168,16 +137,14 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 	// the tx commits successfully, this is a no-op
 	defer tx.Rollback()
 
-	sqlStatement := `INSERT INTO message (uid, chat_id, user_local_id, message, is_shown)
-						SELECT $1, chat_local_id, user_local_id, $3, $4 FROM 
-							(SELECT * FROM user_chat uc WHERE $2 = uc.chat_local_id) AS s1
-					RETURNING mid`
-	//fmt.Println("Params", msg)
+	sqlStatement := `INSERT INTO message (uid, chat_id, user_local_id, message, is_shown) 
+							VALUES ($1, $2, $3, $4, $5) RETURNS mid;`
 	mID := int64(0)
 	err = tx.QueryRow(
 		sqlStatement,
 		msg.Uid,
 		msg.ChatID,
+		msg.ULocalID,
 		msg.Text,
 		true).Scan(&mID)
 	if err != nil {
@@ -185,29 +152,29 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 		log.Println(sqlStatement, msg.Uid, msg.ChatID, msg.ULocalID, true)
 		return -1, err
 	}
-	//sqlStatement = `INSERT INTO message (uid, chat_id, user_local_id, message, is_shown) VALUES `
-	//valuesStr := ``
-	//values := []interface{}{}
-	//itemNum := 5
-	//postNum := len(relatedChats)
-	//for i := 0; i < postNum; i++ {
-	//	valuesStr += ` ( `
-	//	for j := 1; j <= itemNum; j++ {
-	//		valuesStr += `$` + strconv.Itoa(i*itemNum+j)
-	//		if j != itemNum {
-	//			valuesStr += `, `
-	//		}
-	//	}
-	//	valuesStr += ` ) `
-	//	values = append(values, msg.Uid, msg.ChatID, relatedChats[i], true)
-	//	if i != postNum-1 {
-	//		valuesStr += ` , `
-	//	}
-	//}
-	//_, err = tx.Exec(sqlStatement+valuesStr+" ;", values...)
-	//if err != nil {
-	//	return -1, err
-	//}
+	sqlStatement = `INSERT INTO message (uid, chat_id, user_local_id, message, is_shown) VALUES `
+	valuesStr := ``
+	values := []interface{}{}
+	itemNum := 5
+	postNum := len(relatedChats)
+	for i := 0; i < postNum; i++ {
+		valuesStr += ` ( `
+		for j := 1; j <= itemNum; j++ {
+			valuesStr += `$` + strconv.Itoa(i*itemNum+j)
+			if j != itemNum {
+				valuesStr += `, `
+			}
+		}
+		valuesStr += ` ) `
+		values = append(values, msg.Uid, msg.ChatID, relatedChats[i], true)
+		if i != postNum-1 {
+			valuesStr += ` , `
+		}
+	}
+	_, err = tx.Exec(sqlStatement+valuesStr+" ;", values...)
+	if err != nil {
+		return -1, err
+	}
 
 	err = tx.Commit()
 	if err != nil {
@@ -218,34 +185,13 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 }
 
 func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]models.ChatMeta, error) {
-	sqlStatement := `
-		SELECT 
-			c.chat_id,
-			c.title,
-			SUM(CASE WHEN m.is_shown = FALSE THEN 1 ELSE 0 END) AS unseen,
-			MAX(m.created) AS last_date,
-			SUBSTRING(MAX(m.created || '-----' || m.message) from '%#"-----%#"%' for '#') last_msg,
-			uc.avatar,
-			uc.title
-		FROM 
-			user_chat uc
-			JOIN chat_user c
-				ON c.chat_id = uc.chat_local_id 
-			JOIN message m
-				ON m.user_local_id = uc.user_local_id
-		WHERE
-			uc.uid = $1
-		GROUP BY 
-			c.chat_id, uc.avatar, uc.title
-		ORDER BY 
-			last_date DESC
-		LIMIT
-			$2
-		OFFSET
-			$3;`
+	sqlStatement := `SELECT c.chat_id,, c.title, SUM(CASE WHEN m.is_shown = TRUE THEN 1 ELSE 0 END) AS unseen,
+						MAX(m.created) AS last_date, SUBSTR(MAX(CONCAT(m.created, m.message)), 20) last_msg
+						FROM user_chat uc JOIN chat_user c ON c.chat_id = uc.chat_local_id 
+						JOIN message m ON m.user_local_id = uc.user_local_id WHERE uc.uid = $1
+							GROUP BY c.chat_id ORDER BY last_date DESC LIMIT $2 OFFSET $3;`
 	rows, err := cr.db.Query(sqlStatement, uid, limit, page)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 	var chatsMeta []models.ChatMeta
@@ -256,41 +202,22 @@ func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]m
 			&meta.Title,
 			&meta.Unseen,
 			&meta.LastDate,
-			&meta.LastMsg,
-			&meta.Photos,
-			&meta.Name)
+			&meta.LastMsg)
 		if err != nil {
-			log.Println(err)
 			return nil, err
 		}
 		chatsMeta = append(chatsMeta, meta)
 	}
 	err = rows.Err()
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 	return chatsMeta, nil
 }
 
 func (cr *sqlChatRepository) GetRoomMessages(uid, cid int64, page, limit int) ([]forms.Message, error) {
-	sqlStatement := `
-		SELECT
-			ms.mid, ms.uid, ms.chat_id, ms.user_local_id, ms.message, ms.is_shown, ms.created 
-		FROM
-			user_chat uc
-			JOIN message ms
-				ON uc.user_local_id = ms.user_local_id
-					AND
-				ms.chat_id = $1
-		WHERE
-			uc.uid = $2 
-		ORDER BY
-			ms.created DESC
-		LIMIT
-			$3
-		OFFSET
-			$4;`
-	page = 0
+	sqlStatement := `SELECT ms.mid, ms.uid, ms.chat_id, ms.user_local_id, ms.message, ms.is_shown, ms.created 
+						FROM user_chat uc JOIN message ms ON uc.user_local_id = ms.user_local_id AND ms.chat_id = $1
+						WHERE uc.uid = $2 ORDER BY ms.created DESC LIMIT $3 OFFSET $4;`
 	return cr.getMessages(sqlStatement, cid, uid, limit, page)
 }

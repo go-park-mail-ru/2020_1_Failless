@@ -3,8 +3,8 @@ package delivery
 import (
 	"failless/internal/pkg/chat/usecase"
 	"failless/internal/pkg/network"
+	"failless/internal/pkg/security"
 	"github.com/gorilla/websocket"
-	"log"
 	"net/http"
 )
 
@@ -16,24 +16,18 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-type msgWithId struct {
-	Uid 	int64
-}
-
 func HandlerWS(w http.ResponseWriter, r *http.Request, m map[string]string) {
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-
-	uid := msgWithId{}
-	if err = conn.ReadJSON(&uid); err != nil {
-		log.Println(err)
-		return
-	}
-
 	uc := usecase.GetUseCase()
-	uc.Subscribe(conn, uid.Uid)
+	uc.Subscribe(conn, r, int64(uid))
 }
