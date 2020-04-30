@@ -62,7 +62,7 @@ func GetMessages(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	var request models.MessageRequest
 	err := json.UnmarshalFromReader(r.Body, &request)
 	if err != nil {
-		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
+		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
 		return
 	}
 

@@ -182,7 +182,7 @@ func (cc *chatUseCase) AddNewMessage(message *forms.Message) (int, error) {
 	return http.StatusOK, nil
 }
 
-func (cc *chatUseCase) GetMessagesForChat(msgRequest *models.MessageRequest) ([]forms.Message, error) {
+func (cc *chatUseCase) GetMessagesForChat(msgRequest *models.MessageRequest) (forms.MessageList, error) {
 	has, err := cc.IsUserHasRoom(msgRequest.Uid, msgRequest.ChatID)
 	if err != nil || !has {
 		return nil, err
