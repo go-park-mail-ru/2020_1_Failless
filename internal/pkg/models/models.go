@@ -151,6 +151,9 @@ type Event struct {
 	Tag      Tag       `json:"tag, omitempty"`
 }
 
+//easyjson:json
+type EventList []Event
+
 type EventRequest struct {
 	Uid       int           `json:"uid, omitempty"`
 	Page      int           `json:"page"`
@@ -175,6 +178,9 @@ type EventResponse struct {
 	Event    Event
 	Followed bool `json:"followed"`
 }
+
+//easyjson:json
+type EventResponseList []EventResponse
 
 type Vote struct {
 	Uid   int       `json:"uid"`
