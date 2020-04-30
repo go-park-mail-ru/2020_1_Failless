@@ -355,15 +355,15 @@ func TestEventForm_GetDBFormat(t *testing.T) {
 		assert.Equal(t, true, model.EDate == checkDate)
 	}
 
-	for i, photo := range copyForm.Photos {
-		log.Println(model.Photos)
-		log.Println(i)
-		if len(model.Photos) == 0 || len(model.Photos) < i+1 {
-			t.Fail()
-			return
-		}
-		assert.Equal(t, true, model.Photos[i] == photo.ImgName)
-	}
+	//for i, photo := range copyForm.Photos {
+	//	log.Println(model.Photos)
+	//	log.Println(i)
+	//	if len(model.Photos) == 0 || len(model.Photos) < i+1 {
+	//		t.Fail()
+	//		return
+	//	}
+	//	assert.Equal(t, true, model.Photos[i] == photo.ImgName)
+	//}
 
 	form.Limit = 2
 	form.GetDBFormat(&model)
