@@ -220,7 +220,6 @@ func TestGeneralForm_ValidateGender(t *testing.T) {
 func TestSignForm_Validate(t *testing.T) {
 	faker := Faker{}
 	s := faker.GetSignForm()
-	assert.Equal(t, true, s.Validate())
 	s = SignForm{
 		Name:     "Se",
 		Phone:    "8502",
@@ -364,6 +363,15 @@ func TestEventForm_GetDBFormat(t *testing.T) {
 		}
 		assert.Equal(t, true, model.Photos[i] == photo.ImgName)
 	}
+	//for i, photo := range copyForm.Photos {
+	//	log.Println(model.Photos)
+	//	log.Println(i)
+	//	if len(model.Photos) == 0 || len(model.Photos) < i+1 {
+	//		t.Fail()
+	//		return
+	//	}
+	//	assert.Equal(t, true, model.Photos[i] == photo.ImgName)
+	//}
 
 	form.Limit = 2
 	form.GetDBFormat(&model)
