@@ -40,6 +40,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         false,
+		WS:           false,
 	}},
 	"/api/srv/logout": {{
 		Type:         "GET",
@@ -47,6 +48,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         false,
+		WS:           false,
 	}},
 	"/api/srv/signin": {{
 		Type:         "POST",
@@ -54,6 +56,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
+		WS:           false,
 	}},
 	"/api/srv/signup": {{
 		Type:         "POST",
@@ -61,6 +64,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
+		WS:           false,
 	}},
 	"/api/srv/events/feed": {
 		{
@@ -69,6 +73,7 @@ var routesMap = map[string][]settings.MapHandler{
 			CORS:         true,
 			AuthRequired: false,
 			CSRF:         false,
+			WS:           false,
 		},
 		{
 			Type:         "POST",
@@ -76,6 +81,7 @@ var routesMap = map[string][]settings.MapHandler{
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         false,
+			WS:           false,
 		},
 	},
 	"/api/srv/events/search": {{
@@ -84,6 +90,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
+		WS:           false,
 	}},
 	"/api/srv/event/new": {{
 		Type:         "POST",
@@ -91,6 +98,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
 	"/api/srv/event/:id/like": {{
 		Type:         "POST",
@@ -98,6 +106,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
 	"/api/srv/event/:id/dislike": {{
 		Type:         "POST",
@@ -105,6 +114,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
 	"/api/srv/event/:id/follow": {
 		{
@@ -113,6 +123,7 @@ var routesMap = map[string][]settings.MapHandler{
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,
+			WS:           false,
 		},
 		{
 			Type:         "GET",
@@ -120,6 +131,7 @@ var routesMap = map[string][]settings.MapHandler{
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         false,
+			WS:           false,
 		},
 	},
 	"/api/srv/tags/feed": {{
@@ -128,6 +140,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
+		WS:           false,
 	}},
 	"/api/srv/profile/:id/upload": {{
 		Type:         "PUT",
@@ -135,6 +148,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
 	"/api/srv/profile/:id/meta": {{
 		Type:         "PUT",
@@ -142,6 +156,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
 	"/api/srv/profile/:id/general": {{
 		Type:         "PUT",
@@ -149,6 +164,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
 	"/api/srv/profile/:id/subscriptions": {{
 		Type:         "GET",
@@ -156,6 +172,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
 	"/api/srv/profile/:id": {
 		{
@@ -164,6 +181,7 @@ var routesMap = map[string][]settings.MapHandler{
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,
+			WS:           false,
 		},
 		{
 			Type:         "GET",
@@ -171,6 +189,7 @@ var routesMap = map[string][]settings.MapHandler{
 			CORS:         true,
 			AuthRequired: false,
 			CSRF:         false,
+			WS:           false,
 		},
 	},
 	"/api/srv/users/:vote": {{
@@ -179,6 +198,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
 	"/api/srv/users/feed": {{
 		Type:         "POST",
@@ -186,6 +206,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
 	"/metrics": {{
 		Type:         "GET",
@@ -193,6 +214,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
+		WS:           false,
 	}},
 	"/api": {{
 		Type:         "OPTIONS",
@@ -200,6 +222,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
+		WS:           false,
 	}},
 }
 

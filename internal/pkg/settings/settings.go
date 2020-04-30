@@ -14,6 +14,7 @@ type MapHandler struct {
 	AuthRequired bool
 	CORS         bool
 	CSRF         bool
+	WS           bool
 }
 
 type GlobalSecure struct {

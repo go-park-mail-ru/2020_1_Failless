@@ -23,6 +23,7 @@ type msgWithId struct {
 func HandlerWS(w http.ResponseWriter, r *http.Request, m map[string]string) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
+		log.Println(err.Error())
 		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 		return
 	}
