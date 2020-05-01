@@ -67,6 +67,9 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 	sqlStatement3 := `
 		INSERT INTO message (uid, chat_id, user_local_id, message, is_shown)
 		VALUES ($1, $2, $3, 'Напишите первое сообщение!', FALSE);`
+	//TODO: implement it
+	//var qGen queryGenerator
+	//qGen.generateArgsSql()
 	for _, userLocalID := range userLocalIDs {
 		if row, err := tx.Exec(sqlStatement3, uid1, chatId, userLocalID); err != nil {
 			log.Println(err)
@@ -91,6 +94,7 @@ func (cr *sqlChatRepository) getMessages(sqlStatement string, cid int64, uid int
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	var messages []forms.Message
 	for rows.Next() {
 		msg := forms.Message{}
@@ -121,6 +125,7 @@ func (cr *sqlChatRepository) GetUsersRooms(uid int64) ([]models.ChatRoom, error)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	var rooms []models.ChatRoom
 	for rows.Next() {
 		room := models.ChatRoom{}
@@ -219,35 +224,23 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 
 func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]models.ChatMeta, error) {
 	sqlStatement := `
-		SELECT 
-			c.chat_id,
-			c.title,
+		SELECT c.chat_id, c.title,
 			SUM(CASE WHEN m.is_shown = FALSE THEN 1 ELSE 0 END) AS unseen,
 			MAX(m.created) AS last_date,
 			SUBSTRING(MAX(m.created || '-----' || m.message) from '%#"-----%#"%' for '#') last_msg,
-			uc.avatar,
-			uc.title
-		FROM 
-			user_chat uc
-			JOIN chat_user c
-				ON c.chat_id = uc.chat_local_id 
-			JOIN message m
-				ON m.user_local_id = uc.user_local_id
-		WHERE
-			uc.uid = $1
-		GROUP BY 
-			c.chat_id, uc.avatar, uc.title
-		ORDER BY 
-			last_date DESC
-		LIMIT
-			$2
-		OFFSET
-			$3;`
+			uc.avatar, uc.title
+			FROM user_chat uc 
+				JOIN chat_user c ON c.chat_id = uc.chat_local_id 
+				JOIN message m ON m.user_local_id = uc.user_local_id
+					WHERE uc.uid = $1
+			GROUP BY c.chat_id, uc.avatar, uc.title
+				ORDER BY last_date DESC LIMIT $2 OFFSET $3;`
 	rows, err := cr.db.Query(sqlStatement, uid, limit, page)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
+	defer rows.Close()
 	var chatsMeta []models.ChatMeta
 	for rows.Next() {
 		photo := ""

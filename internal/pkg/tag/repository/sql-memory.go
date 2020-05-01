@@ -20,6 +20,7 @@ func (tr *sqlTagRepository) GetAllTags() ([]models.Tag, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var tags []models.Tag
 	for rows.Next() {
