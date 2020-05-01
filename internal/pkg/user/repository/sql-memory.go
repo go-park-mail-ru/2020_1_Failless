@@ -49,13 +49,18 @@ func (ur *sqlUserRepository) getUser(sqlStatement string, args ...interface{}) (
 // Private method
 func (ur *sqlUserRepository) getEvents(sqlStatement string, args ...interface{}) ([]models.Event, error) {
 	rows, err := ur.db.Query(sqlStatement, args...)
-	if err != nil && rows != nil && !rows.Next() {
+	if err != nil {
+		return nil, err
+	}
+	if rows != nil && !rows.Next() {
+		rows.Close()
 		log.Println(sqlStatement)
 		log.Println("user has no events")
 		return nil, nil
-	} else if err != nil || rows == nil {
+	} else if rows == nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var events []models.Event
 	for rows.Next() {
@@ -204,14 +209,15 @@ func (ur *sqlUserRepository) GetEventsByTag(tag string) ([]models.Event, error) 
 func (ur *sqlUserRepository) GetUserTags(uid int) ([]models.Tag, error) {
 	sqlStatement := `SELECT tag_id, name FROM user_tag NATURAL JOIN tag WHERE uid = $1 ;`
 	rows, err := ur.db.Query(sqlStatement, uid)
-	if err != nil && rows != nil && !rows.Next() {
+	if err != nil {
+		return nil, err
+	}
+	if rows != nil && !rows.Next() {
 		log.Println(sqlStatement)
 		log.Println("user has no tags")
 		return nil, nil
-	} else if err != nil || rows == nil {
-		return nil, err
 	}
-
+	defer rows.Close()
 	var tags []models.Tag
 	for rows.Next() {
 		tag := models.Tag{}
@@ -281,6 +287,7 @@ func (ur *sqlUserRepository) GetValidTags() ([]models.Tag, error) {
 	}
 
 	var tags []models.Tag
+	defer rows.Close()
 	for rows.Next() {
 		tag := models.Tag{}
 		err = rows.Scan(&tag.TagId, &tag.Name)
@@ -327,6 +334,7 @@ func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string,
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var users []models.UserGeneral
 	for rows.Next() {
@@ -371,6 +379,7 @@ func (ur *sqlUserRepository) GetUserSubscriptions(uid int) ([]models.Event, erro
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var subs []models.Event
 	for rows.Next() {

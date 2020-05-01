@@ -29,7 +29,8 @@ func init() {
 		Password: password,
 	}
 	pgxConnPoolConfig := pgx.ConnPoolConfig{
-		MaxConnections: 100,
+		// TODO: reduce this value
+		MaxConnections: 50,
 		ConnConfig: pgxConfig,
 	}
 	dbase, err := pgx.NewConnPool(pgxConnPoolConfig)

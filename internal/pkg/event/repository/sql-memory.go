@@ -116,6 +116,7 @@ func (er *sqlEventsRepository) getEvents(withCondition string, sqlStatement stri
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var events []models.Event
 	for rows.Next() {
@@ -230,6 +231,7 @@ func (er *sqlEventsRepository) GetValidTags() ([]models.Tag, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var tags []models.Tag
 	for rows.Next() {
@@ -319,6 +321,7 @@ func (er *sqlEventsRepository) GetEventsWithFollowed(events *models.EventRespons
 		return err
 	}
 
+	defer rows.Close()
 	for rows.Next() {
 		tempEvent := models.EventResponse{}
 		err = rows.Scan(

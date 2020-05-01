@@ -154,7 +154,11 @@ func (cr *sqlChatRepository) CheckRoom(cid int64, uid int64) (bool, error) {
 		JOIN chat_user cu ON uc.chat_local_id = $1
 		WHERE uid = $2;`
 	rows, err := cr.db.Query(sqlStatement, cid, uid)
-	if err != nil && rows != nil && !rows.Next() {
+	if err != nil {
+		return false, err
+	}
+	defer rows.Close()
+	if rows != nil && !rows.Next() {
 		log.Println("CheckRoom: user has no rooms")
 		return false, nil
 	} else if err != nil {
@@ -275,20 +279,11 @@ func (cr *sqlChatRepository) GetRoomMessages(uid, cid int64, page, limit int) ([
 	sqlStatement := `
 		SELECT
 			ms.mid, ms.uid, ms.chat_id, ms.user_local_id, ms.message, ms.is_shown, ms.created 
-		FROM
-			user_chat uc
-			JOIN message ms
-				ON uc.user_local_id = ms.user_local_id
-					AND
-				ms.chat_id = $1
-		WHERE
-			uc.uid = $2 
-		ORDER BY
-			ms.created DESC
-		LIMIT
-			$3
-		OFFSET
-			$4;`
+			FROM user_chat uc
+				JOIN message ms
+					ON uc.user_local_id = ms.user_local_id AND ms.chat_id = $1
+			WHERE uc.uid = $2
+				ORDER BY ms.created DESC LIMIT $3 OFFSET $4;`
 	page = 0
 	return cr.getMessages(sqlStatement, cid, uid, limit, page)
 }
