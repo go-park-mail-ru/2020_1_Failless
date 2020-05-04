@@ -343,3 +343,23 @@ func (er *sqlEventsRepository) GetEventsWithFollowed(events *models.EventRespons
 
 	return nil
 }
+
+func (er *sqlEventsRepository) CreateSmallEvent(event *models.SmallEvent) error {
+	sqlStatement := `
+		INSERT INTO
+			small_event (uid, title, description, time, tags, photos)
+		VALUES 
+			($1, $2, $3, $4, $5, $6)
+		RETURNING
+			eid;`
+
+	row := er.db.QueryRow(sqlStatement, event.UId, event.Title, event.Descr, event.Date, event.TagsId, event.Photos)
+	err := row.Scan(
+		&event.EId)
+	if err != nil {
+		log.Println(row)
+		return err
+	}
+
+	return nil
+}

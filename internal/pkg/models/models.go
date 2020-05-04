@@ -171,6 +171,16 @@ type EventRequest struct {
 	Women     bool          `json:"women"`
 }
 
+type SmallEvent struct {
+	EId 	int		 	`json:"eid,omitempty"`
+	UId     int      	`json:"uid"`
+	Title   string   	`json:"title"`
+	Descr   string   	`json:"description,omitempty"`
+	TagsId  []int    	`json:"tags,omitempty"`
+	Date    time.Time	`json:"date,omitempty"`
+	Photos  []string 	`json:"photos,omitempty"`
+}
+
 type EventFollow struct {
 	Uid  int    `json:"uid"`
 	Eid  int    `json:"eid"`

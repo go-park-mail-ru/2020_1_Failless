@@ -54,3 +54,7 @@ func (er *eventsRepository) FollowBigEvent(uid, eid int) error {
 func (er *eventsRepository) GetEventsWithFollowed(events *models.EventResponseList, request *models.EventRequest) error {
 	return nil
 }
+
+func (er *eventsRepository) CreateSmallEvent(event *models.SmallEvent) error {
+	return nil
+}

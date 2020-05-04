@@ -100,6 +100,14 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         true,
 		WS:           false,
 	}},
+	"/api/srv/event/small": {{
+		Type:         "POST",
+		Handler:      eventDelivery.CreateSmallEvent,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
 	"/api/srv/event/:id/like": {{
 		Type:         "POST",
 		Handler:      voteDelivery.VoteEvent,

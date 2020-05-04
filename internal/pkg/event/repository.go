@@ -13,4 +13,5 @@ type Repository interface {
 	FollowMidEvent(uid, eid int) error
 	FollowBigEvent(uid, eid int) error
 	GetEventsWithFollowed(events *models.EventResponseList, request *models.EventRequest) error
+	CreateSmallEvent(event *models.SmallEvent) error
 }

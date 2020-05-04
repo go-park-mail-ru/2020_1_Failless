@@ -6,6 +6,7 @@ import (
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -34,6 +35,11 @@ func CreateNewEvent(w http.ResponseWriter, r *http.Request, _ map[string]string)
 	r.Header.Set("Content-Type", "application/json")
 	var form forms.EventForm
 	err := json.UnmarshalFromReader(r.Body, &form)
+	if err != nil {
+		fmt.Println(err)
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
 	if !form.Validate() {
 		// TODO: add error code from error code table
 		network.GenErrorCode(w, r, "incorrect data", http.StatusBadRequest)
@@ -42,6 +48,31 @@ func CreateNewEvent(w http.ResponseWriter, r *http.Request, _ map[string]string)
 
 	uc := usecase.GetUseCase()
 	event, err := uc.CreateEvent(form)
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	network.Jsonify(w, event, http.StatusOK)
+}
+
+func CreateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
+	r.Header.Set("Content-Type", "application/json")
+	var event models.SmallEvent
+	err := json.UnmarshalFromReader(r.Body, &event)
+	if err != nil {
+		fmt.Println(err)
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	uc := usecase.GetUseCase()
+	err = uc.CreateSmallEvent(&event)
 	if err != nil {
 		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
 		return

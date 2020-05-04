@@ -108,6 +108,20 @@ CREATE TABLE IF NOT EXISTS event_vote
     CONSTRAINT unique_event_vote UNIQUE (uid, eid)
 );
 
+CREATE TABLE IF NOT EXISTS small_event
+(
+    eid             SERIAL PRIMARY KEY,
+    uid             INTEGER                     NOT NULL REFERENCES profile (uid),  -- author id
+    title           VARCHAR(128)                NOT NULL CHECK ( title <> '' ),     -- title, actually is checked on the front-end
+    description     VARCHAR(1024)               DEFAULT NULL,
+    time            TIMESTAMP(0) WITH TIME ZONE DEFAULT NULL,                       -- time of event, not the creation
+    tags            INTEGER[]                   DEFAULT NULL,                       -- tags from table 'tag'
+    photos          VARCHAR(64)[]               DEFAULT NULL,
+    is_edited       BOOLEAN                     DEFAULT FALSE,
+
+    time_created    TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp  -- for sorting
+);
+
 --------------------------------------------------------
 -------------------- CHAT PART -------------------------
 --------------------------------------------------------

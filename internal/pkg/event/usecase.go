@@ -12,4 +12,5 @@ type UseCase interface {
 	InitEventsByUserPreferences(events *models.EventList, request *models.EventRequest) (int, error)
 	FollowEvent(subscription *models.EventFollow) models.WorkMessage
 	SearchEventsByUserPreferences(events *models.EventResponseList, request *models.EventRequest) (int, error)
+	CreateSmallEvent(event *models.SmallEvent) error
 }
