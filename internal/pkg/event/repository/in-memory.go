@@ -58,3 +58,7 @@ func (er *eventsRepository) GetEventsWithFollowed(events *models.EventResponseLi
 func (er *eventsRepository) CreateSmallEvent(event *models.SmallEvent) error {
 	return nil
 }
+
+func (er *eventsRepository) GetSmallEventsForUser(uid int) (models.SmallEventList, error) {
+	return nil, nil
+}

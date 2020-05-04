@@ -81,6 +81,24 @@ func CreateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]strin
 	network.Jsonify(w, event, http.StatusOK)
 }
 
+func GetSmallEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
+	r.Header.Set("Content-Type", "application/json")
+
+	uc := usecase.GetUseCase()
+	events, err := uc.GetSmallEventsForUser(uid)
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	network.Jsonify(w, events, http.StatusOK)
+}
+
 // Get events limited by number strings with offset from JSON (POST parameter)
 // Limit have to be set in the /configs/*/settings.go file using global variable
 // UseCaseConf

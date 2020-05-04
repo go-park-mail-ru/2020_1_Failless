@@ -7,11 +7,13 @@ import (
 	"failless/internal/pkg/settings"
 	"fmt"
 	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/pgtype"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type sqlEventsRepository struct {
@@ -362,4 +364,55 @@ func (er *sqlEventsRepository) CreateSmallEvent(event *models.SmallEvent) error 
 	}
 
 	return nil
+}
+
+func (er *sqlEventsRepository) GetSmallEventsForUser(uid int) (models.SmallEventList, error) {
+	sqlStatement := `
+		SELECT
+			eid, uid, title, description, time, tags, photos
+		FROM
+			small_event
+		WHERE
+			uid = $1
+		ORDER BY
+			time
+		LIMIT
+			10;`
+
+	rows, err := er.db.Query(sqlStatement, uid)
+	if err != nil {
+		log.Println(rows)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events models.SmallEventList
+	tags := pgtype.Int4Array{}
+	time := new(time.Time)
+	for rows.Next() {
+		eventInfo := models.SmallEvent{}
+		err = rows.Scan(
+			&eventInfo.EId,
+			&eventInfo.UId,
+			&eventInfo.Title,
+			&eventInfo.Descr,
+			&time,
+			&tags,
+			&eventInfo.Photos)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+
+		if time != nil {
+			eventInfo.Date = *time
+		}
+
+		if err = tags.AssignTo(&eventInfo.TagsId); err != nil {
+			fmt.Println(err)
+		}
+		events = append(events, eventInfo)
+	}
+
+	return events, nil
 }

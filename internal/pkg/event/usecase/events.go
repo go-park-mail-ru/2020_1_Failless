@@ -64,6 +64,11 @@ func (ec *eventUseCase) CreateSmallEvent(event *models.SmallEvent) error {
 	return ec.rep.CreateSmallEvent(event)
 }
 
+func (ec *eventUseCase) GetSmallEventsForUser(uid int) (models.SmallEventList, error) {
+	return ec.rep.GetSmallEventsForUser(uid)
+}
+
+
 func (ec *eventUseCase) InitEventsByUserPreferences(events *models.EventList, request *models.EventRequest) (int, error) {
 	dbTags, err := ec.rep.GetValidTags()
 	if err != nil {

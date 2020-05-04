@@ -176,10 +176,13 @@ type SmallEvent struct {
 	UId     int      	`json:"uid"`
 	Title   string   	`json:"title"`
 	Descr   string   	`json:"description,omitempty"`
-	TagsId  []int    	`json:"tags,omitempty"`
+	TagsId  []int32    	`json:"tags,omitempty"`
 	Date    time.Time	`json:"date,omitempty"`
 	Photos  []string 	`json:"photos,omitempty"`
 }
+
+//easyjson:json
+type SmallEventList []SmallEvent
 
 type EventFollow struct {
 	Uid  int    `json:"uid"`
