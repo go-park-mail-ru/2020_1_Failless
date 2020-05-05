@@ -14,5 +14,6 @@ type UseCase interface {
 	UnfollowEvent(subscription *models.EventFollow) models.WorkMessage
 	SearchEventsByUserPreferences(events *models.EventResponseList, request *models.EventRequest) (int, error)
 	CreateSmallEvent(event *models.SmallEvent) error
+	UpdateSmallEvent(event *models.SmallEvent) (int, error)
 	GetSmallEventsForUser(uid int) (models.SmallEventList, error)
 }

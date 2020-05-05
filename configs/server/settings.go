@@ -102,14 +102,6 @@ var routesMap = map[string][]settings.MapHandler{
 	},
 	"/api/srv/events/small/{eid}": {
 		{
-			Type:         "GET",
-			Handler:      eventDelivery.GetSmallEvent,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         true,
-			WS:           false,
-		},
-		{
 			Type:         "PUT",
 			Handler:      eventDelivery.UpdateSmallEvent,
 			CORS:         true,

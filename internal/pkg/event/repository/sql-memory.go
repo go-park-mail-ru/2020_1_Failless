@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
 	"log"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -410,6 +411,28 @@ func (er *sqlEventsRepository) CreateSmallEvent(event *models.SmallEvent) error 
 	}
 
 	return nil
+}
+
+func (er *sqlEventsRepository) UpdateSmallEvent(event *models.SmallEvent) (int, error) {
+	sqlStatement := `
+		UPDATE
+			small_event
+		SET 
+			title = $3, description = $4, time = $5, tags = $6, photos = $7
+		WHERE
+			uid = $1
+				AND
+			eid = $2;`
+
+	cTag, err := er.db.Exec(sqlStatement, event.UId, event.EId, event.Title, event.Descr, event.Date, event.TagsId, event.Photos)
+	if err != nil || cTag.RowsAffected() == 0 {
+		log.Println(err)
+		return http.StatusNotFound, err
+	}
+
+	// TODO: try it
+
+	return http.StatusOK, nil
 }
 
 func (er *sqlEventsRepository) GetSmallEventsForUser(uid int) (models.SmallEventList, error) {

@@ -3,6 +3,7 @@ package repository
 import (
 	"failless/internal/pkg/event"
 	"failless/internal/pkg/models"
+	"net/http"
 )
 
 type eventsRepository struct {
@@ -70,4 +71,8 @@ func (er *eventsRepository) CreateSmallEvent(event *models.SmallEvent) error {
 
 func (er *eventsRepository) GetSmallEventsForUser(uid int) (models.SmallEventList, error) {
 	return nil, nil
+}
+
+func (er *eventsRepository) UpdateSmallEvent(event *models.SmallEvent) (int, error) {
+	return http.StatusNotImplemented, nil
 }

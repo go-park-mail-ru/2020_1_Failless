@@ -56,31 +56,6 @@ func CreateNewEvent(w http.ResponseWriter, r *http.Request, _ map[string]string)
 	network.Jsonify(w, event, http.StatusOK)
 }
 
-func CreateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	uid := security.CheckCredentials(w, r)
-	if uid < 0 {
-		return
-	}
-
-	r.Header.Set("Content-Type", "application/json")
-	var event models.SmallEvent
-	err := json.UnmarshalFromReader(r.Body, &event)
-	if err != nil {
-		fmt.Println(err)
-		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	uc := usecase.GetUseCase()
-	err = uc.CreateSmallEvent(&event)
-	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	network.Jsonify(w, event, http.StatusOK)
-}
-
 func GetSmallEventsForUser(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
@@ -214,12 +189,54 @@ func GetSearchEvents(w http.ResponseWriter, r *http.Request, ps map[string]strin
 	network.Jsonify(w, events, http.StatusOK)
 }
 
-func GetSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+func CreateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
+	r.Header.Set("Content-Type", "application/json")
+	var event models.SmallEvent
+	err := json.UnmarshalFromReader(r.Body, &event)
+	if err != nil {
+		fmt.Println(err)
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	uc := usecase.GetUseCase()
+	err = uc.CreateSmallEvent(&event)
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	network.Jsonify(w, event, http.StatusOK)
 }
 
 func UpdateSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
+	r.Header.Set("Content-Type", "application/json")
+	var event models.SmallEvent
+	err := json.UnmarshalFromReader(r.Body, &event)
+	if err != nil {
+		fmt.Println(err)
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	uc := usecase.GetUseCase()
+	code, err := uc.UpdateSmallEvent(&event)
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), code)
+		return
+	}
+
+	network.Jsonify(w, event, code)
 }
 
 func DeleteSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {

@@ -188,3 +188,7 @@ func (ec *eventUseCase) SearchEventsByUserPreferences(events *models.EventRespon
 
 	return http.StatusOK, nil
 }
+
+func (ec *eventUseCase) UpdateSmallEvent(event *models.SmallEvent) (int, error) {
+	return ec.rep.UpdateSmallEvent(event)
+}
