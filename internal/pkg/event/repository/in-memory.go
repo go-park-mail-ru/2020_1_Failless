@@ -47,7 +47,16 @@ func (er *eventsRepository) GetNewEventsByTags(tags []int, uid int, limit int, p
 func (er *eventsRepository) FollowMidEvent(uid, eid int) error {
 	return nil
 }
+
 func (er *eventsRepository) FollowBigEvent(uid, eid int) error {
+	return nil
+}
+
+func (er *eventsRepository) UnfollowMidEvent(uid, eid int) error {
+	return nil
+}
+
+func (er *eventsRepository) UnfollowBigEvent(uid, eid int) error {
 	return nil
 }
 

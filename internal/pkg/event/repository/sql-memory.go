@@ -271,7 +271,16 @@ func (er *sqlEventsRepository) GetNewEventsByTags(tags []int, uid int, limit int
 }
 
 func (er *sqlEventsRepository) FollowMidEvent(uid, eid int) error {
-	sqlStatement := `INSERT INTO event_vote (uid, eid, value) VALUES ( $1 , $2 , 1 );`
+	sqlStatement := `
+		INSERT INTO
+			event_vote (uid, eid, value)
+		VALUES
+			($1, $2, 1)
+		ON CONFLICT
+			ON CONSTRAINT unique_event_vote
+		DO
+			UPDATE
+			SET value = 1, is_edited = TRUE, vote_date = current_timestamp;`
 	rows, err := er.db.Exec(sqlStatement, uid, eid)
 	if err != nil || rows.RowsAffected() == 0 {
 		log.Println(err)
@@ -281,9 +290,46 @@ func (er *sqlEventsRepository) FollowMidEvent(uid, eid int) error {
 
 	return nil
 }
+
 func (er *sqlEventsRepository) FollowBigEvent(uid, eid int) error {
 	sqlStatement := `
 		INSERT INTO subscribe (uid, table_id) VALUES ( $1, $2 );`
+
+	rows, err := er.db.Exec(sqlStatement, uid, eid)
+	if err != nil || rows.RowsAffected() == 0 {
+		return err
+	}
+	return nil
+}
+
+func (er *sqlEventsRepository) UnfollowMidEvent(uid, eid int) error {
+	sqlStatement := `
+		UPDATE
+			event_vote
+		SET
+			value = -1, is_edited = TRUE, vote_date = current_timestamp
+		WHERE
+			uid = $1
+				AND
+			eid = $2;`
+	rows, err := er.db.Exec(sqlStatement, uid, eid)
+	if err != nil || rows.RowsAffected() == 0 {
+		log.Println(err)
+		log.Println(sqlStatement, uid, eid)
+		return err
+	}
+
+	return nil
+}
+
+func (er *sqlEventsRepository) UnfollowBigEvent(uid, eid int) error {
+	sqlStatement := `
+		DELETE FROM
+			subscribe
+		WHERE
+			uid = $1
+				AND
+			table_id = $2;`
 
 	rows, err := er.db.Exec(sqlStatement, uid, eid)
 	if err != nil || rows.RowsAffected() == 0 {
@@ -297,7 +343,7 @@ func (er *sqlEventsRepository) GetEventsWithFollowed(events *models.EventRespons
 		SELECT e.eid, e.uid, e.title, e.edate, e.message, e.is_edited, e.author, e.etype, e.range, e.photos,
 			   CASE WHEN ev.uid IS NULL THEN FALSE ELSE TRUE END AS followed
 		FROM events e
-		LEFT JOIN event_vote ev ON e.eid = ev.eid AND ev.uid = $1
+		LEFT JOIN event_vote ev ON e.eid = ev.eid AND ev.uid = $1 AND ev.value = 1
 		`
 
 	var rows *pgx.Rows

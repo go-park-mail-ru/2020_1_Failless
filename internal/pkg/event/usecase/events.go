@@ -138,6 +138,35 @@ func (ec *eventUseCase) FollowEvent(subscription *models.EventFollow) models.Wor
 	}
 }
 
+func (ec *eventUseCase) UnfollowEvent(subscription *models.EventFollow) models.WorkMessage {
+	var err error
+	if subscription.Type == "mid-event" {
+		err = ec.rep.UnfollowMidEvent(subscription.Uid, subscription.Eid)
+	} else if subscription.Type == "big-event" {
+		err = ec.rep.UnfollowBigEvent(subscription.Uid, subscription.Eid)
+	} else {
+		return models.WorkMessage{
+			Request: nil,
+			Message: "Invalid subscription type",
+			Status:  http.StatusBadRequest,
+		}
+	}
+
+	if err != nil {
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  http.StatusConflict,
+		}
+	} else {
+		return models.WorkMessage{
+			Request: nil,
+			Message: "OK",
+			Status:  http.StatusCreated,
+		}
+	}
+}
+
 func (ec *eventUseCase) SearchEventsByUserPreferences(events *models.EventResponseList, request *models.EventRequest) (int, error) {
 	var err error
 	if request.Uid == 0 {

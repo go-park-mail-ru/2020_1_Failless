@@ -172,6 +172,24 @@ func FollowEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	network.Jsonify(w, message, http.StatusCreated)
 }
 
+func UnfollowEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	if uid := security.CheckCredentials(w, r); uid < 0 {
+		return
+	}
+
+	var subscription models.EventFollow
+	err := json.UnmarshalFromReader(r.Body, &subscription)
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	uc := usecase.GetUseCase()
+	message := uc.UnfollowEvent(&subscription)
+
+	network.Jsonify(w, message, http.StatusCreated)
+}
+
 func GetSearchEvents(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	var searchRequest models.EventRequest
 	err := json.UnmarshalFromReader(r.Body, &searchRequest)

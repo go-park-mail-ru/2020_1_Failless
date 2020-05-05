@@ -187,7 +187,7 @@ type SmallEventList []SmallEvent
 type EventFollow struct {
 	Uid  int    `json:"uid"`
 	Eid  int    `json:"eid"`
-	Type string `json:"type"`
+	Type string `json:"type"`	// mid-event | big-event
 }
 
 type EventResponse struct {

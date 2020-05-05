@@ -152,6 +152,14 @@ var routesMap = map[string][]settings.MapHandler{
 			WS:           false,
 		},
 	},
+	"/api/srv/event/:id/unfollow": {{
+		Type:         "POST",
+		Handler:      eventDelivery.UnfollowEvent,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
 	"/api/srv/tags/feed": {{
 		Type:         "GET",
 		Handler:      tagDelivery.FeedTags,
