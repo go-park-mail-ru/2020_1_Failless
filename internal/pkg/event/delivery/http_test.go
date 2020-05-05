@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	pb "failless/api/proto/auth"
 	"failless/internal/pkg/security"
 	"failless/internal/pkg/settings"
 	"net/http"
@@ -176,7 +177,7 @@ func TestGetEventsByKeyWords(t *testing.T) {
 	}
 }
 
-func TestGetEventsFeed(t *testing.T) {
+func TestOLDGetEventsFeed(t *testing.T) {
 	type response1 struct {
 		Message string   `json:"description"`
 	}
@@ -221,7 +222,7 @@ func TestGetEventsFeed(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		var ps map[string]string
-		GetEventsFeed(w, req, ps)
+		OLDGetEventsFeed(w, req, ps)
 
 		var res []response1
 		json.Unmarshal([]byte(w.Body.String()), &res)

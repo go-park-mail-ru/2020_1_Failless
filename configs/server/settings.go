@@ -5,6 +5,7 @@ import (
 	"failless/internal/pkg/metrics/delivery"
 	"failless/internal/pkg/router"
 	"failless/internal/pkg/settings"
+	tagDelivery "failless/internal/pkg/tag/delivery"
 	"fmt"
 	"github.com/dimfeld/httptreemux"
 	"google.golang.org/grpc"
@@ -13,7 +14,6 @@ import (
 
 	pb "failless/api/proto/auth"
 	eventDelivery "failless/internal/pkg/event/delivery"
-	tagDelivery "failless/internal/pkg/tag/delivery"
 	userDelivery "failless/internal/pkg/user/delivery"
 	voteDelivery "failless/internal/pkg/vote/delivery"
 )
@@ -34,6 +34,10 @@ func ConnectToAuthMS(addr string) *grpc.ClientConn {
 }
 
 var routesMap = map[string][]settings.MapHandler{
+
+	/***********************************************
+					 Authorization
+     ***********************************************/
 	"/api/srv/getuser": {{
 		Type:         "GET",
 		Handler:      userDelivery.GetUserInfo,
@@ -66,6 +70,182 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         false,
 		WS:           false,
 	}},
+
+	/***********************************************
+                 		 Events
+     ***********************************************/
+	"/api/srv/events": {{
+		Type:         "POST",
+		Handler:      eventDelivery.GetSearchEvents,
+		CORS:         true,
+		AuthRequired: false,
+		CSRF:         false,
+		WS:           false,
+	}},
+	"/api/srv/events/small": {
+		{
+			Type:         "POST",
+			Handler:      eventDelivery.CreateSmallEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "GET",
+			Handler:      eventDelivery.GetSmallEventsForUser,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+	"/api/srv/events/small/{eid}": {
+		{
+			Type:         "GET",
+			Handler:      eventDelivery.GetSmallEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "PUT",
+			Handler:      eventDelivery.UpdateSmallEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "DELETE",
+			Handler:      eventDelivery.DeleteSmallEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+	"/api/srv/events/mid": {
+		{
+			Type:         "POST",
+			Handler:      eventDelivery.CreateMidEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "GET",
+			Handler:      eventDelivery.GetMidEventsForUser,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+	"/api/srv/events/min/{eid}": {
+		{
+			Type:         "GET",
+			Handler:      eventDelivery.GetMidEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "PUT",
+			Handler:      eventDelivery.UpdateMidEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "DELETE",
+			Handler:      eventDelivery.DeleteMidEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+	"/api/srv/events/mid/{eid}/member": {
+		{
+			Type:         "POST",
+			Handler:      eventDelivery.JoinMidEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "DELETE",
+			Handler:      eventDelivery.LeaveMidEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+	"/api/srv/events/big": {
+		{
+			Type:         "POST",
+			Handler:      eventDelivery.CreateBigEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+	"/api/srv/events/big/{eid}": {
+		{
+			Type:         "GET",
+			Handler:      eventDelivery.GetBigEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "PUT",
+			Handler:      eventDelivery.UpdateBigEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "DELETE",
+			Handler:      eventDelivery.DeleteBigEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+	"/api/srv/events/big/{eid}/visitor": {
+		{
+			Type:         "POST",
+			Handler:      eventDelivery.AddVisitorForBigEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "DELETE",
+			Handler:      eventDelivery.RemoveVisitorForBigEvent,// TODO: create a better name
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+
+	/***********************************************
+                 		REMOVE
+     ***********************************************/
 	"/api/srv/events/feed": {
 		{
 			Type:         "GET",
@@ -77,21 +257,13 @@ var routesMap = map[string][]settings.MapHandler{
 		},
 		{
 			Type:         "POST",
-			Handler:      eventDelivery.GetEventsFeed,
+			Handler:      eventDelivery.OLDGetEventsFeed,
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         false,
 			WS:           false,
 		},
 	},
-	"/api/srv/events/search": {{
-		Type:         "POST",
-		Handler:      eventDelivery.GetSearchEvents,
-		CORS:         true,
-		AuthRequired: false,
-		CSRF:         false,
-		WS:           false,
-	}},
 	"/api/srv/event/new": {{
 		Type:         "POST",
 		Handler:      eventDelivery.CreateNewEvent,
@@ -100,24 +272,6 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         true,
 		WS:           false,
 	}},
-	"/api/srv/event/small": {
-		{
-			Type:         "POST",
-			Handler:      eventDelivery.CreateSmallEvent,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         true,
-			WS:           false,
-		},
-		{
-			Type:         "GET",
-			Handler:      eventDelivery.GetSmallEvents,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         true,
-			WS:           false,
-		},
-	},
 	"/api/srv/event/:id/like": {{
 		Type:         "POST",
 		Handler:      voteDelivery.VoteEvent,
@@ -160,14 +314,10 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         true,
 		WS:           false,
 	}},
-	"/api/srv/tags/feed": {{
-		Type:         "GET",
-		Handler:      tagDelivery.FeedTags,
-		CORS:         true,
-		AuthRequired: false,
-		CSRF:         false,
-		WS:           false,
-	}},
+
+	/***********************************************
+                 		Profile
+     ***********************************************/
 	"/api/srv/profile/:id/upload": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UploadNewImage,
@@ -232,6 +382,18 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
+	}},
+
+	/***********************************************
+                 		 Utils
+     ***********************************************/
+	"/api/srv/tags/feed": {{
+		Type:         "GET",
+		Handler:      tagDelivery.FeedTags,
+		CORS:         true,
+		AuthRequired: false,
+		CSRF:         false,
 		WS:           false,
 	}},
 	"/metrics": {{

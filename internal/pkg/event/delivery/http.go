@@ -81,7 +81,7 @@ func CreateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]strin
 	network.Jsonify(w, event, http.StatusOK)
 }
 
-func GetSmallEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+func GetSmallEventsForUser(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return
@@ -125,7 +125,7 @@ func GetEventsByKeyWords(w http.ResponseWriter, r *http.Request, _ map[string]st
 	network.Jsonify(w, events, http.StatusOK)
 }
 
-func GetEventsFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func OLDGetEventsFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return
@@ -212,4 +212,68 @@ func GetSearchEvents(w http.ResponseWriter, r *http.Request, ps map[string]strin
 	}
 
 	network.Jsonify(w, events, http.StatusOK)
+}
+
+func GetSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func UpdateSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func DeleteSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func CreateMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func GetMidEventsForUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func GetMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func UpdateMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func DeleteMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func JoinMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func LeaveMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func CreateBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func GetBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func UpdateBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func DeleteBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func AddVisitorForBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
+}
+
+func RemoveVisitorForBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	panic("impement me!")
 }
