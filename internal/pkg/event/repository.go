@@ -19,4 +19,5 @@ type Repository interface {
 	UpdateSmallEvent(event *models.SmallEvent) (int, error)
 	DeleteSmallEvent(uid int, eid int64) error
 	GetSmallEventsForUser(uid int) (models.SmallEventList, error)
+	CreateMidEvent(event *models.MidEvent) error
 }

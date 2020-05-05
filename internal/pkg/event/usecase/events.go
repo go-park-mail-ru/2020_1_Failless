@@ -68,6 +68,26 @@ func (ec *eventUseCase) GetSmallEventsForUser(uid int) (models.SmallEventList, e
 	return ec.rep.GetSmallEventsForUser(uid)
 }
 
+func (ec *eventUseCase) CreateMidEvent(midEventForm *forms.MidEventForm) (models.MidEvent, models.WorkMessage) {
+	midEvent := models.MidEvent{}
+	midEventForm.GetDBFormat(&midEvent)
+
+	err := ec.rep.CreateMidEvent(&midEvent)
+
+	if err != nil {
+		return midEvent, models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+		}
+	}
+
+	return midEvent, models.WorkMessage{
+		Request: nil,
+		Message: "",
+		Status:  http.StatusCreated,
+	}
+}
 
 func (ec *eventUseCase) InitEventsByUserPreferences(events *models.EventList, request *models.EventRequest) (int, error) {
 	dbTags, err := ec.rep.GetValidTags()

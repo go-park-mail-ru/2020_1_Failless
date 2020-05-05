@@ -257,7 +257,32 @@ func DeleteSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]stri
 }
 
 func CreateMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
+	r.Header.Set("Content-Type", "application/json")
+	var midEventForm forms.MidEventForm
+	err := json.UnmarshalFromReader(r.Body, &midEventForm)
+	if err != nil {
+		fmt.Println(err)
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !midEventForm.Validate() {
+		network.GenErrorCode(w, r, "incorrect data", http.StatusBadRequest)
+		return
+	}
+
+	uc := usecase.GetUseCase()
+	midEvent, message := uc.CreateMidEvent(&midEventForm)
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
+		return
+	}
+
+	network.Jsonify(w, midEvent, message.Status)
 }
 
 func GetMidEventsForUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {

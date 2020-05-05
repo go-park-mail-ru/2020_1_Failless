@@ -122,6 +122,21 @@ CREATE TABLE IF NOT EXISTS small_event
     time_created    TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp  -- for sorting
 );
 
+CREATE TABLE IF NOT EXISTS mid_events
+(
+    eid             SERIAL PRIMARY KEY,
+    admin_id        INTEGER REFERENCES profile (uid),
+    title           VARCHAR(128)                NOT NULL CHECK ( title <> '' ),
+    description     VARCHAR(1024)               NOT NULL,
+    date            TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    tags            INTEGER[]                            DEFAULT NULL,                       -- tags from table 'tag'
+    photos          VARCHAR(64)[]                        DEFAULT NULL,
+    member_limit    SMALLINT                             DEFAULT 3,
+    is_public       BOOLEAN                              DEFAULT TRUE, -- if admin don't wanna show himself and members in search
+    is_edited       BOOLEAN                              DEFAULT FALSE,
+    title_tsv       TSVECTOR
+);
+
 --------------------------------------------------------
 -------------------- CHAT PART -------------------------
 --------------------------------------------------------

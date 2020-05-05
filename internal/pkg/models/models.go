@@ -184,6 +184,22 @@ type SmallEvent struct {
 //easyjson:json
 type SmallEventList []SmallEvent
 
+type MidEvent struct {
+	EId 		int		 	`json:"eid,omitempty"`
+	AdminId    	int      	`json:"uid"`
+	Title   	string   	`json:"title"`
+	Descr   	string   	`json:"description,omitempty"`
+	TagsId  	[]int32    	`json:"tags,omitempty"`
+	Date    	time.Time	`json:"date,omitempty"`
+	Photos  	[]string 	`json:"photos,omitempty"`
+	Limit		int			`json:"limit"`
+	ChatId		int			`json:"chat_id, omitempty"`
+	Public		bool		`json:"public"`
+}
+
+//easyjson:json
+type MidEventList []SmallEvent
+
 type EventFollow struct {
 	Uid  int    `json:"uid"`
 	Eid  int    `json:"eid"`

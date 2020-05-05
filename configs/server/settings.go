@@ -129,7 +129,7 @@ var routesMap = map[string][]settings.MapHandler{
 		},
 		{
 			Type:         "GET",
-			Handler:      eventDelivery.GetMidEventsForUser,
+			Handler:      eventDelivery.GetMidEventsForUser, // TODO: move to profile
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,

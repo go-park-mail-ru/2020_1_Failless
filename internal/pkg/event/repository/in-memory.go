@@ -80,3 +80,7 @@ func (er *eventsRepository) UpdateSmallEvent(event *models.SmallEvent) (int, err
 func (er *eventsRepository) DeleteSmallEvent(uid int, eid int64) error {
 	return nil
 }
+
+func (er *eventsRepository) CreateMidEvent(event *models.MidEvent) error {
+	return nil
+}

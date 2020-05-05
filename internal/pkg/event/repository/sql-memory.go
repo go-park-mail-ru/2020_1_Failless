@@ -505,3 +505,33 @@ func (er *sqlEventsRepository) GetSmallEventsForUser(uid int) (models.SmallEvent
 
 	return events, nil
 }
+
+func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
+	sqlStatement := `
+		INSERT INTO
+			mid_events (admin_id, title, description, date, tags, photos, member_limit, is_public, title_tsv)
+		VALUES
+			($1, $2, $3, $4, $5, $6, $7, $8,
+			setweight(to_tsvector($9), 'A')
+				|| 
+			setweight(to_tsvector($10), 'B'))
+		RETURNING
+			eid;`
+	err := er.db.QueryRow(sqlStatement,
+		event.AdminId,
+		event.Title,
+		event.Descr,
+		event.Date,
+		event.TagsId,
+		event.Photos,
+		event.Limit,
+		event.Public,
+		event.Title,
+		event.Descr).Scan(&event.EId)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
