@@ -76,3 +76,7 @@ func (er *eventsRepository) GetSmallEventsForUser(uid int) (models.SmallEventLis
 func (er *eventsRepository) UpdateSmallEvent(event *models.SmallEvent) (int, error) {
 	return http.StatusNotImplemented, nil
 }
+
+func (er *eventsRepository) DeleteSmallEvent(uid int, eid int64) error {
+	return nil
+}

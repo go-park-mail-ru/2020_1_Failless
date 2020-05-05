@@ -17,5 +17,6 @@ type Repository interface {
 	GetEventsWithFollowed(events *models.EventResponseList, request *models.EventRequest) error
 	CreateSmallEvent(event *models.SmallEvent) error
 	UpdateSmallEvent(event *models.SmallEvent) (int, error)
+	DeleteSmallEvent(uid int, eid int64) error
 	GetSmallEventsForUser(uid int) (models.SmallEventList, error)
 }

@@ -240,7 +240,20 @@ func UpdateSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]stri
 }
 
 func DeleteSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
+	eid := network.GetEIdFromRequest(w, r, ps)
+	if eid < 0 {
+		network.GenErrorCode(w, r, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	}
+
+	uc := usecase.GetUseCase()
+	message := uc.DeleteSmallEvent(uid, eid)
+
+	network.Jsonify(w, message, message.Status)
 }
 
 func CreateMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {

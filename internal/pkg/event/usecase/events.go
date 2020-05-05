@@ -192,3 +192,21 @@ func (ec *eventUseCase) SearchEventsByUserPreferences(events *models.EventRespon
 func (ec *eventUseCase) UpdateSmallEvent(event *models.SmallEvent) (int, error) {
 	return ec.rep.UpdateSmallEvent(event)
 }
+
+func (ec *eventUseCase) DeleteSmallEvent(uid int, eid int64) models.WorkMessage {
+	err := ec.rep.DeleteSmallEvent(uid, eid)
+
+	if err != nil {
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+		}
+	}
+
+	return models.WorkMessage{
+		Request: nil,
+		Message: http.StatusText(http.StatusOK),
+		Status:  http.StatusOK,
+	}
+}

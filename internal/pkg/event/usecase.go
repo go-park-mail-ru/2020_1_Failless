@@ -15,5 +15,6 @@ type UseCase interface {
 	SearchEventsByUserPreferences(events *models.EventResponseList, request *models.EventRequest) (int, error)
 	CreateSmallEvent(event *models.SmallEvent) error
 	UpdateSmallEvent(event *models.SmallEvent) (int, error)
+	DeleteSmallEvent(uid int, eid int64) models.WorkMessage
 	GetSmallEventsForUser(uid int) (models.SmallEventList, error)
 }

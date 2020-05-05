@@ -435,6 +435,26 @@ func (er *sqlEventsRepository) UpdateSmallEvent(event *models.SmallEvent) (int, 
 	return http.StatusOK, nil
 }
 
+func (er *sqlEventsRepository) DeleteSmallEvent(uid int, eid int64) error {
+	sqlStatement := `
+		DELETE FROM
+			small_event
+		WHERE
+			uid = $1
+				AND
+			eid = $2;`
+
+	cTag, err := er.db.Exec(sqlStatement, uid, eid)
+	if err != nil || cTag.RowsAffected() == 0 {
+		log.Println(err)
+		return err
+	}
+
+	// TODO: try it
+
+	return nil
+}
+
 func (er *sqlEventsRepository) GetSmallEventsForUser(uid int) (models.SmallEventList, error) {
 	sqlStatement := `
 		SELECT
