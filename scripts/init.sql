@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS small_event
     uid             INTEGER                     NOT NULL REFERENCES profile (uid),  -- author id
     title           VARCHAR(128)                NOT NULL CHECK ( title <> '' ),     -- title, actually is checked on the front-end
     description     VARCHAR(1024)               DEFAULT NULL,
-    time            TIMESTAMP(0) WITH TIME ZONE DEFAULT NULL,                       -- time of event, not the creation
+    date            TIMESTAMP(0) WITH TIME ZONE DEFAULT NULL,                       -- time of event, not the creation
     tags            INTEGER[]                   DEFAULT NULL,                       -- tags from table 'tag'
     photos          VARCHAR(64)[]               DEFAULT NULL,
     is_edited       BOOLEAN                     DEFAULT FALSE,
@@ -128,14 +128,16 @@ CREATE TABLE IF NOT EXISTS mid_events
     admin_id        INTEGER REFERENCES profile (uid),
     title           VARCHAR(128)                NOT NULL CHECK ( title <> '' ),
     description     VARCHAR(1024)               NOT NULL,
-    date            TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
+    date            TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NULL,
     tags            INTEGER[]                            DEFAULT NULL,                       -- tags from table 'tag'
     photos          VARCHAR(64)[]                        DEFAULT NULL,
     member_limit    SMALLINT                             DEFAULT 3,
     members         SMALLINT                             DEFAULT 1,
     is_public       BOOLEAN                              DEFAULT TRUE, -- if admin don't wanna show himself and members in search
     is_edited       BOOLEAN                              DEFAULT FALSE,
-    title_tsv       TSVECTOR
+    title_tsv       TSVECTOR,
+
+    time_created    TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
 
 --------------------------------------------------------

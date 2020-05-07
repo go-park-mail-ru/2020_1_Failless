@@ -396,7 +396,7 @@ func (er *sqlEventsRepository) GetEventsWithFollowed(events *models.EventRespons
 func (er *sqlEventsRepository) CreateSmallEvent(event *models.SmallEvent) error {
 	sqlStatement := `
 		INSERT INTO
-			small_event (uid, title, description, time, tags, photos)
+			small_event (uid, title, description, date, tags, photos)
 		VALUES 
 			($1, $2, $3, $4, $5, $6)
 		RETURNING
@@ -418,7 +418,7 @@ func (er *sqlEventsRepository) UpdateSmallEvent(event *models.SmallEvent) (int, 
 		UPDATE
 			small_event
 		SET 
-			title = $3, description = $4, time = $5, tags = $6, photos = $7
+			title = $3, description = $4, date = $5, tags = $6, photos = $7
 		WHERE
 			uid = $1
 				AND
@@ -458,15 +458,15 @@ func (er *sqlEventsRepository) DeleteSmallEvent(uid int, eid int64) error {
 func (er *sqlEventsRepository) GetSmallEventsForUser(smallEvents *models.SmallEventList, uid int) (int, error) {
 	sqlStatement := `
 		SELECT
-			eid, uid, title, description, time, tags, photos
+			eid, uid, title, description, date, tags, photos
 		FROM
 			small_event
 		WHERE
 			uid = $1
 		ORDER BY
-			time
+			(current_timestamp - time) ASC, time_created DESC
 		LIMIT
-			10;`
+			30;`
 
 	rows, err := er.db.Query(sqlStatement, uid)
 	if err != nil {
@@ -515,7 +515,7 @@ func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
 				|| 
 			setweight(to_tsvector($10), 'B'))
 		RETURNING
-			eid;`
+			eid, members;`
 	err := er.db.QueryRow(sqlStatement,
 		event.AdminId,
 		event.Title,
@@ -526,7 +526,7 @@ func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
 		event.Limit,
 		event.Public,
 		event.Title,
-		event.Descr).Scan(&event.EId)
+		event.Descr).Scan(&event.EId, &event.MemberAmount)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -543,8 +543,10 @@ func (er *sqlEventsRepository) GetMidEventsForUser(midEvents *models.MidEventLis
 			mid_events
 		WHERE
 			admin_id = $1
+		ORDER BY
+			(current_timestamp - date) ASC, time_created DESC
 		LIMIT
-			10;`
+			30;`
 	rows, err := er.db.Query(sqlStatement, uid)
 	if err != nil {
 		log.Println("EventRepo: GetMidEventsForUser: ", err)

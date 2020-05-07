@@ -2,7 +2,6 @@ package forms
 
 import (
 	"failless/internal/pkg/models"
-	"fmt"
 	"log"
 	"time"
 )
@@ -58,7 +57,6 @@ func (sef *SmallEventForm) GetDBFormat(event *models.SmallEvent) {
 	for iii := 0; iii < len(sef.Photos); iii++ {
 		imgName := sef.Photos[iii].ImgName
 		event.Photos = append(event.Photos, imgName)
-		fmt.Println("GetDBFormat\t", event.Photos[iii])
 	}
 
 	for _, tag := range sef.TagsId {

@@ -57,14 +57,6 @@ func (mef *MidEventForm) Validate() bool {
 }
 
 func (mef *MidEventForm) GetDBFormat(event *models.MidEvent) {
-	for _, photo := range mef.Photos {
-		event.Photos = append(event.Photos, photo.ImgName)
-	}
-
-	for _, tag := range mef.TagsId {
-		event.TagsId = append(event.TagsId, tag)
-	}
-
 	*event = models.MidEvent{
 		AdminId: 	mef.AdminId,
 		Title:    	mef.Title,
@@ -72,5 +64,15 @@ func (mef *MidEventForm) GetDBFormat(event *models.MidEvent) {
 		Date:		mef.Date,
 		Limit:    	mef.Limit,
 		Public:		mef.Public,
+	}
+
+	// Not for...range since it creates a copy of image
+	for iii := 0; iii < len(mef.Photos); iii++ {
+		imgName := mef.Photos[iii].ImgName
+		event.Photos = append(event.Photos, imgName)
+	}
+
+	for _, tag := range mef.TagsId {
+		event.TagsId = append(event.TagsId, tag)
 	}
 }

@@ -274,6 +274,14 @@ func CreateMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
+	// Upload pics
+	for iii := 0; iii < len(midEventForm.Photos); iii++ {
+		if midEventForm.Photos[iii].ImgBase64 == "" ||
+			!images.ValidateImage(&midEventForm.Photos[iii], images.Events) {
+			network.GenErrorCode(w, r, "Image validation failed. Check server logs", http.StatusBadRequest)
+		}
+	}
+
 	uc := usecase.GetUseCase()
 	midEvent, message := uc.CreateMidEvent(&midEventForm)
 	if message.Message != "" {
