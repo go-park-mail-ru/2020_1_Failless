@@ -16,6 +16,5 @@ type UseCase interface {
 	CreateSmallEvent(smallEventForm *forms.SmallEventForm) (models.SmallEvent, error)
 	UpdateSmallEvent(event *models.SmallEvent) (int, error)
 	DeleteSmallEvent(uid int, eid int64) models.WorkMessage
-	GetSmallEventsForUser(uid int) (models.SmallEventList, error)
 	CreateMidEvent(midEventForm *forms.MidEventForm) (models.MidEvent, models.WorkMessage)
 }

@@ -67,10 +67,6 @@ func (ec *eventUseCase) CreateSmallEvent(smallEventForm *forms.SmallEventForm) (
 	return smallEvent, err
 }
 
-func (ec *eventUseCase) GetSmallEventsForUser(uid int) (models.SmallEventList, error) {
-	return ec.rep.GetSmallEventsForUser(uid)
-}
-
 func (ec *eventUseCase) CreateMidEvent(midEventForm *forms.MidEventForm) (models.MidEvent, models.WorkMessage) {
 	midEvent := models.MidEvent{}
 	midEventForm.GetDBFormat(&midEvent)

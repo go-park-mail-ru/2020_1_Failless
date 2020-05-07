@@ -69,8 +69,8 @@ func (er *eventsRepository) CreateSmallEvent(event *models.SmallEvent) error {
 	return nil
 }
 
-func (er *eventsRepository) GetSmallEventsForUser(uid int) (models.SmallEventList, error) {
-	return nil, nil
+func (er *eventsRepository) GetSmallEventsForUser(smallEvents *models.SmallEventList, uid int) (int, error) {
+	return http.StatusNotImplemented, nil
 }
 
 func (er *eventsRepository) UpdateSmallEvent(event *models.SmallEvent) (int, error) {
@@ -83,4 +83,12 @@ func (er *eventsRepository) DeleteSmallEvent(uid int, eid int64) error {
 
 func (er *eventsRepository) CreateMidEvent(event *models.MidEvent) error {
 	return nil
+}
+
+func (er *eventsRepository) GetOwnEventsForUser(ownEvents *models.OwnEventsList, uid int) (int, error) {
+	return http.StatusNotImplemented, nil
+}
+
+func (er *eventsRepository) GetMidEventsForUser(midEvents *models.MidEventList, uid int) (int, error) {
+	return http.StatusNotImplemented, nil
 }

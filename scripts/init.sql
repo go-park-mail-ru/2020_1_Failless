@@ -132,6 +132,7 @@ CREATE TABLE IF NOT EXISTS mid_events
     tags            INTEGER[]                            DEFAULT NULL,                       -- tags from table 'tag'
     photos          VARCHAR(64)[]                        DEFAULT NULL,
     member_limit    SMALLINT                             DEFAULT 3,
+    members         SMALLINT                             DEFAULT 1,
     is_public       BOOLEAN                              DEFAULT TRUE, -- if admin don't wanna show himself and members in search
     is_edited       BOOLEAN                              DEFAULT FALSE,
     title_tsv       TSVECTOR

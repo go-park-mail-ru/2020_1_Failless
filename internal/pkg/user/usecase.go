@@ -16,6 +16,8 @@ type UseCase interface {
 	InitUsersByUserPreferences(users *[]models.UserGeneral, request *models.UserRequest) (int, error)
 	GetUserSubscriptions(events *models.EventList, uid int) (int, error)
 	GetFeedResults(users *[]models.UserGeneral, form *[]forms.GeneralForm) (models.FeedResults, error)
+	GetUserOwnEvents(ownEvents *models.OwnEventsList, uid int) models.WorkMessage
+	GetSmallEventsForUser(smallEvents *models.SmallEventList, uid int) models.WorkMessage
 }
 
 // Get gender string by int id

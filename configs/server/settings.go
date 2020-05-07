@@ -82,24 +82,14 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         false,
 		WS:           false,
 	}},
-	"/api/srv/events/small": {
-		{
-			Type:         "POST",
-			Handler:      eventDelivery.CreateSmallEvent,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         true,
-			WS:           false,
-		},
-		{
-			Type:         "GET",
-			Handler:      eventDelivery.GetSmallEventsForUser,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         true,
-			WS:           false,
-		},
-	},
+	"/api/srv/events/small": {{
+		Type:         "POST",
+		Handler:      eventDelivery.CreateSmallEvent,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
 	"/api/srv/events/small/{eid}": {
 		{
 			Type:         "PUT",
@@ -371,6 +361,22 @@ var routesMap = map[string][]settings.MapHandler{
 	"/api/srv/users/feed": {{
 		Type:         "POST",
 		Handler:      userDelivery.GetUsersFeed,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
+	"/api/srv/profile/:id/own-events": {{
+		Type:         "GET",
+		Handler:      userDelivery.GetSmallAndMidEventsForUser,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
+	"/api/srv/profile/:id/small-events": {{
+		Type:         "GET",
+		Handler:      userDelivery.GetSmallEventsForUser,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,

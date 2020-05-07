@@ -455,7 +455,7 @@ func (er *sqlEventsRepository) DeleteSmallEvent(uid int, eid int64) error {
 	return nil
 }
 
-func (er *sqlEventsRepository) GetSmallEventsForUser(uid int) (models.SmallEventList, error) {
+func (er *sqlEventsRepository) GetSmallEventsForUser(smallEvents *models.SmallEventList, uid int) (int, error) {
 	sqlStatement := `
 		SELECT
 			eid, uid, title, description, time, tags, photos
@@ -470,14 +470,13 @@ func (er *sqlEventsRepository) GetSmallEventsForUser(uid int) (models.SmallEvent
 
 	rows, err := er.db.Query(sqlStatement, uid)
 	if err != nil {
-		log.Println(rows)
-		return nil, err
+		log.Println(err)
+		return http.StatusInternalServerError, err
 	}
 	defer rows.Close()
 
-	var events models.SmallEventList
 	tags := pgtype.Int4Array{}
-	time := new(time.Time)
+	date := new(time.Time)
 	for rows.Next() {
 		eventInfo := models.SmallEvent{}
 		err = rows.Scan(
@@ -485,25 +484,25 @@ func (er *sqlEventsRepository) GetSmallEventsForUser(uid int) (models.SmallEvent
 			&eventInfo.UId,
 			&eventInfo.Title,
 			&eventInfo.Descr,
-			&time,
+			&date,
 			&tags,
 			&eventInfo.Photos)
 		if err != nil {
 			fmt.Println(err)
-			return nil, err
+			return http.StatusInternalServerError, err
 		}
 
-		if time != nil {
-			eventInfo.Date = *time
+		if date != nil {
+			eventInfo.Date = *date
 		}
 
 		if err = tags.AssignTo(&eventInfo.TagsId); err != nil {
 			fmt.Println(err)
 		}
-		events = append(events, eventInfo)
+		*smallEvents = append(*smallEvents, eventInfo)
 	}
 
-	return events, nil
+	return http.StatusOK, nil
 }
 
 func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
@@ -534,4 +533,54 @@ func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
 	}
 
 	return nil
+}
+
+func (er *sqlEventsRepository) GetMidEventsForUser(midEvents *models.MidEventList, uid int) (int, error) {
+	sqlStatement := `
+		SELECT
+			eid, admin_id, title, description, tags, date, photos, member_limit, members, is_public
+		FROM
+			mid_events
+		WHERE
+			admin_id = $1
+		LIMIT
+			10;`
+	rows, err := er.db.Query(sqlStatement, uid)
+	if err != nil {
+		log.Println("EventRepo: GetMidEventsForUser: ", err)
+		return http.StatusInternalServerError, err
+	}
+	defer rows.Close()
+
+	tags := pgtype.Int4Array{}
+	date := new(time.Time)
+	for rows.Next() {
+		eventInfo := models.MidEvent{}
+		err = rows.Scan(
+			&eventInfo.EId,
+			&eventInfo.AdminId,
+			&eventInfo.Title,
+			&eventInfo.Descr,
+			&tags,
+			&date,
+			&eventInfo.Photos,
+			&eventInfo.Limit,
+			&eventInfo.MemberAmount,
+			&eventInfo.Public)
+		if err != nil {
+			log.Println(err)
+			return http.StatusInternalServerError, err
+		}
+
+		if date != nil {
+			eventInfo.Date = *date
+		}
+
+		if err = tags.AssignTo(&eventInfo.TagsId); err != nil {
+			log.Println("EventRepo: GetMidEventsForUser: Assigning tags:", err)
+		}
+		*midEvents = append(*midEvents, eventInfo)
+	}
+
+	return http.StatusOK, nil
 }
