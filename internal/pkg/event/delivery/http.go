@@ -292,10 +292,6 @@ func CreateMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string
 	network.Jsonify(w, midEvent, message.Status)
 }
 
-func GetMidEventsForUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
-}
-
 func GetMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	panic("impement me!")
 }

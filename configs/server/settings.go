@@ -108,24 +108,14 @@ var routesMap = map[string][]settings.MapHandler{
 			WS:           false,
 		},
 	},
-	"/api/srv/events/mid": {
-		{
-			Type:         "POST",
-			Handler:      eventDelivery.CreateMidEvent,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         true,
-			WS:           false,
-		},
-		{
-			Type:         "GET",
-			Handler:      eventDelivery.GetMidEventsForUser, // TODO: move to profile
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         true,
-			WS:           false,
-		},
-	},
+	"/api/srv/events/mid": {{
+		Type:         "POST",
+		Handler:      eventDelivery.CreateMidEvent,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+		}},
 	"/api/srv/events/min/{eid}": {
 		{
 			Type:         "GET",
@@ -382,6 +372,14 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         true,
 		WS:           false,
 	}},
+	//"/api/srv/profile/:id/mid-events": {{
+	//	Type:         "GET",
+	//	Handler:      userDelivery.GetMidEventsForUser,
+	//	CORS:         true,
+	//	AuthRequired: true,
+	//	CSRF:         true,
+	//	WS:           false,
+	//}},
 
 	/***********************************************
                  		 Utils
