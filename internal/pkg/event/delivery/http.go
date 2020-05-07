@@ -3,6 +3,7 @@ package delivery
 import (
 	"failless/internal/pkg/event/usecase"
 	"failless/internal/pkg/forms"
+	"failless/internal/pkg/images"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
@@ -195,18 +196,36 @@ func CreateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]strin
 		return
 	}
 
+	// Get form
 	r.Header.Set("Content-Type", "application/json")
-	var event models.SmallEvent
-	err := json.UnmarshalFromReader(r.Body, &event)
+	var eventForm forms.SmallEventForm
+	err := json.UnmarshalFromReader(r.Body, &eventForm)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// Check form
+	if !eventForm.Validate() {
+		network.GenErrorCode(w, r, "Small event validation failed. Check server logs", http.StatusBadRequest)
+		return
+	}
+
+	// Upload pics
+	if len(eventForm.Photos) > 0 {
+		for _, photo := range eventForm.Photos {
+			if photo.ImgBase64 == "" ||
+				!images.ValidateImage(&photo, images.Events) {
+				network.GenErrorCode(w, r, "Image validation failed. Check server logs", http.StatusBadRequest)
+			}
+		}
+	}
+
 	uc := usecase.GetUseCase()
-	err = uc.CreateSmallEvent(&event)
+	event, err := uc.CreateSmallEvent(&eventForm)
 	if err != nil {
+		log.Println(err)
 		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
 		return
 	}
