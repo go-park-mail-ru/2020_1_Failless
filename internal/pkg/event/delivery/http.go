@@ -195,12 +195,10 @@ func CreateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]strin
 	}
 
 	// Upload pics
-	if len(eventForm.Photos) > 0 {
-		for _, photo := range eventForm.Photos {
-			if photo.ImgBase64 == "" ||
-				!images.ValidateImage(&photo, images.Events) {
-				network.GenErrorCode(w, r, "Image validation failed. Check server logs", http.StatusBadRequest)
-			}
+	for iii := 0; iii < len(eventForm.Photos); iii++ {
+		if eventForm.Photos[iii].ImgBase64 == "" ||
+			!images.ValidateImage(&eventForm.Photos[iii], images.Events) {
+			network.GenErrorCode(w, r, "Image validation failed. Check server logs", http.StatusBadRequest)
 		}
 	}
 

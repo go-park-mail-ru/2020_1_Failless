@@ -2,6 +2,7 @@ package forms
 
 import (
 	"failless/internal/pkg/models"
+	"fmt"
 	"log"
 	"time"
 )
@@ -46,18 +47,21 @@ func (sef *SmallEventForm) Validate() bool {
 }
 
 func (sef *SmallEventForm) GetDBFormat(event *models.SmallEvent) {
-	for _, photo := range sef.Photos {
-		event.Photos = append(event.Photos, photo.ImgName)
-	}
-
-	for _, tag := range sef.TagsId {
-		event.TagsId = append(event.TagsId, tag)
-	}
-
 	*event = models.SmallEvent{
 		UId: 		sef.Uid,
 		Title:    	sef.Title,
 		Descr:  	sef.Descr,
 		Date:		sef.Date,
+	}
+
+	// Not for...range since it creates a copy of image
+	for iii := 0; iii < len(sef.Photos); iii++ {
+		imgName := sef.Photos[iii].ImgName
+		event.Photos = append(event.Photos, imgName)
+		fmt.Println("GetDBFormat\t", event.Photos[iii])
+	}
+
+	for _, tag := range sef.TagsId {
+		event.TagsId = append(event.TagsId, tag)
 	}
 }
