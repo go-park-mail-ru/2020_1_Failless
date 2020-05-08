@@ -50,15 +50,6 @@ func (ec *eventUseCase) InitEventsByKeyWords(events *models.EventList, keys stri
 	return http.StatusOK, nil
 }
 
-func (ec *eventUseCase) CreateEvent(event forms.EventForm) (models.Event, error) {
-	user, err := ec.rep.GetNameByID(event.UId)
-	model := models.Event{}
-	event.GetDBFormat(&model)
-	model.Author = user
-	err = ec.rep.SaveNewEvent(&model)
-	return model, err
-}
-
 func (ec *eventUseCase) CreateSmallEvent(smallEventForm *forms.SmallEventForm) (models.SmallEvent, error) {
 	smallEvent := models.SmallEvent{}
 	smallEventForm.GetDBFormat(&smallEvent)
@@ -127,7 +118,7 @@ func (ec *eventUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int
 	return valid
 }
 
-func (ec *eventUseCase) SearchEventsByUserPreferences(events *models.SearchResultList, request *models.EventRequest) (int, error) {
+func (ec *eventUseCase) SearchEventsByUserPreferences(events *models.MidAndBigEventList, request *models.EventRequest) (int, error) {
 	if request.Uid == 0 {
 		code, err := ec.rep.GetAllMidEvents(&events.MidEvents, request)
 		//bigEvents, _ := ec.rep.GetAllBigEvents()
@@ -170,6 +161,24 @@ func (ec *eventUseCase) DeleteSmallEvent(uid int, eid int64) models.WorkMessage 
 
 func (ec *eventUseCase) JoinMidEvent(eventVote *models.EventFollow) models.WorkMessage {
 	code, err := ec.rep.JoinMidEvent(eventVote.Uid, eventVote.Eid)
+
+	if err != nil {
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  code,
+		}
+	}
+
+	return models.WorkMessage{
+		Request: nil,
+		Message: http.StatusText(http.StatusOK),
+		Status:  http.StatusOK,
+	}
+}
+
+func (ec *eventUseCase) LeaveMidEvent(eventVote *models.EventFollow) models.WorkMessage {
+	code, err := ec.rep.LeaveMidEvent(eventVote.Uid, eventVote.Eid)
 
 	if err != nil {
 		return models.WorkMessage{

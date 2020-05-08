@@ -135,7 +135,7 @@ func (uc *UserUseCase) GetUserOwnEvents(ownEvents *models.OwnEventsList, uid int
 
 	// Get Mid events
 	midEventList := models.MidEventList{}
-	code, err := er.GetMidEventsForUser(&midEventList, uid)
+	code, err := er.GetOwnMidEvents(&midEventList, uid)
 	if err != nil {
 		return models.WorkMessage{
 			Request: nil,

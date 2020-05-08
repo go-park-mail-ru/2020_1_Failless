@@ -17,10 +17,6 @@ func (er *eventsRepository) getEvents(withCondition string, sqlStatement string,
 	return nil, nil
 }
 
-func (er *eventsRepository) SaveNewEvent(event *models.Event) error {
-	return nil
-}
-
 func (er *eventsRepository) GetNameByID(uid int) (string, error) {
 	return "", nil
 }
@@ -46,10 +42,6 @@ func (er *eventsRepository) GetNewEventsByTags(tags []int, uid int, limit int, p
 }
 
 func (er *eventsRepository) FollowBigEvent(uid, eid int) error {
-	return nil
-}
-
-func (er *eventsRepository) UnfollowMidEvent(uid, eid int) error {
 	return nil
 }
 
@@ -81,7 +73,7 @@ func (er *eventsRepository) GetOwnEventsForUser(ownEvents *models.OwnEventsList,
 	return http.StatusNotImplemented, nil
 }
 
-func (er *eventsRepository) GetMidEventsForUser(midEvents *models.MidEventList, uid int) (int, error) {
+func (er *eventsRepository) GetOwnMidEvents(midEvents *models.MidEventList, uid int) (int, error) {
 	return http.StatusNotImplemented, nil
 }
 
@@ -94,5 +86,13 @@ func (er *eventsRepository) GetAllMidEvents(midEvents *models.MidEventList, requ
 }
 
 func (er *eventsRepository) JoinMidEvent(uid, eid int) (int, error) {
+	return http.StatusNotImplemented, nil
+}
+
+func (er *eventsRepository) LeaveMidEvent(uid, eid int) (int, error) {
+	return http.StatusNotImplemented, nil
+}
+
+func (er *eventsRepository) GetSubscriptionMidEvents(midEvent *models.MidEventList, uid int) (int, error) {
 	return http.StatusNotImplemented, nil
 }

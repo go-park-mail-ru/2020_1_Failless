@@ -184,15 +184,15 @@ func GetProfileSubscriptions(w http.ResponseWriter, r *http.Request, ps map[stri
 		return
 	}
 
-	var events models.EventList
+	var subscriptions models.MidAndBigEventList
 	uc := usecase.GetUseCase()
-	code, err := uc.GetUserSubscriptions(&events, int(uid))
-	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), code)
+	message := uc.GetUserSubscriptions(&subscriptions, int(uid))
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
 		return
 	}
 
-	network.Jsonify(w, events, code)
+	network.Jsonify(w, subscriptions, message.Status)
 }
 
 ////////////// user part //////////////////

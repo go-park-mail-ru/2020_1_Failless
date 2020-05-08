@@ -234,14 +234,6 @@ var routesMap = map[string][]settings.MapHandler{
 			WS:           false,
 		},
 	},
-	"/api/srv/event/new": {{
-		Type:         "POST",
-		Handler:      eventDelivery.CreateNewEvent,
-		CORS:         true,
-		AuthRequired: true,
-		CSRF:         true,
-		WS:           false,
-	}},
 	"/api/srv/event/:id/like": {{
 		Type:         "POST",
 		Handler:      voteDelivery.VoteEvent,
@@ -256,14 +248,6 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
-		WS:           false,
-	}},
-	"/api/srv/event/:id/follow": {{
-		Type:         "GET",
-		Handler:      voteDelivery.EventFollowers,
-		CORS:         true,
-		AuthRequired: true,
-		CSRF:         false,
 		WS:           false,
 	}},
 
@@ -354,7 +338,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	//"/api/srv/profile/:id/mid-events": {{
 	//	Type:         "GET",
-	//	Handler:      userDelivery.GetMidEventsForUser,
+	//	Handler:      userDelivery.GetOwnMidEvents,
 	//	CORS:         true,
 	//	AuthRequired: true,
 	//	CSRF:         true,

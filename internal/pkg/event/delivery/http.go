@@ -27,36 +27,6 @@ func FeedEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	network.Jsonify(w, events, http.StatusOK)
 }
 
-func CreateNewEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	uid := security.CheckCredentials(w, r)
-	if uid < 0 {
-		return
-	}
-
-	r.Header.Set("Content-Type", "application/json")
-	var form forms.EventForm
-	err := json.UnmarshalFromReader(r.Body, &form)
-	if err != nil {
-		fmt.Println(err)
-		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if !form.Validate() {
-		// TODO: add error code from error code table
-		network.GenErrorCode(w, r, "incorrect data", http.StatusBadRequest)
-		return
-	}
-
-	uc := usecase.GetUseCase()
-	event, err := uc.CreateEvent(form)
-	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	network.Jsonify(w, event, http.StatusOK)
-}
-
 // Get events limited by number strings with offset from JSON (POST parameter)
 // Limit have to be set in the /configs/*/settings.go file using global variable
 // UseCaseConf
@@ -126,7 +96,7 @@ func GetSearchEvents(w http.ResponseWriter, r *http.Request, ps map[string]strin
 		searchRequest.Page = 1
 	}
 
-	var events models.SearchResultList
+	var events models.MidAndBigEventList
 	uc := usecase.GetUseCase()
 	if code, err := uc.SearchEventsByUserPreferences(&events, &searchRequest); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
@@ -295,7 +265,29 @@ func JoinMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 }
 
 func LeaveMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+	if uid := security.CheckCredentials(w, r); uid < 0 {
+		return
+	}
+
+	if eid := network.GetEIdFromRequest(w, r, ps); eid < 0 {
+		network.GenErrorCode(w, r, "Error in retrieving eid from url", http.StatusBadRequest)
+	}
+
+	var subscription models.EventFollow
+	err := json.UnmarshalFromReader(r.Body, &subscription)
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	uc := usecase.GetUseCase()
+	message := uc.LeaveMidEvent(&subscription)
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
+		return
+	}
+
+	network.Jsonify(w, message, message.Status)
 }
 
 func CreateBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {

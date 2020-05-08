@@ -214,7 +214,7 @@ type EventFollow struct {
 }
 
 //easyjson:json
-type SearchResultList struct {
+type MidAndBigEventList struct {
 	MidEvents	MidEventList		`json:"mid_events,omitempty"`
 	//BigEvent 	BigEventList
 }
