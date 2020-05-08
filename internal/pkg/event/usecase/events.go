@@ -50,6 +50,11 @@ func (ec *eventUseCase) InitEventsByKeyWords(events *models.EventList, keys stri
 	return http.StatusOK, nil
 }
 
+func (ec *eventUseCase) GetSmallEventsByUID(uid int64) (models.SmallEventList, error) {
+	// TODO: implement it
+	return nil, nil
+}
+
 func (ec *eventUseCase) CreateSmallEvent(smallEventForm *forms.SmallEventForm) (models.SmallEvent, error) {
 	smallEvent := models.SmallEvent{}
 	smallEventForm.GetDBFormat(&smallEvent)

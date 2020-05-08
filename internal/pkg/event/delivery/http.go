@@ -102,6 +102,23 @@ func GetSearchEvents(w http.ResponseWriter, r *http.Request, ps map[string]strin
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
+	network.Jsonify(w, events, http.StatusOK)
+}
+
+func GetSmallEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+
+
+	uc := usecase.GetUseCase()
+	events, err := uc.GetSmallEventsByUID(int64(uid))
+	if err != nil {
+		log.Println(err)
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	network.Jsonify(w, events, http.StatusOK)
 }
@@ -147,7 +164,7 @@ func CreateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]strin
 	network.Jsonify(w, event, http.StatusOK)
 }
 
-func UpdateSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func UpdateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return
@@ -189,7 +206,7 @@ func DeleteSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]stri
 	network.Jsonify(w, message, message.Status)
 }
 
-func CreateMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func CreateMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return
@@ -226,19 +243,20 @@ func CreateMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string
 	network.Jsonify(w, midEvent, message.Status)
 }
 
-func GetMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+func GetMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	network.GenErrorCode(w, r, "Not implemented", 502)
 }
 
-func UpdateMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+func UpdateMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	network.GenErrorCode(w, r, "Not implemented", 502)
+
 }
 
-func DeleteMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+func DeleteMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	network.GenErrorCode(w, r, "Not implemented", 502)
 }
 
-func JoinMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func JoinMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	if uid := security.CheckCredentials(w, r); uid < 0 {
 		return
 	}
@@ -264,7 +282,7 @@ func JoinMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 	network.Jsonify(w, message, message.Status)
 }
 
-func LeaveMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func LeaveMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	if uid := security.CheckCredentials(w, r); uid < 0 {
 		return
 	}

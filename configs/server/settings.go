@@ -36,8 +36,8 @@ func ConnectToAuthMS(addr string) *grpc.ClientConn {
 var routesMap = map[string][]settings.MapHandler{
 
 	/***********************************************
-					 Authorization
-     ***********************************************/
+						 Authorization
+	     ***********************************************/
 	"/api/srv/getuser": {{
 		Type:         "GET",
 		Handler:      userDelivery.GetUserInfo,
@@ -72,9 +72,9 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 
 	/***********************************************
-                 		 Events
-     ***********************************************/
-	"/api/srv/events": {{
+	            		 Events
+	***********************************************/
+	"/api/srv/events/search": {{
 		Type:         "POST",
 		Handler:      eventDelivery.GetSearchEvents,
 		CORS:         true,
@@ -82,14 +82,24 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         false,
 		WS:           false,
 	}},
-	"/api/srv/events/small": {{
-		Type:         "POST",
-		Handler:      eventDelivery.CreateSmallEvent,
-		CORS:         true,
-		AuthRequired: true,
-		CSRF:         true,
-		WS:           false,
-	}},
+	"/api/srv/events/small": {
+		{
+			Type:         "POST",
+			Handler:      eventDelivery.CreateSmallEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "GET",
+			Handler:      eventDelivery.GetSmallEvents,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
 	"/api/srv/events/small/:eid": {
 		{
 			Type:         "PUT",
@@ -110,16 +120,16 @@ var routesMap = map[string][]settings.MapHandler{
 	},
 	"/api/srv/events/mid": {{
 		Type:         "POST",
-		Handler:      eventDelivery.CreateMidEvent,
+		Handler:      eventDelivery.CreateMiddleEvent,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
 		WS:           false,
 	}},
-	"/api/srv/events/min/:eid": {
+	"/api/srv/events/mid/:eid": {
 		{
 			Type:         "GET",
-			Handler:      eventDelivery.GetMidEvent,
+			Handler:      eventDelivery.GetMiddleEvent,
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,
@@ -127,7 +137,7 @@ var routesMap = map[string][]settings.MapHandler{
 		},
 		{
 			Type:         "PUT",
-			Handler:      eventDelivery.UpdateMidEvent,
+			Handler:      eventDelivery.UpdateMiddleEvent,
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,
@@ -135,7 +145,7 @@ var routesMap = map[string][]settings.MapHandler{
 		},
 		{
 			Type:         "DELETE",
-			Handler:      eventDelivery.DeleteMidEvent,
+			Handler:      eventDelivery.DeleteMiddleEvent,
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,
@@ -145,7 +155,7 @@ var routesMap = map[string][]settings.MapHandler{
 	"/api/srv/events/mid/:eid/member": {
 		{
 			Type:         "POST",
-			Handler:      eventDelivery.JoinMidEvent,
+			Handler:      eventDelivery.JoinMiddleEvent,
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,
@@ -153,7 +163,7 @@ var routesMap = map[string][]settings.MapHandler{
 		},
 		{
 			Type:         "DELETE",
-			Handler:      eventDelivery.LeaveMidEvent,
+			Handler:      eventDelivery.LeaveMiddleEvent,
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,
@@ -205,7 +215,7 @@ var routesMap = map[string][]settings.MapHandler{
 		},
 		{
 			Type:         "DELETE",
-			Handler:      eventDelivery.RemoveVisitorForBigEvent,// TODO: create a better name
+			Handler:      eventDelivery.RemoveVisitorForBigEvent, // TODO: create a better name
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,
@@ -214,8 +224,8 @@ var routesMap = map[string][]settings.MapHandler{
 	},
 
 	/***********************************************
-                 		REMOVE
-     ***********************************************/
+	            		REMOVE
+	***********************************************/
 	"/api/srv/events/feed": {
 		{
 			Type:         "GET",
@@ -252,8 +262,8 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 
 	/***********************************************
-                 		Profile
-     ***********************************************/
+	            		Profile
+	***********************************************/
 	"/api/srv/profile/:id/upload": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UploadNewImage,
@@ -346,8 +356,8 @@ var routesMap = map[string][]settings.MapHandler{
 	//}},
 
 	/***********************************************
-                 		 Utils
-     ***********************************************/
+	            		 Utils
+	***********************************************/
 	"/api/srv/tags/feed": {{
 		Type:         "GET",
 		Handler:      tagDelivery.FeedTags,

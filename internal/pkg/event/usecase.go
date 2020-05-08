@@ -16,4 +16,5 @@ type UseCase interface {
 	CreateMidEvent(midEventForm *forms.MidEventForm) (models.MidEvent, models.WorkMessage)
 	JoinMidEvent(eventVote *models.EventFollow) models.WorkMessage
 	LeaveMidEvent(eventVote *models.EventFollow) models.WorkMessage
+	GetSmallEventsByUID(uid int64) (models.SmallEventList, error)
 }
