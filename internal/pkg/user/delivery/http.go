@@ -140,6 +140,43 @@ func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	network.Jsonify(w, profile, http.StatusOK)
 }
 
+func GetSmallEventsForUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := network.GetIdFromRequest(w, r, ps)
+	if uid < 0 {
+		network.GenErrorCode(w, r, "Uid is incorrect", http.StatusInternalServerError)
+		return
+	}
+
+	r.Header.Set("Content-Type", "application/json")
+	var smallEvents models.SmallEventList
+	uc := usecase.GetUseCase()
+	message := uc.GetSmallEventsForUser(&smallEvents, int(uid))
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
+		return
+	}
+
+	network.Jsonify(w, smallEvents, http.StatusOK)
+}
+
+func GetSmallAndMidEventsForUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := network.GetIdFromRequest(w, r, ps)
+	if uid < 0 {
+		network.GenErrorCode(w, r, "Uid is incorrect", http.StatusInternalServerError)
+		return
+	}
+
+	var ownEvents models.OwnEventsList
+	uc := usecase.GetUseCase()
+	message := uc.GetUserOwnEvents(&ownEvents, int(uid))
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
+		return
+	}
+
+	network.Jsonify(w, ownEvents, message.Status)
+}
+
 func GetProfileSubscriptions(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := network.GetIdFromRequest(w, r, ps)
 	if uid < 0 {
@@ -147,15 +184,15 @@ func GetProfileSubscriptions(w http.ResponseWriter, r *http.Request, ps map[stri
 		return
 	}
 
-	var events models.EventList
+	var subscriptions models.MidAndBigEventList
 	uc := usecase.GetUseCase()
-	code, err := uc.GetUserSubscriptions(&events, int(uid))
-	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), code)
+	message := uc.GetUserSubscriptions(&subscriptions, int(uid))
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
 		return
 	}
 
-	network.Jsonify(w, events, code)
+	network.Jsonify(w, subscriptions, message.Status)
 }
 
 ////////////// user part //////////////////

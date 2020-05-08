@@ -7,7 +7,6 @@ import (
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/settings"
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -51,13 +50,32 @@ func (ec *eventUseCase) InitEventsByKeyWords(events *models.EventList, keys stri
 	return http.StatusOK, nil
 }
 
-func (ec *eventUseCase) CreateEvent(event forms.EventForm) (models.Event, error) {
-	user, err := ec.rep.GetNameByID(event.UId)
-	model := models.Event{}
-	event.GetDBFormat(&model)
-	model.Author = user
-	err = ec.rep.SaveNewEvent(&model)
-	return model, err
+func (ec *eventUseCase) CreateSmallEvent(smallEventForm *forms.SmallEventForm) (models.SmallEvent, error) {
+	smallEvent := models.SmallEvent{}
+	smallEventForm.GetDBFormat(&smallEvent)
+	err := ec.rep.CreateSmallEvent(&smallEvent)
+	return smallEvent, err
+}
+
+func (ec *eventUseCase) CreateMidEvent(midEventForm *forms.MidEventForm) (models.MidEvent, models.WorkMessage) {
+	midEvent := models.MidEvent{}
+	midEventForm.GetDBFormat(&midEvent)
+
+	err := ec.rep.CreateMidEvent(&midEvent)
+
+	if err != nil {
+		return midEvent, models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  http.StatusBadRequest,
+		}
+	}
+
+	return midEvent, models.WorkMessage{
+		Request: nil,
+		Message: "",
+		Status:  http.StatusCreated,
+	}
 }
 
 func (ec *eventUseCase) InitEventsByUserPreferences(events *models.EventList, request *models.EventRequest) (int, error) {
@@ -100,53 +118,79 @@ func (ec *eventUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int
 	return valid
 }
 
-func (ec *eventUseCase) FollowEvent(subscription *models.EventFollow) models.WorkMessage {
-	var err error
-	if subscription.Type == "mid-event" {
-		err = ec.rep.FollowMidEvent(subscription.Uid, subscription.Eid)
-	} else if subscription.Type == "big-event" {
-		err = ec.rep.FollowBigEvent(subscription.Uid, subscription.Eid)
+func (ec *eventUseCase) SearchEventsByUserPreferences(events *models.MidAndBigEventList, request *models.EventRequest) (int, error) {
+	if request.Uid == 0 {
+		code, err := ec.rep.GetAllMidEvents(&events.MidEvents, request)
+		//bigEvents, _ := ec.rep.GetAllBigEvents()
+		if err != nil {
+			log.Println(err)
+			return code, err
+		}
 	} else {
-		return models.WorkMessage{
-			Request: nil,
-			Message: "Invalid subscription type",
-			Status:  http.StatusBadRequest,
+		code, err := ec.rep.GetMidEventsWithFollowed(&events.MidEvents, request)
+		if err != nil {
+			log.Println(err)
+			return code, err
 		}
 	}
+
+	return http.StatusOK, nil
+}
+
+func (ec *eventUseCase) UpdateSmallEvent(event *models.SmallEvent) (int, error) {
+	return ec.rep.UpdateSmallEvent(event)
+}
+
+func (ec *eventUseCase) DeleteSmallEvent(uid int, eid int64) models.WorkMessage {
+	err := ec.rep.DeleteSmallEvent(uid, eid)
 
 	if err != nil {
 		return models.WorkMessage{
 			Request: nil,
 			Message: err.Error(),
-			Status:  http.StatusConflict,
+			Status:  http.StatusBadRequest,
 		}
-	} else {
-		return models.WorkMessage{
-			Request: nil,
-			Message: "OK",
-			Status:  http.StatusCreated,
-		}
+	}
+
+	return models.WorkMessage{
+		Request: nil,
+		Message: http.StatusText(http.StatusOK),
+		Status:  http.StatusOK,
 	}
 }
 
-func (ec *eventUseCase) SearchEventsByUserPreferences(events *models.EventResponseList, request *models.EventRequest) (int, error) {
-	var err error
-	if request.Uid == 0 {
-		tempEvents, _ := ec.rep.GetAllEvents()
-		for _, tempEvent := range tempEvents {
-			tempEventResponse := models.EventResponse{
-				Event:    tempEvent,
-				Followed: false,
-			}
-			*events = append(*events, tempEventResponse)
-		}
-	} else {
-		err = ec.rep.GetEventsWithFollowed(events, request)
-		if err != nil {
-			fmt.Println(err)
-			return http.StatusInternalServerError, err
+func (ec *eventUseCase) JoinMidEvent(eventVote *models.EventFollow) models.WorkMessage {
+	code, err := ec.rep.JoinMidEvent(eventVote.Uid, eventVote.Eid)
+
+	if err != nil {
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  code,
 		}
 	}
 
-	return http.StatusOK, nil
+	return models.WorkMessage{
+		Request: nil,
+		Message: http.StatusText(http.StatusOK),
+		Status:  http.StatusOK,
+	}
+}
+
+func (ec *eventUseCase) LeaveMidEvent(eventVote *models.EventFollow) models.WorkMessage {
+	code, err := ec.rep.LeaveMidEvent(eventVote.Uid, eventVote.Eid)
+
+	if err != nil {
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  code,
+		}
+	}
+
+	return models.WorkMessage{
+		Request: nil,
+		Message: http.StatusText(http.StatusOK),
+		Status:  http.StatusOK,
+	}
 }

@@ -1,4 +1,5 @@
-INSERT INTO events (uid, title, edate, message, is_edited, author, etype)
+INSERT INTO
+    events (uid, title, edate, message, is_edited, author, etype)
 VALUES (5, 'Концерт Арии', '2021-03-19 12:59:13+03', 'Группа дает прощальный концерт,
         сыграет всем известные хиты - это будет просто вау', false, 'Алексей', 5)
         ,
@@ -46,7 +47,10 @@ VALUES (5, 'Концерт Арии', '2021-03-19 12:59:13+03', 'Группа д
         ,
        (5, 'Танцевальный мастер-класс в Парке Горького', '2021-03-01 18:34:53+03', 'Событие для молодых пар и тех,
         кто хочет научиться красиво танцевать', false, 'Марина', 15);
-UPDATE events SET title_tsv = setweight(to_tsvector(title), 'A') || setweight(to_tsvector(message), 'B');
+UPDATE
+    events
+SET
+    title_tsv = setweight(to_tsvector(title), 'A') || setweight(to_tsvector(message), 'B');
 
 -- WITH chat_meta AS
 --     (

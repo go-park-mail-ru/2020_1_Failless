@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"failless/internal/pkg/db"
+	eventRep "failless/internal/pkg/event/repository"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/security"
@@ -108,4 +110,58 @@ func (uc *UserUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {
 	}
 
 	return http.StatusOK, nil
+}
+
+func (uc *UserUseCase) GetSmallEventsForUser(smallEvents *models.SmallEventList, uid int) models.WorkMessage {
+	er := eventRep.NewSqlEventRepository(db.ConnectToDB())
+	code, err := er.GetSmallEventsForUser(smallEvents, uid)
+	if err != nil {
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  code,
+		}
+	} else {
+		return models.WorkMessage{
+			Request: nil,
+			Message: "",
+			Status:  code,
+		}
+	}
+}
+
+func (uc *UserUseCase) GetUserOwnEvents(ownEvents *models.OwnEventsList, uid int) models.WorkMessage {
+	er := eventRep.NewSqlEventRepository(db.ConnectToDB())
+
+	// Get Mid events
+	midEventList := models.MidEventList{}
+	code, err := er.GetOwnMidEvents(&midEventList, uid)
+	if err != nil {
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  code,
+		}
+	}
+
+	// Get Small events
+	smallEventList := models.SmallEventList{}
+	code, err = er.GetSmallEventsForUser(&smallEventList, uid)
+	if err != nil {
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  code,
+		}
+	}
+
+	// Assign and return
+	ownEvents.MidEvents = midEventList
+	ownEvents.SmallEvents = smallEventList
+	return models.WorkMessage{
+			Request: nil,
+			Message: "",
+			Status:  http.StatusOK,
+		}
+	// TODO: rewrite in goroutines
 }

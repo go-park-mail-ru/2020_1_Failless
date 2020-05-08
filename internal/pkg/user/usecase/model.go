@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"failless/internal/pkg/db"
+	eventRep "failless/internal/pkg/event/repository"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/settings"
@@ -58,15 +59,25 @@ func (uc *UserUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int 
 	return valid
 }
 
-func (uc *UserUseCase) GetUserSubscriptions(events *models.EventList, uid int) (int, error) {
-	var err error
-	*events, err = uc.Rep.GetUserSubscriptions(uid)
+func (uc *UserUseCase) GetUserSubscriptions(subscriptions *models.MidAndBigEventList, uid int) models.WorkMessage {
+	er := eventRep.NewSqlEventRepository(db.ConnectToDB())
+
+	code, err := er.GetSubscriptionMidEvents(&subscriptions.MidEvents, uid)
+	//code, err != er.GetSubscriptionBigEvents(&subscriptions.BigEvents, uid)
 
 	if err != nil {
-		return http.StatusInternalServerError, err
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  code,
+		}
+	} else {
+		return models.WorkMessage{
+			Request: nil,
+			Message: "",
+			Status:  code,
+		}
 	}
-
-	return http.StatusOK, nil
 }
 
 func (uc *UserUseCase) GetFeedResults(
@@ -74,13 +85,13 @@ func (uc *UserUseCase) GetFeedResults(
 	form *[]forms.GeneralForm) (models.FeedResults, error) {
 	// Get subscriptions for FeedUsers
 	var events [][]models.Event
-	for i := 0; i < len(*users); i++ {
-		var userEvents models.EventList
-		if _, err := uc.GetUserSubscriptions(&userEvents, (*users)[i].Uid); err != nil {
-			return nil, err
-		}
-		events = append(events, userEvents)
-	}
+	//for i := 0; i < len(*users); i++ {
+	//	var userEvents models.EventList
+	//	if _, err := uc.GetUserSubscriptions(&userEvents, (*users)[i].Uid); err != nil {
+	//		return nil, err
+	//	}
+	//	events = append(events, userEvents)
+	//}
 
 	// Collecting all together
 	var result models.FeedResults
