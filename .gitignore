@@ -9,3 +9,4 @@ data
 *.log
 *.pb.go
 *_easyjson.go
+easyjson-*
