@@ -271,27 +271,6 @@ func (er *sqlEventsRepository) GetNewEventsByTags(tags []int, uid int, limit int
 	return er.getEvents(withCondition, sqlStatement, generator.JoinIntArgs(items, limit, page)...)
 }
 
-func (er *sqlEventsRepository) FollowMidEvent(uid, eid int) error {
-	sqlStatement := `
-		INSERT INTO
-			event_vote (uid, eid, value)
-		VALUES
-			($1, $2, 1)
-		ON CONFLICT
-			ON CONSTRAINT unique_event_vote
-		DO
-			UPDATE
-			SET value = 1, is_edited = TRUE, vote_date = current_timestamp;`
-	rows, err := er.db.Exec(sqlStatement, uid, eid)
-	if err != nil || rows.RowsAffected() == 0 {
-		log.Println(err)
-		log.Println(sqlStatement, uid, eid)
-		return err
-	}
-
-	return nil
-}
-
 func (er *sqlEventsRepository) FollowBigEvent(uid, eid int) error {
 	sqlStatement := `
 		INSERT INTO subscribe (uid, table_id) VALUES ( $1, $2 );`
@@ -336,60 +315,6 @@ func (er *sqlEventsRepository) UnfollowBigEvent(uid, eid int) error {
 	if err != nil || rows.RowsAffected() == 0 {
 		return err
 	}
-	return nil
-}
-
-func (er *sqlEventsRepository) GetEventsWithFollowed(events *models.EventResponseList, request *models.EventRequest) error {
-	sqlStatement := `
-		SELECT e.eid, e.uid, e.title, e.edate, e.message, e.is_edited, e.author, e.etype, e.range, e.photos,
-			   CASE WHEN ev.uid IS NULL THEN FALSE ELSE TRUE END AS followed
-		FROM events e
-		LEFT JOIN event_vote ev ON e.eid = ev.eid AND ev.uid = $1 AND ev.value = 1
-		`
-
-	var rows *pgx.Rows
-	var err error
-	if len(request.Query) > 0 {
-		var generator queryGenerator
-		if !generator.remove3PSymbols(request.Query) {
-			return errors.New("Incorrect symbols in the query\n")
-		}
-		args := generator.GenerateArgSlice(request.Limit, request.Page)
-		sqlStatement += "WHERE e.title_tsv @@ phraseto_tsquery( $2 ) LIMIT $3 OFFSET $4;"
-		args = append([]interface{}{request.Uid}, args...)
-		rows, err = er.db.Query(sqlStatement, args...)
-	} else {
-		sqlStatement += "LIMIT $2 OFFSET $3;"
-		rows, err = er.db.Query(sqlStatement, request.Uid, request.Limit, request.Page)
-	}
-	if err != nil {
-		log.Println(err)
-		fmt.Println(err)
-		return err
-	}
-
-	for rows.Next() {
-		tempEvent := models.EventResponse{}
-		err = rows.Scan(
-			&tempEvent.Event.EId,
-			&tempEvent.Event.AuthorId,
-			&tempEvent.Event.Title,
-			&tempEvent.Event.EDate,
-			&tempEvent.Event.Message,
-			&tempEvent.Event.Edited,
-			&tempEvent.Event.Author,
-			&tempEvent.Event.Type,
-			&tempEvent.Event.Limit,
-			&tempEvent.Event.Photos,
-			&tempEvent.Followed)
-		if err != nil {
-			log.Println(err)
-			fmt.Println(err)
-			return err
-		}
-		*events = append(*events, tempEvent)
-	}
-
 	return nil
 }
 
@@ -464,7 +389,7 @@ func (er *sqlEventsRepository) GetSmallEventsForUser(smallEvents *models.SmallEv
 		WHERE
 			uid = $1
 		ORDER BY
-			(current_timestamp - time) ASC, time_created DESC
+			(current_timestamp - date) ASC, time_created DESC
 		LIMIT
 			30;`
 
@@ -582,6 +507,199 @@ func (er *sqlEventsRepository) GetMidEventsForUser(midEvents *models.MidEventLis
 			log.Println("EventRepo: GetMidEventsForUser: Assigning tags:", err)
 		}
 		*midEvents = append(*midEvents, eventInfo)
+	}
+
+	return http.StatusOK, nil
+}
+
+func (er *sqlEventsRepository) GetAllMidEvents(midEvents *models.MidEventList, request *models.EventRequest) (int, error) {
+	sqlStatement := `
+		SELECT
+			eid, title, description, tags, date, photos, member_limit, members, is_public
+		FROM
+			mid_events
+		`
+	var rows *pgx.Rows
+	var err error
+	if len(request.Query) > 0 {
+		var generator queryGenerator
+		if !generator.remove3PSymbols(request.Query) {
+			return http.StatusInternalServerError, errors.New("Incorrect symbols in the query\n")
+		}
+		args := generator.GenerateArgSlice(request.Limit, request.Page)
+		sqlStatement += `
+			WHERE
+				e.title_tsv @@ phraseto_tsquery( $1 )
+			ORDER BY
+				(current_timestamp - date) ASC, time_created DESC
+			LIMIT
+				$2
+			OFFSET
+				$3 * 0;` // TODO: offset 0
+		rows, err = er.db.Query(sqlStatement, args...)
+	} else {
+		sqlStatement += `
+			ORDER BY
+				(current_timestamp - date) ASC, time_created DESC
+			LIMIT 
+				$1
+			OFFSET 
+				$2 * 0;`	// TODO: offset 0
+		rows, err = er.db.Query(sqlStatement, request.Limit, request.Page)
+	}
+
+	if err != nil {
+		log.Println("EventRepo: GetAllMidEvents: ", err)
+		return http.StatusInternalServerError, err
+	}
+	defer rows.Close()
+
+	tags := pgtype.Int4Array{}
+	date := new(time.Time)
+	for rows.Next() {
+		eventInfo := models.MidEvent{}
+		err = rows.Scan(
+			&eventInfo.EId,
+			&eventInfo.Title,
+			&eventInfo.Descr,
+			&tags,
+			&date,
+			&eventInfo.Photos,
+			&eventInfo.Limit,
+			&eventInfo.MemberAmount,
+			&eventInfo.Public)
+		if err != nil {
+			log.Println(err)
+			return http.StatusInternalServerError, err
+		}
+
+		if date != nil {
+			eventInfo.Date = *date
+		}
+
+		if err = tags.AssignTo(&eventInfo.TagsId); err != nil {
+			log.Println("EventRepo: GetAllMidEvents: Assigning tags:", err)
+		}
+
+		eventInfo.Followed = false
+		*midEvents = append(*midEvents, eventInfo)
+	}
+
+	return http.StatusOK, nil
+}
+
+func (er *sqlEventsRepository) GetMidEventsWithFollowed(midEvents *models.MidEventList, request *models.EventRequest) (int, error) {
+	sqlStatement := `
+		SELECT
+			eid, title, description, tags, date, photos, member_limit, members, is_public,
+			CASE WHEN ev.uid IS NULL THEN FALSE ELSE TRUE END AS followed
+		FROM
+			mid_events
+			LEFT JOIN
+				mid_event_members MEM
+				ON
+					MEM.eid = mid_events.eid
+						AND
+					MEM.uid = $1
+		WHERE
+			admin_id <> $1`
+	var rows *pgx.Rows
+	var err error
+	if len(request.Query) > 0 {
+		var generator queryGenerator
+		if !generator.remove3PSymbols(request.Query) {
+			return http.StatusInternalServerError, errors.New("Incorrect symbols in the query\n")
+		}
+		args := generator.GenerateArgSlice(request.Limit, request.Page)
+		sqlStatement += `, e.title_tsv @@ phraseto_tsquery( $2 )
+			ORDER BY
+				(current_timestamp - date) ASC, time_created DESC
+			LIMIT
+				$3
+			OFFSET
+				$4 * 0;` // TODO: offset 0
+		args = append([]interface{}{request.Uid}, args...)
+		rows, err = er.db.Query(sqlStatement, args...)
+	} else {
+		sqlStatement += `
+			ORDER BY
+				(current_timestamp - date) ASC, time_created DESC
+			LIMIT 
+				$2 
+			OFFSET 
+				$3 * 0;` // TODO: offset 0
+		rows, err = er.db.Query(sqlStatement, request.Uid, request.Limit, request.Page)
+	}
+	if err != nil {
+		log.Println("EventRepo: GetMidEventsWithFollowed: ", err)
+		return http.StatusInternalServerError, err
+	}
+	defer rows.Close()
+
+	tags := pgtype.Int4Array{}
+	date := new(time.Time)
+	for rows.Next() {
+		eventInfo := models.MidEvent{}
+		err = rows.Scan(
+			&eventInfo.EId,
+			&eventInfo.Title,
+			&eventInfo.Descr,
+			&tags,
+			&date,
+			&eventInfo.Photos,
+			&eventInfo.Limit,
+			&eventInfo.MemberAmount,
+			&eventInfo.Public,
+			&eventInfo.Followed)
+		if err != nil {
+			log.Println(err)
+			return http.StatusInternalServerError, err
+		}
+
+		if date != nil {
+			eventInfo.Date = *date
+		}
+
+		if err = tags.AssignTo(&eventInfo.TagsId); err != nil {
+			log.Println("EventRepo: GetMidEventsWithFollowed: Assigning tags:", err)
+		}
+		*midEvents = append(*midEvents, eventInfo)
+	}
+
+	return http.StatusOK, nil
+}
+
+func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
+	sqlStatement := `
+		INSERT INTO
+			mid_event_members (uid, eid)
+		VALUES
+			($1, $2)
+		ON CONFLICT
+			ON CONSTRAINT unique_member
+		DO
+			NOTHING;`
+	cTag, err := er.db.Exec(sqlStatement, uid, eid)
+	if err != nil {
+		log.Println(err)
+		return http.StatusInternalServerError, err
+	}
+
+	if cTag.RowsAffected() == 0 {
+		log.Println("Member already in base", cTag)
+	} else {
+		sqlStatement = `
+		UPDATE
+			mid_events
+		SET
+			members = members + 1
+		WHERE
+			eid = $1;`
+		cTag, err = er.db.Exec(sqlStatement, eid)
+		if err != nil || cTag.RowsAffected() == 0 {
+			log.Println(err)
+			return http.StatusInternalServerError, err
+		}
 	}
 
 	return http.StatusOK, nil

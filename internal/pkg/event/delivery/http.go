@@ -112,42 +112,6 @@ func OLDGetEventsFeed(w http.ResponseWriter, r *http.Request, ps map[string]stri
 	network.Jsonify(w, events, http.StatusOK)
 }
 
-func FollowEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if uid := security.CheckCredentials(w, r); uid < 0 {
-		return
-	}
-
-	var subscription models.EventFollow
-	err := json.UnmarshalFromReader(r.Body, &subscription)
-	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	uc := usecase.GetUseCase()
-	message := uc.FollowEvent(&subscription)
-
-	network.Jsonify(w, message, http.StatusCreated)
-}
-
-func UnfollowEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	if uid := security.CheckCredentials(w, r); uid < 0 {
-		return
-	}
-
-	var subscription models.EventFollow
-	err := json.UnmarshalFromReader(r.Body, &subscription)
-	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	uc := usecase.GetUseCase()
-	message := uc.UnfollowEvent(&subscription)
-
-	network.Jsonify(w, message, http.StatusCreated)
-}
-
 func GetSearchEvents(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	var searchRequest models.EventRequest
 	err := json.UnmarshalFromReader(r.Body, &searchRequest)
@@ -162,7 +126,7 @@ func GetSearchEvents(w http.ResponseWriter, r *http.Request, ps map[string]strin
 		searchRequest.Page = 1
 	}
 
-	var events models.EventResponseList
+	var events models.SearchResultList
 	uc := usecase.GetUseCase()
 	if code, err := uc.SearchEventsByUserPreferences(&events, &searchRequest); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
@@ -305,7 +269,29 @@ func DeleteMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string
 }
 
 func JoinMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+	if uid := security.CheckCredentials(w, r); uid < 0 {
+		return
+	}
+
+	if eid := network.GetEIdFromRequest(w, r, ps); eid < 0 {
+		network.GenErrorCode(w, r, "Error in retrieving eid from url", http.StatusBadRequest)
+	}
+
+	var subscription models.EventFollow
+	err := json.UnmarshalFromReader(r.Body, &subscription)
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	uc := usecase.GetUseCase()
+	message := uc.JoinMidEvent(&subscription)
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
+		return
+	}
+
+	network.Jsonify(w, message, message.Status)
 }
 
 func LeaveMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {

@@ -45,10 +45,6 @@ func (er *eventsRepository) GetNewEventsByTags(tags []int, uid int, limit int, p
 	return nil, nil
 }
 
-func (er *eventsRepository) FollowMidEvent(uid, eid int) error {
-	return nil
-}
-
 func (er *eventsRepository) FollowBigEvent(uid, eid int) error {
 	return nil
 }
@@ -58,10 +54,6 @@ func (er *eventsRepository) UnfollowMidEvent(uid, eid int) error {
 }
 
 func (er *eventsRepository) UnfollowBigEvent(uid, eid int) error {
-	return nil
-}
-
-func (er *eventsRepository) GetEventsWithFollowed(events *models.EventResponseList, request *models.EventRequest) error {
 	return nil
 }
 
@@ -90,5 +82,17 @@ func (er *eventsRepository) GetOwnEventsForUser(ownEvents *models.OwnEventsList,
 }
 
 func (er *eventsRepository) GetMidEventsForUser(midEvents *models.MidEventList, uid int) (int, error) {
+	return http.StatusNotImplemented, nil
+}
+
+func (er *eventsRepository) GetMidEventsWithFollowed(midEvents *models.MidEventList, request *models.EventRequest) (int, error) {
+	return http.StatusNotImplemented, nil
+}
+
+func (er *eventsRepository) GetAllMidEvents(midEvents *models.MidEventList, request *models.EventRequest) (int, error) {
+	return http.StatusNotImplemented, nil
+}
+
+func (er *eventsRepository) JoinMidEvent(uid, eid int) (int, error) {
 	return http.StatusNotImplemented, nil
 }

@@ -140,6 +140,13 @@ CREATE TABLE IF NOT EXISTS mid_events
     time_created    TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
 
+CREATE TABLE IF NOT EXISTS mid_event_members
+(
+    eid     INTEGER REFERENCES mid_events (eid),
+    uid     INTEGER REFERENCES profile (uid),
+    CONSTRAINT unique_member UNIQUE (uid, eid)
+);
+
 --------------------------------------------------------
 -------------------- CHAT PART -------------------------
 --------------------------------------------------------

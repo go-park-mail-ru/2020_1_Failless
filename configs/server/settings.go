@@ -90,7 +90,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         true,
 		WS:           false,
 	}},
-	"/api/srv/events/small/{eid}": {
+	"/api/srv/events/small/:eid": {
 		{
 			Type:         "PUT",
 			Handler:      eventDelivery.UpdateSmallEvent,
@@ -115,8 +115,8 @@ var routesMap = map[string][]settings.MapHandler{
 		AuthRequired: true,
 		CSRF:         true,
 		WS:           false,
-		}},
-	"/api/srv/events/min/{eid}": {
+	}},
+	"/api/srv/events/min/:eid": {
 		{
 			Type:         "GET",
 			Handler:      eventDelivery.GetMidEvent,
@@ -142,7 +142,7 @@ var routesMap = map[string][]settings.MapHandler{
 			WS:           false,
 		},
 	},
-	"/api/srv/events/mid/{eid}/member": {
+	"/api/srv/events/mid/:eid/member": {
 		{
 			Type:         "POST",
 			Handler:      eventDelivery.JoinMidEvent,
@@ -160,17 +160,15 @@ var routesMap = map[string][]settings.MapHandler{
 			WS:           false,
 		},
 	},
-	"/api/srv/events/big": {
-		{
-			Type:         "POST",
-			Handler:      eventDelivery.CreateBigEvent,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         true,
-			WS:           false,
-		},
-	},
-	"/api/srv/events/big/{eid}": {
+	"/api/srv/events/big": {{
+		Type:         "POST",
+		Handler:      eventDelivery.CreateBigEvent,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
+	"/api/srv/events/big/:eid": {
 		{
 			Type:         "GET",
 			Handler:      eventDelivery.GetBigEvent,
@@ -196,7 +194,7 @@ var routesMap = map[string][]settings.MapHandler{
 			WS:           false,
 		},
 	},
-	"/api/srv/events/big/{eid}/visitor": {
+	"/api/srv/events/big/:eid/visitor": {
 		{
 			Type:         "POST",
 			Handler:      eventDelivery.AddVisitorForBigEvent,
@@ -260,30 +258,12 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         true,
 		WS:           false,
 	}},
-	"/api/srv/event/:id/follow": {
-		{
-			Type:         "POST",
-			Handler:      eventDelivery.FollowEvent,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         true,
-			WS:           false,
-		},
-		{
-			Type:         "GET",
-			Handler:      voteDelivery.EventFollowers,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         false,
-			WS:           false,
-		},
-	},
-	"/api/srv/event/:id/unfollow": {{
-		Type:         "POST",
-		Handler:      eventDelivery.UnfollowEvent,
+	"/api/srv/event/:id/follow": {{
+		Type:         "GET",
+		Handler:      voteDelivery.EventFollowers,
 		CORS:         true,
 		AuthRequired: true,
-		CSRF:         true,
+		CSRF:         false,
 		WS:           false,
 	}},
 

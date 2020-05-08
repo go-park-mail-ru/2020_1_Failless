@@ -196,6 +196,7 @@ type MidEvent struct {
 	MemberAmount	int			`json:"member_amount, omitempty"`
 	ChatId			int			`json:"chat_id, omitempty"`
 	Public			bool		`json:"public"`
+	Followed		bool		`json:"followed,omitempty"`
 }
 
 //easyjson:json
@@ -210,16 +211,13 @@ type OwnEventsList struct {
 type EventFollow struct {
 	Uid  int    `json:"uid"`
 	Eid  int    `json:"eid"`
-	Type string `json:"type"`	// mid-event | big-event
-}
-
-type EventResponse struct {
-	Event    Event
-	Followed bool `json:"followed"`
 }
 
 //easyjson:json
-type EventResponseList []EventResponse
+type SearchResultList struct {
+	MidEvents	MidEventList		`json:"mid_events,omitempty"`
+	//BigEvent 	BigEventList
+}
 
 type Vote struct {
 	Uid   int       `json:"uid"`
