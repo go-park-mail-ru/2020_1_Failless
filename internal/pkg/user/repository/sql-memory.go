@@ -4,8 +4,8 @@ import (
 	"errors"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/user"
-	"fmt"
 	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/pgtype"
 	"log"
 	"time"
 )
@@ -308,39 +308,43 @@ func (ur *sqlUserRepository) GetRandomFeedUsers(uid int, limit int, page int) ([
 		LEFT JOIN
         	voted_users AS v
         	ON
-            	PI.pid = v.user_id
+            	p.pid = v.user_id
 		WHERE
 			v.user_id IS NULL
 				AND
-			PI.pid != 1
+			p.pid != $1
 				AND
-			PI.photos IS NOT NULL	-- we don't show users without full profile info
+			p.photos IS NOT NULL	-- we don't show users without full profile info
 				AND
-			PI.about IS NOT NULL
+			p.about IS NOT NULL
 				AND
-			PI.about <> ''
+			p.about <> ''
 		LIMIT
-			$3;`
-	return ur.getUsers(withCondition, sqlCondition, uid, uid, limit)
+			$2;`
+	return ur.getUsers(withCondition, sqlCondition, uid, limit)
 }
 
 // +/- universal method for getting users array by condition (aka sqlStatement)
 // and parameters in args (interface array)
 func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string, args ...interface{}) ([]models.UserGeneral, error) {
 	baseSql := withCondition + `
-		SELECT p.pid, u.name, p.photos, p.about, p.birthday, p.gender
-		FROM profile_info as p
-		JOIN profile as u
-		ON p.pid = u.uid `
+		SELECT
+			p.pid, u.name, p.photos, p.about, p.birthday, p.gender, p.tags
+		FROM
+			profile_info as p
+			JOIN
+				profile as u
+				ON
+					p.pid = u.uid `
 	baseSql += sqlStatement
 	rows, err := ur.db.Query(baseSql, args...)
-	fmt.Println(rows)
 	if err != nil {
 		return nil, err
 	}
 
 	var users []models.UserGeneral
 	for rows.Next() {
+		tags := pgtype.Int4Array{}
 		userInfo := models.UserGeneral{}
 		gender := ""
 		genderPtr := &gender
@@ -352,9 +356,13 @@ func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string,
 			&userInfo.Photos,
 			&userInfo.About,
 			&bdayPtr,
-			&genderPtr)
+			&genderPtr,
+			&tags)
 		if err != nil {
 			return nil, err
+		}
+		if err = tags.AssignTo(&userInfo.TagsId); err != nil {
+			log.Println("EventRepo: GetMidEventsWithFollowed: Assigning tags:", err)
 		}
 		users = append(users, userInfo)
 	}

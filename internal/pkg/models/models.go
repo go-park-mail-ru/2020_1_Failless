@@ -30,12 +30,13 @@ type User struct {
 }
 
 type UserGeneral struct {
-	Uid      int       `json:"uid, omitempty"`
-	Name     string    `json:"name, omitempty"`
-	Photos   []string  `json:"photos, omitempty"`
-	About    string    `json:"about, omitempty"`
-	Birthday time.Time `json:"birthday, omitempty"`
-	Gender   int       `json:"gender, omitempty"`
+	Uid     	int       	`json:"uid, omitempty"`
+	Name     	string    	`json:"name, omitempty"`
+	Photos   	[]string  	`json:"photos, omitempty"`
+	About    	string    	`json:"about, omitempty"`
+	Birthday 	time.Time 	`json:"birthday, omitempty"`
+	Gender   	int       	`json:"gender, omitempty"`
+	TagsId	 	[]int32	   	`json:"tags,omitempty"`
 }
 
 //easyjson:json
@@ -237,9 +238,8 @@ type TagList []Tag
 //Mix up of UserGeneral, GeneralForm and Subs
 type FeedPost struct {
 	UserGeneral
-	Events []Event `json:"events"`
-	Tags   []Tag   `json:"tags"`
-	Subs   []Event `json:"subscriptions"`
+	OnwEvents		OwnEventsList	 	`json:"own_events,omitempty"`
+	Subscriptions	MidAndBigEventList	`json:"subscriptions,omitempty"`
 }
 
 //easyjson:json

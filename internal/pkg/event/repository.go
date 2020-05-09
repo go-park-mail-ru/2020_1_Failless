@@ -22,4 +22,6 @@ type Repository interface {
 	GetAllMidEvents(midEvents *models.MidEventList, request *models.EventRequest) (int, error)
 	GetSubscriptionMidEvents(midEvent *models.MidEventList, uid int) (int, error)
 	GetMidEventsWithFollowed(midEvents *models.MidEventList, request *models.EventRequest) (int, error)
+	GetOwnMidEventsWithAnotherUserFollowed(midEvents *models.MidEventList, admin, member int) (int, error)
+	GetSubscriptionMidEventsWithAnotherUserFollowed(midEvents *models.MidEventList, uid, visitor int) (int, error)
 }

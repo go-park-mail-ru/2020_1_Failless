@@ -319,7 +319,7 @@ func GetUsersFeed(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	var searchRequest models.UserRequest
 	err := json.UnmarshalFromReader(r.Body, &searchRequest)
 	if err != nil {
-		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
+		network.GenErrorCode(w, r, "Error within parse json"  + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -336,21 +336,11 @@ func GetUsersFeed(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
-	// Get events and tags about FeedUsers
-	var info []forms.GeneralForm
-	for i := 0; i < len(users); i++ {
-		userForm := forms.GeneralForm{}
-		userForm.Uid = (users)[i].Uid
-		if code, err := uc.GetUserInfo(&userForm); err != nil {
-			network.GenErrorCode(w, r, err.Error(), code)
-			return
-		}
-		info = append(info, userForm)
-	}
-	feed, err := uc.GetFeedResults(&users, &info)
-	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+
+	feedResults, message := uc.GetFeedResultsFor(uid, &users)
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
 	}
 
-	network.Jsonify(w, feed, http.StatusOK)
+	network.Jsonify(w, feedResults, http.StatusOK)
 }
