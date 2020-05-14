@@ -1,142 +1,82 @@
-UPDATE
-    profile_info PI
-SET
-    about = 'Да, я Серёга. И я из Калифорнии. Именно после встречи со мной Дудь решил снять тот фильм',
-    photos = '{developers/AlmaShell.jpg}'
-FROM
-    profile P
-WHERE
-    PI.pid = P.uid
-        AND
-    P.phone = '88005553535'
-        AND
-    P.email = 'almashell@eventum.xyz';
+UPDATE  profile_info PI
+SET     about = 'Да, я Серёга. И я из Калифорнии. Именно после встречи со мной Дудь решил снять тот фильм',
+        photos = '{developers/AlmaShell.jpg}'
+FROM    profile P
+WHERE   PI.pid = P.uid
+AND     P.phone = '88005553535'
+AND     P.email = 'almashell@eventum.xyz';
 
-UPDATE
-    profile_info PI
-SET
-    about = 'Профессиональный траблмейкер',
-    photos = '{developers/EgorBedov.jpg}'
-FROM
-    profile P
-WHERE
-    PI.pid = P.uid
-        AND
-    P.phone = '88005553536'
-        AND
-    P.email = 'egogoger@eventum.xyz';
+UPDATE  profile_info PI
+SET     about = 'Профессиональный траблмейкер',
+        photos = '{developers/EgorBedov.jpg}'
+FROM    profile P
+WHERE   PI.pid = P.uid
+AND     P.phone = '88005553536'
+AND     P.email = 'egogoger@eventum.xyz';
 
-UPDATE
-    profile_info PI
-SET
-    about = 'Папин бродяга, мамин симпотяга',
-    photos = '{developers/rowbotman.jpg}'
-FROM
-    profile P
-WHERE
-    PI.pid = P.uid
-        AND
-    P.phone = '88005553537'
-        AND
-    P.email = 'rowbotman@eventum.xyz';
+UPDATE  profile_info PI
+SET     about = 'Папин бродяга, мамин симпотяга',
+        photos = '{developers/rowbotman.jpg}'
+FROM    profile P
+WHERE   PI.pid = P.uid
+AND     P.phone = '88005553537'
+AND     P.email = 'rowbotman@eventum.xyz';
 
-UPDATE
-    profile_info PI
-SET
-    about = 'Навсегда в наших сердцах... и истории коммитов на гите',
-    photos = '{developers/Shampoooh.jpg}'
-FROM
-    profile P
-WHERE
-    PI.pid = P.uid
-        AND
-    P.phone = '88005553538'
-        AND
-    P.email = 'kerch@eventum.xyz';
+UPDATE  profile_info PI
+SET     about = 'Навсегда в наших сердцах... и истории коммитов на гите',
+        photos = '{developers/Shampoooh.jpg}'
+FROM    profile P
+WHERE   PI.pid = P.uid
+AND     P.phone = '88005553538'
+AND     P.email = 'kerch@eventum.xyz';
 
-UPDATE
-    profile_info PI
-SET
-    about = 'Рискуя показаться смешным, хотел бы сказать, что истинным революционером движет великая любовь. Невозможно себе представить настоящего революционера, не испытывающего этого чувства. Вероятно, в этом и состоит великая внутренняя драма каждого руководителя. Он должен совмещать духовную страсть и холодный ум, принимать мучительные решения, не дрогнув ни одним мускулом.',
-    photos = '{che-gevara.jpg}'
-FROM
-    profile P
-WHERE
-    PI.pid = P.uid
-        AND
-    P.phone = '88000000001'
-        AND
-    P.email = 'ernesto@cuba.cu';
+UPDATE  profile_info PI
+SET     about = 'Рискуя показаться смешным, хотел бы сказать, что истинным революционером движет великая любовь. Невозможно себе представить настоящего революционера, не испытывающего этого чувства. Вероятно, в этом и состоит великая внутренняя драма каждого руководителя. Он должен совмещать духовную страсть и холодный ум, принимать мучительные решения, не дрогнув ни одним мускулом.',
+        photos = '{che-gevara.jpg}'
+FROM    profile P
+WHERE   PI.pid = P.uid
+AND     P.phone = '88000000001'
+AND     P.email = 'ernesto@cuba.cu';
 
-UPDATE
-    profile_info PI
-SET
-    about = 'right - if u floor gang, left and alt-f4 if u ceiling gang',
-    photos = '{pewdiepie.jpg}'
-FROM
-    profile P
-WHERE
-    PI.pid = P.uid
-        AND
-    P.phone = '88000000002'
-        AND
-    P.email = 'pewdiepie@sweden.swe';
+UPDATE  profile_info PI
+SET     about = 'right - if u floor gang, left and alt-f4 if u ceiling gang',
+        photos = '{pewdiepie.jpg}'
+FROM    profile P
+WHERE   PI.pid = P.uid
+AND     P.phone = '88000000002'
+AND     P.email = 'pewdiepie@sweden.swe';
 
-UPDATE
-    profile_info PI
-SET
-    about = 'Обнуляй скорей Мой срок наружу ему тесно В твоей конституции так мало места',
-    photos = '{putin.jpg}'
-FROM
-    profile P
-WHERE
-    PI.pid = P.uid
-        AND
-    P.phone = '88000000003'
-        AND
-    P.email = 'godhimself@russia.ru';
+UPDATE  profile_info PI
+SET     about = 'Обнуляй скорей Мой срок наружу ему тесно В твоей конституции так мало места',
+        photos = '{putin.jpg}'
+FROM    profile P
+WHERE   PI.pid = P.uid
+AND     P.phone = '88000000003'
+AND     P.email = 'godhimself@russia.ru';
 
-UPDATE
-    profile_info PI
-SET
-    about = 'Ставь лайк! За меня и за Сашку!',
-    photos = '{bazhenov.jpg}'
-FROM
-    profile P
-WHERE
-    PI.pid = P.uid
-        AND
-    P.phone = '88000000004'
-        AND
-    P.email = 'bazhenov@russia.ru';
+UPDATE  profile_info PI
+SET     about = 'Ставь лайк! За меня и за Сашку!',
+        photos = '{bazhenov.jpg}'
+FROM    profile P
+WHERE   PI.pid = P.uid
+AND     P.phone = '88000000004'
+AND     P.email = 'bazhenov@russia.ru';
 
-UPDATE
-    profile_info PI
-SET
-    about = 'Ставь лайк и будем вместе ставить линукс в твою зубную щётку',
-    photos = '{linus.jpg}'
-FROM
-    profile P
-WHERE
-    PI.pid = P.uid
-        AND
-    P.phone = '88000000005'
-        AND
-    P.email = 'linux@finland.fi';
+UPDATE  profile_info PI
+SET     about = 'Ставь лайк и будем вместе ставить линукс в твою зубную щётку',
+        photos = '{linus.jpg}'
+FROM    profile P
+WHERE   PI.pid = P.uid
+AND     P.phone = '88000000005'
+AND     P.email = 'linux@finland.fi';
 
-UPDATE
-    profile_info PI
-SET
-    about = 'Бэллочку мою тут не видели?',
-    photos = '{pechorin.jpg}'
-FROM
-    profile P
-WHERE
-    PI.pid = P.uid
-        AND
-    P.phone = '88000000006'
-        AND
-    P.email = 'thuglife@taman.ta';
+UPDATE  profile_info PI
+SET     about = 'Бэллочку мою тут не видели?',
+        photos = '{pechorin.jpg}'
+FROM    profile P
+WHERE   PI.pid = P.uid
+AND     P.phone = '88000000006'
+AND     P.email = 'thuglife@taman.ta';
 
 INSERT INTO
     mid_events
