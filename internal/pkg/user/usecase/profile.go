@@ -11,7 +11,11 @@ import (
 )
 
 func (uc *UserUseCase) UpdateUserMeta(form *forms.MetaForm) (int, error) {
-	if err := uc.Rep.UpdateUserSimple(form.Uid, form.Social, &form.About); err != nil {
+	var photos []string
+	for _, photo := range form.Photos {
+		photos = append(photos, photo.ImgName)
+	}
+	if err := uc.Rep.UpdateUserSimple(form.Uid, form.Social, &form.About, photos); err != nil {
 		return http.StatusNotModified, err
 	}
 

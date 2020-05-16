@@ -9,7 +9,7 @@ import (
 type Repository interface {
 	GetUserByUID(uid int) (models.User, error)
 	UpdateUserTags(uid int, tagId int) error
-	UpdateUserSimple(uid int, social []string, about *string) error
+	UpdateUserSimple(uid int, social []string, about *string, photos []string) error
 	UpdateUserRating(uid int, rating float32) error
 	UpdateUserPhotos(uid int, name string) error
 	SetUserLocation(uid int, point models.LocationPoint) error

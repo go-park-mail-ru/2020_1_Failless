@@ -142,9 +142,9 @@ func (ur *sqlUserRepository) UpdateUserTags(uid int, tagId int) error {
 	return err
 }
 
-func (ur *sqlUserRepository) UpdateUserSimple(uid int, social []string, about *string) error {
-	sqlStatement := `UPDATE profile_info SET about = $1, social = $2 WHERE pid = $3;`
-	_, err := ur.db.Exec(sqlStatement, *about, social, uid)
+func (ur *sqlUserRepository) UpdateUserSimple(uid int, social []string, about *string, photos []string) error {
+	sqlStatement := `UPDATE profile_info SET about = $1, social = $2, photos = $3 WHERE pid = $4;`
+	_, err := ur.db.Exec(sqlStatement, *about, social, photos, uid)
 	return err
 }
 
@@ -153,9 +153,10 @@ func (ur *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err 
 	sqlStatement := `SELECT about, photos, rating, birthday, gender FROM profile_info WHERE pid = $1 ;`
 	gender := ""
 	genPtr := &gender
-	err = ur.db.QueryRow(sqlStatement, uid).Scan(
+	row := ur.db.QueryRow(sqlStatement, uid)
+	err = row.Scan(
 		&profile.About,
-		&profile.Photos,
+		&info.Photos,
 		&profile.Rating,
 		&profile.Birthday,
 		&genPtr)
@@ -167,10 +168,6 @@ func (ur *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err 
 
 	if profile.About != nil {
 		info.About = *profile.About
-	}
-
-	if profile.Photos != nil {
-		info.Photos = *profile.Photos
 	}
 
 	if genPtr != nil {

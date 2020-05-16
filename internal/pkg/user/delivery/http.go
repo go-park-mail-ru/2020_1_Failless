@@ -8,6 +8,7 @@ import (
 	"failless/internal/pkg/security"
 	"failless/internal/pkg/settings"
 	"failless/internal/pkg/user/usecase"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -54,6 +55,15 @@ func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]strin
 	}
 
 	form.Uid = uid
+	for index := range form.Photos {
+		if form.Photos[index].ImgName == "" {
+			if !images.ValidateImage(&form.Photos[index], images.Users) {
+				network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
+				return
+			}
+		}
+	}
+
 	uc := usecase.GetUseCase()
 	if code, err := uc.UpdateUserMeta(&form); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
@@ -77,12 +87,16 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	}
 
 	form.Uid = uid
-	if form.Avatar.ImgBase64 != "" {
-		if !images.ValidateImage(&form.Avatar, images.Users) {
-			network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
-			return
+	for index := range form.Photos {
+		if form.Photos[index].ImgBase64 != "" {
+			if !images.ValidateImage(&form.Photos[index], images.Users) {
+				network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
+				return
+			}
 		}
 	}
+
+	fmt.Println("PHOTOS", form.Photos)
 
 	uc := usecase.GetUseCase()
 	if code, err := uc.UpdateUserInfo(&form); err != nil {
