@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	chatRep "failless/internal/pkg/chat/repository"
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/vote"
@@ -12,6 +11,8 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+
+	chatRep "failless/internal/pkg/chat/repository"
 )
 
 type voteUseCase struct {
@@ -141,7 +142,6 @@ type Client struct {
 func (cc *Client) Run() {
 	for {
 		message := <-cc.MessagesChannel
-		log.Println("Read from channel", message)
 		MainHandler.Notify(&message)
 	}
 }
