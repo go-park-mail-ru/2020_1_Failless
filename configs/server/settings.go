@@ -260,6 +260,15 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         true,
 		WS:           false,
 	}},
+	"/ws/match": {{
+		Type:         "GET",
+		Handler:      voteDelivery.MatchPush,
+		CORS:         true,
+		AuthRequired: false,
+		CSRF:         false,
+		WS:           true,
+	}},
+
 
 	/***********************************************
 	            		Profile

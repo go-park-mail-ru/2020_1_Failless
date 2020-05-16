@@ -1,15 +1,17 @@
 package usecase
 
 import (
+	chatRep "failless/internal/pkg/chat/repository"
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/vote"
 	"failless/internal/pkg/vote/repository"
+	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"strconv"
-
-	chatRep "failless/internal/pkg/chat/repository"
+	"sync"
 )
 
 type voteUseCase struct {
@@ -37,9 +39,11 @@ func (vc *voteUseCase) VoteUser(vote models.Vote) models.WorkMessage {
 
 	// Check for matching
 	if vote.Value == 1 {
+		log.Print("OK: check for matching\n")
+
 		match, _ := vc.rep.CheckMatching(vote.Uid, vote.Id)
 		if match {
-			log.Println("Match occured between", vote.Uid, "and", vote.Id)
+			log.Println("OK: Match occured between", vote.Uid, "and", vote.Id)
 			// Create dialogue
 			cr := chatRep.NewSqlChatRepository(db.ConnectToDB())
 			if _, err = cr.InsertDialogue(
@@ -54,6 +58,24 @@ func (vc *voteUseCase) VoteUser(vote models.Vote) models.WorkMessage {
 					Status:  http.StatusBadRequest,
 				}
 			}
+
+			go func(clients map[string]*Client, voteId, matchId int64) {
+				for _, item := range clients {
+					if item.Uid == matchId {
+						MainHandler.MessagesChannel <- models.Match{
+							Uid:     matchId,
+							MatchID: voteId,
+							Message: "You've matched someone",
+						}
+					}
+				}
+			}(MainHandler.Clients, int64(vote.Uid), int64(vote.Id))
+
+			//MainHandler.MessagesChannel <- models.Match{
+			//	Uid:     int64(vote.Id),
+			//	MatchID: int64(vote.Uid),
+			//	Message: "You've matched someone",
+			//}
 
 			return models.WorkMessage{
 				Request: nil,
@@ -102,4 +124,61 @@ func (vc *voteUseCase) ValidateValue(value int8) int8 {
 
 func (vc *voteUseCase) GetEventFollowers(eid int) (models.UserGeneralList, error) {
 	return vc.rep.FindFollowers(eid)
+}
+
+type Client struct {
+	Mut  sync.Mutex
+	Conn *websocket.Conn
+	Id   string
+	Uid  int64
+	Cond *sync.Cond
+}
+
+func (cc *Client) Run() {
+	for {
+		//cc.Mut.Lock()
+		//cc.Cond.Wait()
+		//cc.Mut.Unlock()
+		message := <-MainHandler.MessagesChannel
+		MainHandler.Notify(&message)
+	}
+}
+
+type Handler struct {
+	Clients         map[string]*Client
+	MessagesChannel chan models.Match
+}
+
+func (h *Handler) Notify(message *models.Match) {
+	var broken []string
+	for _, client := range h.Clients {
+		if client.Uid == message.MatchID {
+			err := client.Conn.WriteJSON(message)
+			if err != nil {
+				client.Conn.Close()
+				broken = append(broken, client.Id)
+			}
+		}
+	}
+	// TODO: check it
+	for _, detached := range broken {
+		delete(h.Clients, detached)
+	}
+}
+
+var MainHandler Handler
+
+func (cc *voteUseCase) Subscribe(conn *websocket.Conn, uid int64) {
+	if len(MainHandler.Clients) == 0 {
+		MainHandler.Clients = make(map[string]*Client)
+	}
+
+	id := uuid.New().String()
+	cs := &Client{}
+	cs.Conn = conn
+	cs.Id = id
+	cs.Uid = uid
+	cs.Cond = sync.NewCond(&cs.Mut)
+	MainHandler.Clients[id] = cs
+	cs.Run()
 }
