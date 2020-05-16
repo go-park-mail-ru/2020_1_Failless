@@ -7,7 +7,7 @@ import (
 
 type ProfileInfo struct {
 	About     *string               `json:"about"`
-	Photos    *[]string             `json:"photos"`
+	Photos    []string              `json:"photos"`
 	Rating    *float32              `json:"rating"`
 	Birthday  *time.Time            `json:"birthday"`
 	Gender    *int                  `json:"gender"`
