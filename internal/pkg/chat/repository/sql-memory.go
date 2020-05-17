@@ -8,6 +8,25 @@ import (
 	"log"
 )
 
+const (
+	QueryInsertGlobalChat = `
+		INSERT INTO 	chat_user (admin_id, user_count, title)
+		VALUES 			($1, $2, $3)
+		RETURNING 		chat_id;`
+	QueryInsertFirstMessage = `
+		INSERT INTO 	message (uid, chat_id, user_local_id, message, is_shown)
+		VALUES 			($1, $2, $3, 'Напишите первое сообщение!', $4);`
+	QueryInsertNewLocalChat = `
+		INSERT INTO 	user_chat (chat_local_id, uid, avatar, title)
+		VALUES			($1, $2, $3, $4)
+		RETURNING 		user_local_id;`
+	QueryUpdateEidAvatarInChatUser = `
+		UPDATE  		chat_user
+		SET     		eid = $1,
+						avatar = $2
+		WHERE   		chat_id = $3;`
+)
+
 type sqlChatRepository struct {
 	db *pgx.ConnPool
 }
@@ -21,57 +40,56 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 	tx, err := cr.db.Begin()
 	if err != nil {
 		log.Println(err)
-		return -1, nil
+		return -1, err
 	}
 	defer tx.Rollback()
 
-	// Add row to chat_pair
+	// Create global chat
 	var chatId int64
-	sqlStatement := `INSERT INTO chat_user (admin_id, user_count, title) VALUES ($1, $2, $3) RETURNING chat_id;`
-	if err := tx.QueryRow(sqlStatement, uid1, userCount, title).Scan(&chatId); err != nil {
+	if err := tx.QueryRow(QueryInsertGlobalChat, uid1, userCount, title).Scan(&chatId); err != nil {
 		log.Println(err)
-		return -1, nil
+		return -1, err
 	}
 
 	// Insert into user_chat joining name of person + avatar
 	var userLocalIDs [2]int
-	sqlStatement = `
-		INSERT INTO user_chat (chat_local_id, uid, avatar, title)
-    		SELECT $1, $2, pi.photos[1], p.name
-    			FROM profile_info pi
-					JOIN profile p ON p.uid = pi.pid
-				WHERE pi.pid = $3 RETURNING user_local_id;`
+	sqlStatement := `
+		INSERT INTO 	user_chat (chat_local_id, uid, avatar, title)
+		SELECT 			$1, $2, pi.photos[1], p.name
+		FROM 			profile_info pi
+		JOIN 			profile p ON p.uid = pi.pid
+		WHERE 			pi.pid = $3
+		RETURNING 		user_local_id;`
 	if err := tx.QueryRow(sqlStatement, chatId, uid1, uid2).Scan(
 		&userLocalIDs[0]); err != nil {
 		log.Println(err)
-		return -1, nil
+		return -1, err
 	}
 	if err := tx.QueryRow(sqlStatement, chatId, uid2, uid1).Scan(
 		&userLocalIDs[1]); err != nil {
 		log.Println(err)
-		return -1, nil
+		return -1, err
 	}
 
 	// Modify user_vote
 	sqlStatement2 := `
-		UPDATE user_vote SET chat_id = $1
-		WHERE (uid = $2 AND user_id = $3) OR (uid = $3 AND user_id = $2);`
+		UPDATE 	user_vote
+		SET 	chat_id = $1
+		WHERE 	(uid = $2 AND user_id = $3)
+		OR 		(uid = $3 AND user_id = $2);`
 	if row, err := tx.Exec(sqlStatement2, chatId, uid1, uid2); err != nil {
 		log.Println(err)
 		log.Println(sqlStatement2, chatId, uid1, uid2)
 		log.Println(row)
-		return -1, nil
+		return -1, err
 	}
 
 	//Insert first message
-	sqlStatement3 := `
-		INSERT INTO message (uid, chat_id, user_local_id, message, is_shown)
-		VALUES ($1, $2, $3, 'Напишите первое сообщение!', FALSE);`
 	for _, userLocalID := range userLocalIDs {
-		if row, err := tx.Exec(sqlStatement3, uid1, chatId, userLocalID); err != nil {
+		if row, err := tx.Exec(QueryInsertFirstMessage, uid1, chatId, userLocalID, false); err != nil {
 			log.Println(err)
 			log.Println(row)
-			return -1, nil
+			return -1, err
 		}
 	}
 

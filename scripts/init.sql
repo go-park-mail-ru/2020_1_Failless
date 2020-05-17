@@ -137,6 +137,7 @@ CREATE TABLE IF NOT EXISTS mid_events
     is_public       BOOLEAN                              DEFAULT TRUE, -- if admin don't wanna show himself and members in search
     is_edited       BOOLEAN                              DEFAULT FALSE,
     title_tsv       TSVECTOR,
+    chat_id         INTEGER REFERENCES chat_user (chat_id) DEFAULT NULL,
 
     time_created    TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
@@ -159,7 +160,7 @@ CREATE TABLE IF NOT EXISTS chat_user
     date       TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     user_count INTEGER                              DEFAULT 2,
     title      VARCHAR(128)                NOT NULL CHECK ( title <> '' ),
-    eid        INTEGER REFERENCES events (eid),
+    eid        INTEGER,     -- references mid_events (eid) or big_events (eid)
     avatar     VARCHAR(64)
 );
 
@@ -167,7 +168,7 @@ CREATE TABLE IF NOT EXISTS user_chat
 (
     user_local_id SERIAL PRIMARY KEY,
     chat_local_id INTEGER REFERENCES chat_user (chat_id),
-    uid           INTEGER REFERENCES profile (uid), -- user id
+    uid           INTEGER REFERENCES profile (uid), -- creator/admin id
     date          TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     avatar        VARCHAR(64),
     title         VARCHAR(128)
