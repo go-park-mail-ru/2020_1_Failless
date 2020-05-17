@@ -19,12 +19,20 @@ func (uc *UserUseCase) UpdateUserMeta(form *forms.MetaForm) (int, error) {
 		return http.StatusNotModified, err
 	}
 
-	for _, tag := range form.Tags {
-		if err := uc.Rep.UpdateUserTags(form.Uid, tag); err != nil {
-			return http.StatusNotModified, err
-		}
-	}
+	//for _, tag := range form.Tags {
+	//	if err := uc.Rep.UpdateUserTags(form.Uid, tag); err != nil {
+	//		return http.StatusNotModified, err
+	//	}
+	//}
 	return http.StatusOK, nil
+}
+
+func (uc *UserUseCase) UpdateUserAbout(uid int, about string) models.WorkMessage {
+	return uc.Rep.UpdateUserAbout(uid, about)
+}
+
+func (uc *UserUseCase) UpdateUserTags(uid int, tagIDs []int) models.WorkMessage {
+	return uc.Rep.UpdateUserTags(uid, tagIDs)
 }
 
 func (uc *UserUseCase) UpdateUserInfo(form *forms.GeneralForm) (int, error) {
@@ -74,12 +82,6 @@ func (uc *UserUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 	(*profile).Events, err = uc.Rep.GetUserEvents(base.Uid)
 	if err != nil {
 		log.Println("error in get user events. Not fatal")
-		log.Println(err.Error())
-	}
-
-	(*profile).Tags, err = uc.Rep.GetUserTags(base.Uid)
-	if err != nil {
-		log.Println("error in get user tags. Not fatal")
 		log.Println(err.Error())
 	}
 

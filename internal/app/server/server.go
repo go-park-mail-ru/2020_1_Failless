@@ -4,7 +4,6 @@ import (
 	"failless/configs/server"
 	"failless/internal/pkg/logger"
 	"failless/internal/pkg/settings"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"

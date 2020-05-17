@@ -270,6 +270,22 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         true,
 		WS:           false,
 	}},
+	"/api/srv/profile/:id/meta/about": {{
+		Type:         "PUT",
+		Handler:      userDelivery.UpdUserAbout,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
+	"/api/srv/profile/:id/meta/tags": {{
+		Type:         "PUT",
+		Handler:      userDelivery.UpdUserTags,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
 	"/api/srv/profile/:id/general": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UpdProfileGeneral,

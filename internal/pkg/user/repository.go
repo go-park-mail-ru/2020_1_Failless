@@ -8,10 +8,11 @@ import (
 // It can be in-memory realization or database realization
 type Repository interface {
 	GetUserByUID(uid int) (models.User, error)
-	UpdateUserTags(uid int, tagId int) error
+	UpdateUserTags(uid int, tagIDs []int) models.WorkMessage
 	UpdateUserSimple(uid int, social []string, about *string, photos []string) error
 	UpdateUserRating(uid int, rating float32) error
 	UpdateUserPhotos(uid int, name string) error
+	UpdateUserAbout(uid int, about string) models.WorkMessage
 	SetUserLocation(uid int, point models.LocationPoint) error
 	UpdUserGeneral(info models.JsonInfo, user models.User) error
 

@@ -72,6 +72,52 @@ func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]strin
 	network.Jsonify(w, form, http.StatusOK)
 }
 
+func UpdUserAbout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := security.CompareUidsFromURLAndToken(w, r, ps)
+	if uid < 0 {
+		return
+	}
+
+	var about models.UserAbout
+	err := json.UnmarshalFromReader(r.Body, &about)
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	uc := usecase.GetUseCase()
+	message := uc.UpdateUserAbout(uid, about.About)
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
+		return
+	}
+
+	network.Jsonify(w, about, message.Status)
+}
+
+func UpdUserTags(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	uid := security.CompareUidsFromURLAndToken(w, r, ps)
+	if uid < 0 {
+		return
+	}
+
+	var tags models.UserTags
+	err := json.UnmarshalFromReader(r.Body, &tags)
+	if err != nil {
+		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	uc := usecase.GetUseCase()
+	message := uc.UpdateUserTags(uid, tags.Tags)
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
+		return
+	}
+
+	network.Jsonify(w, tags, message.Status)
+}
+
 func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := security.CompareUidsFromURLAndToken(w, r, ps)
 	if uid < 0 {

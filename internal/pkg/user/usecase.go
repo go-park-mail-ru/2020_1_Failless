@@ -7,6 +7,8 @@ import (
 
 type UseCase interface {
 	UpdateUserMeta(form *forms.MetaForm) (int, error)
+	UpdateUserAbout(uid int, about string) models.WorkMessage
+	UpdateUserTags(uid int, tagIDs []int) models.WorkMessage
 	UpdateUserInfo(form *forms.GeneralForm) (int, error)
 	GetUserInfo(profile *forms.GeneralForm) (int, error)
 	FillFormIfExist(cred *models.User) (int, error)

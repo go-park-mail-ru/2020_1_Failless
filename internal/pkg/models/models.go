@@ -68,6 +68,14 @@ func (ug *DBUserGeneral) GetUserGeneral() UserGeneral {
 	return user
 }
 
+type UserAbout struct {
+	About	string	`json:"about,omitempty"`
+}
+
+type UserTags struct {
+	Tags	[]int	`json:"tags, omitempty"`
+}
+
 // Struct describes location point of user
 type LocationPoint struct {
 	Latitude  float32 `json:"lat"`
@@ -85,6 +93,7 @@ type JsonInfo struct {
 	Gender    int           `json:"gender"`
 	LoginDate time.Time     `json:"login_date"`
 	Location  LocationPoint `json:"location"`
+	Tags	  []int32		`json:"tags"`
 }
 
 // For feed users

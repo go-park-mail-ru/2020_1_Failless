@@ -7,7 +7,19 @@ import (
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
 	"log"
+	"net/http"
 	"time"
+)
+
+const (
+	QueryUpdateUserAbout = `
+		UPDATE  profile_info
+		SET     about = $1
+		WHERE   pid = $2;`
+	QueryUpdateUserTags = `
+		UPDATE  profile_info
+		SET     tags = $1
+		WHERE   pid = $2;`
 )
 
 type sqlUserRepository struct {
@@ -136,10 +148,22 @@ func (ur *sqlUserRepository) UpdateUserRating(uid int, rating float32) error {
 	return err
 }
 
-func (ur *sqlUserRepository) UpdateUserTags(uid int, tagId int) error {
-	sqlStatement := `CALL update_tag($1, $2);`
-	_, err := ur.db.Exec(sqlStatement, uid, tagId)
-	return err
+func (ur *sqlUserRepository) UpdateUserTags(uid int, tagIDs []int) models.WorkMessage {
+	cTag, err := ur.db.Exec(QueryUpdateUserTags, tagIDs, uid)
+	if err != nil || cTag.RowsAffected() == 0 {
+		log.Println(err)
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
+	} else {
+		return models.WorkMessage{
+			Request: nil,
+			Message: "",
+			Status:  http.StatusOK,
+		}
+	}
 }
 
 func (ur *sqlUserRepository) UpdateUserSimple(uid int, social []string, about *string, photos []string) error {
@@ -148,18 +172,41 @@ func (ur *sqlUserRepository) UpdateUserSimple(uid int, social []string, about *s
 	return err
 }
 
+func (ur *sqlUserRepository) UpdateUserAbout(uid int, about string) models.WorkMessage {
+	cTag, err := ur.db.Exec(QueryUpdateUserAbout, about, uid)
+	if err != nil || cTag.RowsAffected() == 0 {
+		log.Println(err)
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
+	} else {
+		return models.WorkMessage{
+			Request: nil,
+			Message: "",
+			Status:  http.StatusOK,
+		}
+	}
+}
+
 func (ur *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err error) {
 	var profile ProfileInfo
-	sqlStatement := `SELECT about, photos, rating, birthday, gender FROM profile_info WHERE pid = $1 ;`
+	sqlStatement := `
+		SELECT 	about, photos, rating, birthday, gender, tags
+		FROM 	profile_info
+		WHERE 	pid = $1 ;`
 	gender := ""
 	genPtr := &gender
 	row := ur.db.QueryRow(sqlStatement, uid)
+	tags := pgtype.Int4Array{}
 	err = row.Scan(
 		&profile.About,
 		&info.Photos,
 		&profile.Rating,
 		&profile.Birthday,
-		&genPtr)
+		&genPtr,
+		&tags)
 	if err != nil {
 		log.Println(sqlStatement)
 		log.Println("error in get profile info")
@@ -176,6 +223,10 @@ func (ur *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err 
 
 	if profile.Location != nil {
 		info.Location = *profile.Location
+	}
+
+	if err = tags.AssignTo(&info.Tags); err != nil {
+		log.Println("GetProfileInfo: Assigning tags:", err)
 	}
 	return
 }
