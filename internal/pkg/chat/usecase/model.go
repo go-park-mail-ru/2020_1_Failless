@@ -6,7 +6,6 @@ import (
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
@@ -82,7 +81,7 @@ func (cc *Client) Run() {
 	for {
 		message := forms.Message{}
 		err := cc.Conn.ReadJSON(&message)
-		fmt.Println("cc.Conn.ReadJSON(&message)", message)
+		//fmt.Println("cc.Conn.ReadJSON(&message)", message)
 
 		if err != nil {
 			cc.Conn.Close()
@@ -95,7 +94,7 @@ func (cc *Client) Run() {
 		//	message.Uid = int64(user.Uid)
 		//}
 		message.Date = time.Now()
-		fmt.Println("Before uc.AddNewMessage(&message)", message)
+		//fmt.Println("Before uc.AddNewMessage(&message)", message)
 		code, err := uc.AddNewMessage(&message)
 		if err != nil {
 			log.Println(err.Error())

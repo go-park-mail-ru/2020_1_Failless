@@ -58,7 +58,6 @@ func (p *GeneralForm) GetDBFormat(info *models.JsonInfo, user *models.User) erro
 
 func (p *GeneralForm) FillProfile(row models.JsonInfo) error {
 	ava := ""
-	fmt.Println(row.Photos)
 	if len(row.Photos) < 1 {
 		ava = "default.png"
 		//ava = path.Join(Media, "default.png")

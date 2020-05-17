@@ -157,7 +157,7 @@ func UpdateSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]stri
 	var event models.SmallEvent
 	err := json.UnmarshalFromReader(r.Body, &event)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -199,7 +199,7 @@ func CreateMidEvent(w http.ResponseWriter, r *http.Request, ps map[string]string
 	var midEventForm forms.MidEventForm
 	err := json.UnmarshalFromReader(r.Body, &midEventForm)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
 		return
 	}

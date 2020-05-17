@@ -8,7 +8,6 @@ import (
 	"failless/internal/pkg/security"
 	"failless/internal/pkg/settings"
 	"failless/internal/pkg/user/usecase"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -95,8 +94,6 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 			}
 		}
 	}
-
-	fmt.Println("PHOTOS", form.Photos)
 
 	uc := usecase.GetUseCase()
 	if code, err := uc.UpdateUserInfo(&form); err != nil {
