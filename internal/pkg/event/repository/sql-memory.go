@@ -24,6 +24,10 @@ const (
 		ON CONFLICT
 		ON CONSTRAINT 	unique_member
 		DO				NOTHING;`
+	QueryIncrementMemberAmount = `
+		UPDATE		mid_events
+		SET			members = members + 1
+		WHERE		eid = $1 `
 )
 
 type sqlEventsRepository struct {
@@ -672,7 +676,14 @@ func (er *sqlEventsRepository) GetMidEventsWithFollowed(midEvents *models.MidEve
 }
 
 func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
-	cTag, err := er.db.Exec(QueryInsertMidEventMember, uid, eid)
+	tx, err := er.db.Begin()
+	if err != nil {
+		log.Println("JoinMidEvent: Failed to start transaction", err)
+		return http.StatusInternalServerError, err
+	}
+	defer tx.Rollback()
+
+	cTag, err := tx.Exec(QueryInsertMidEventMember, uid, eid)
 	if err != nil {
 		log.Println(err)
 		return http.StatusInternalServerError, err
@@ -681,15 +692,28 @@ func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
 	if cTag.RowsAffected() == 0 {
 		log.Println("Member already in base", cTag)
 	} else {
-		sqlStatement := `
-		UPDATE		mid_events
-		SET			members = members + 1
-		WHERE		eid = $1;`
-		cTag, err = er.db.Exec(sqlStatement, eid)
-		if err != nil || cTag.RowsAffected() == 0 {
+		var chatID int
+		var eventTitle string
+		sqlStatement := QueryIncrementMemberAmount + `
+		RETURNING 	chat_id, title;`
+		if err = er.db.QueryRow(sqlStatement, eid).Scan(&chatID, &eventTitle); err != nil {
 			log.Println(err)
 			return http.StatusInternalServerError, err
 		}
+
+		var userLocalID int
+		row := tx.QueryRow(chatRepository.QueryInsertNewLocalChat, chatID, uid, nil, eventTitle)
+		if err = row.Scan(&userLocalID); err != nil {
+			log.Println("CreateMidEvent: ", err)
+			log.Println(row)
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	// Close transaction
+	if err = tx.Commit(); err != nil {
+		log.Println("CreateMidEvent: ", err)
+		return http.StatusInternalServerError, err
 	}
 
 	return http.StatusOK, nil

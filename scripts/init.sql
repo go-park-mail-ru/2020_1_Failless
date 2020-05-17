@@ -137,7 +137,7 @@ CREATE TABLE IF NOT EXISTS mid_events
     is_public       BOOLEAN                              DEFAULT TRUE, -- if admin don't wanna show himself and members in search
     is_edited       BOOLEAN                              DEFAULT FALSE,
     title_tsv       TSVECTOR,
-    chat_id         INTEGER REFERENCES chat_user (chat_id) DEFAULT NULL,
+    chat_id         INTEGER DEFAULT NULL,           -- REFERENCES chat_user (chat_id)
 
     time_created    TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );

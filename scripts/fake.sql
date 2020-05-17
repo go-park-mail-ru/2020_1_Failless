@@ -267,6 +267,39 @@ UPDATE
 SET
     title_tsv = setweight(to_tsvector(title), 'A') || setweight(to_tsvector(description), 'B');
 
+-- create global chats for mid events
+INSERT INTO 	chat_user (admin_id, user_count, title, eid, avatar)
+SELECT 			me.admin_id, member_limit, me.title, me.eid, me.photos[1]
+FROM            mid_events me;
+
+-- update chat_id in mid_events
+UPDATE  mid_events
+SET     chat_id = cu.chat_id
+FROM    chat_user cu
+WHERE   cu.eid = mid_events.eid;
+
+-- create local chats for mid events
+INSERT INTO 	user_chat (chat_local_id, uid, title)
+SELECT 			cu.chat_id, me.admin_id, me.title
+FROM            mid_events me
+JOIN            chat_user cu
+ON              me.chat_id = cu.chat_id;
+
+-- add first messages
+INSERT INTO 	message (uid, chat_id, user_local_id, message, is_shown)
+SELECT 			cu.admin_id, cu.chat_id, uc.user_local_id, 'Напишите первое сообщение!', TRUE
+FROM            chat_user cu
+JOIN            user_chat uc
+ON              cu.chat_id = uc.chat_local_id;
+
+-- add first member
+INSERT INTO		mid_event_members (uid, eid)
+SELECT			me.admin_id, me.eid
+FROM            mid_events me
+ON CONFLICT
+ON CONSTRAINT 	unique_member
+DO				NOTHING;
+
 -- WITH chat_meta AS
 --     (
 --         SELECT uc.title, SUM(m.is_shown = TRUE) AS unseen
