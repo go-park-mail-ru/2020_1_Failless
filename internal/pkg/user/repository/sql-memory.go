@@ -5,6 +5,7 @@ import (
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/user"
 	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/pgtype"
 	"log"
 	"time"
 )
@@ -141,9 +142,9 @@ func (ur *sqlUserRepository) UpdateUserTags(uid int, tagId int) error {
 	return err
 }
 
-func (ur *sqlUserRepository) UpdateUserSimple(uid int, social []string, about *string) error {
-	sqlStatement := `UPDATE profile_info SET about = $1, social = $2 WHERE pid = $3;`
-	_, err := ur.db.Exec(sqlStatement, *about, social, uid)
+func (ur *sqlUserRepository) UpdateUserSimple(uid int, social []string, about *string, photos []string) error {
+	sqlStatement := `UPDATE profile_info SET about = $1, social = $2, photos = $3 WHERE pid = $4;`
+	_, err := ur.db.Exec(sqlStatement, *about, social, photos, uid)
 	return err
 }
 
@@ -152,9 +153,10 @@ func (ur *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err 
 	sqlStatement := `SELECT about, photos, rating, birthday, gender FROM profile_info WHERE pid = $1 ;`
 	gender := ""
 	genPtr := &gender
-	err = ur.db.QueryRow(sqlStatement, uid).Scan(
+	row := ur.db.QueryRow(sqlStatement, uid)
+	err = row.Scan(
 		&profile.About,
-		&profile.Photos,
+		&info.Photos,
 		&profile.Rating,
 		&profile.Birthday,
 		&genPtr)
@@ -166,10 +168,6 @@ func (ur *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err 
 
 	if profile.About != nil {
 		info.About = *profile.About
-	}
-
-	if profile.Photos != nil {
-		info.Photos = *profile.Photos
 	}
 
 	if genPtr != nil {
@@ -301,28 +299,41 @@ func (ur *sqlUserRepository) GetRandomFeedUsers(uid int, limit int, page int) ([
 		return nil, errors.New("Page number can't be less than 1\n")
 	}
 	withCondition := `
-		WITH voted_users AS ( SELECT user_id FROM user_vote WHERE uid = $1 ) `
+		WITH
+			voted_users AS ( SELECT user_id FROM user_vote WHERE uid = $1 ) `
 	sqlCondition := ` 
-		LEFT JOIN voted_users AS v 
-		ON p.pid = v.user_id 
-		WHERE v.user_id IS NULL 
-		AND
-		p.pid != $2
-		LIMIT $3 ; `
-	// TODO: add cool vote algorithm (aka select)
-	return ur.getUsers(withCondition, sqlCondition, uid, uid, limit)
+		LEFT JOIN
+        	voted_users AS v
+        	ON
+            	p.pid = v.user_id
+		WHERE
+			v.user_id IS NULL
+				AND
+			p.pid != $1
+				AND
+			p.photos IS NOT NULL	-- we don't show users without full profile info
+				AND
+			p.about IS NOT NULL
+				AND
+			p.about <> ''
+		LIMIT
+			$2;`
+	return ur.getUsers(withCondition, sqlCondition, uid, limit)
 }
 
 // +/- universal method for getting users array by condition (aka sqlStatement)
 // and parameters in args (interface array)
 func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string, args ...interface{}) ([]models.UserGeneral, error) {
 	baseSql := withCondition + `
-		SELECT p.pid, u.name, p.photos, p.about, p.birthday, p.gender
-		FROM profile_info as p
-		JOIN profile as u
-		ON p.pid = u.uid `
+		SELECT
+			p.pid, u.name, p.photos, p.about, p.birthday, p.gender, p.tags
+		FROM
+			profile_info as p
+			JOIN
+				profile as u
+				ON
+					p.pid = u.uid `
 	baseSql += sqlStatement
-	log.Println(baseSql, args)
 	rows, err := ur.db.Query(baseSql, args...)
 	if err != nil {
 		return nil, err
@@ -330,6 +341,7 @@ func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string,
 
 	var users []models.UserGeneral
 	for rows.Next() {
+		tags := pgtype.Int4Array{}
 		userInfo := models.UserGeneral{}
 		gender := ""
 		genderPtr := &gender
@@ -341,9 +353,13 @@ func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string,
 			&userInfo.Photos,
 			&userInfo.About,
 			&bdayPtr,
-			&genderPtr)
+			&genderPtr,
+			&tags)
 		if err != nil {
 			return nil, err
+		}
+		if err = tags.AssignTo(&userInfo.TagsId); err != nil {
+			log.Println("EventRepo: GetMidEventsWithFollowed: Assigning tags:", err)
 		}
 		users = append(users, userInfo)
 	}

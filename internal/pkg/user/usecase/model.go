@@ -3,7 +3,6 @@ package usecase
 import (
 	"failless/internal/pkg/db"
 	eventRep "failless/internal/pkg/event/repository"
-	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/settings"
 	"failless/internal/pkg/user"
@@ -80,36 +79,52 @@ func (uc *UserUseCase) GetUserSubscriptions(subscriptions *models.MidAndBigEvent
 	}
 }
 
-func (uc *UserUseCase) GetFeedResults(
-	users *[]models.UserGeneral,
-	form *[]forms.GeneralForm) (models.FeedResults, error) {
-	// Get subscriptions for FeedUsers
-	var events [][]models.Event
-	//for i := 0; i < len(*users); i++ {
-	//	var userEvents models.EventList
-	//	if _, err := uc.GetUserSubscriptions(&userEvents, (*users)[i].Uid); err != nil {
-	//		return nil, err
-	//	}
-	//	events = append(events, userEvents)
-	//}
+func (uc *UserUseCase) GetFeedResultsFor(uid int, users *[]models.UserGeneral) (models.FeedResults, models.WorkMessage) {
+	er := eventRep.NewSqlEventRepository(db.ConnectToDB())
 
-	// Collecting all together
-	var result models.FeedResults
-	for i := 0; i < len(*users); i++ {
-		post := models.FeedPost{}
-		post.Uid = (*users)[i].Uid
-		post.Name = (*users)[i].Name
-		post.Photos = (*users)[i].Photos
-		post.About = (*users)[i].About
-		post.Birthday = (*users)[i].Birthday
-		post.Gender = (*users)[i].Gender
-		post.Events = (*form)[i].Events
-		post.Tags = (*form)[i].Tags
-		if events != nil {
-			post.Subs = events[i]
+	var feedResults models.FeedResults
+
+	for _, feedUser := range *users {
+		var feedResult models.FeedPost
+		feedResult.Uid = feedUser.Uid
+		feedResult.Photos = feedUser.Photos
+		feedResult.TagsId = feedUser.TagsId
+		feedResult.About = feedUser.About
+		feedResult.Name = feedUser.Name
+		feedResult.Birthday = feedUser.Birthday
+		feedResult.Gender = feedUser.Gender
+
+		code, err := er.GetSmallEventsForUser(&feedResult.OnwEvents.SmallEvents, feedResult.Uid)
+		if err != nil {
+			return feedResults, models.WorkMessage{
+				Request: nil,
+				Message: err.Error(),
+				Status:  code,
+			}
 		}
-		result = append(result, post)
+		code, err = er.GetOwnMidEventsWithAnotherUserFollowed(&feedResult.OnwEvents.MidEvents, feedResult.Uid, uid)
+		if err != nil {
+			return feedResults, models.WorkMessage{
+				Request: nil,
+				Message: err.Error(),
+				Status:  code,
+			}
+		}
+		code, err = er.GetSubscriptionMidEventsWithAnotherUserFollowed(&feedResult.Subscriptions.MidEvents, feedResult.Uid, uid)
+		if err != nil {
+			return feedResults, models.WorkMessage{
+				Request: nil,
+				Message: err.Error(),
+				Status:  code,
+			}
+		}
+
+		feedResults = append(feedResults, feedResult)
 	}
 
-	return result, nil
+	return feedResults, models.WorkMessage{
+		Request: nil,
+		Message: "",
+		Status:  http.StatusOK,
+	}
 }

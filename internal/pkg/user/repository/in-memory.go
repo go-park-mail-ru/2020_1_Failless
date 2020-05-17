@@ -51,7 +51,7 @@ func (ur *userRepository) UpdateUserTags(uid int, tagId int) error {
 	return nil
 }
 
-func (ur *userRepository) UpdateUserSimple(uid int, social []string, about *string) error {
+func (ur *userRepository) UpdateUserSimple(uid int, social []string, about *string, photos []string) error {
 	return nil
 }
 

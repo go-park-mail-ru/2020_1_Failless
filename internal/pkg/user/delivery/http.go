@@ -54,6 +54,15 @@ func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]strin
 	}
 
 	form.Uid = uid
+	for index := range form.Photos {
+		if form.Photos[index].ImgName == "" {
+			if !images.ValidateImage(&form.Photos[index], images.Users) {
+				network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
+				return
+			}
+		}
+	}
+
 	uc := usecase.GetUseCase()
 	if code, err := uc.UpdateUserMeta(&form); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
@@ -77,10 +86,12 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	}
 
 	form.Uid = uid
-	if form.Avatar.ImgBase64 != "" {
-		if !images.ValidateImage(&form.Avatar, images.Users) {
-			network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
-			return
+	for index := range form.Photos {
+		if form.Photos[index].ImgBase64 != "" {
+			if !images.ValidateImage(&form.Photos[index], images.Users) {
+				network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
+				return
+			}
 		}
 	}
 
@@ -319,7 +330,7 @@ func GetUsersFeed(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	var searchRequest models.UserRequest
 	err := json.UnmarshalFromReader(r.Body, &searchRequest)
 	if err != nil {
-		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
+		network.GenErrorCode(w, r, "Error within parse json"  + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -336,21 +347,11 @@ func GetUsersFeed(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
-	// Get events and tags about FeedUsers
-	var info []forms.GeneralForm
-	for i := 0; i < len(users); i++ {
-		userForm := forms.GeneralForm{}
-		userForm.Uid = (users)[i].Uid
-		if code, err := uc.GetUserInfo(&userForm); err != nil {
-			network.GenErrorCode(w, r, err.Error(), code)
-			return
-		}
-		info = append(info, userForm)
-	}
-	feed, err := uc.GetFeedResults(&users, &info)
-	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+
+	feedResults, message := uc.GetFeedResultsFor(uid, &users)
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
 	}
 
-	network.Jsonify(w, feed, http.StatusOK)
+	network.Jsonify(w, feedResults, http.StatusOK)
 }

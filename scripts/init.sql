@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS profile_info
     location   GEOGRAPHY                            DEFAULT NULL, -- ST_POINT(latitude, longitude)
     birthday   DATE                                 DEFAULT NULL,
     gender     SEX_T,
+    tags       INTEGER[]                            DEFAULT NULL,
     social     VARCHAR(144)[]                       DEFAULT NULL,
     login_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );

@@ -96,3 +96,11 @@ func (er *eventsRepository) LeaveMidEvent(uid, eid int) (int, error) {
 func (er *eventsRepository) GetSubscriptionMidEvents(midEvent *models.MidEventList, uid int) (int, error) {
 	return http.StatusNotImplemented, nil
 }
+
+func (er *eventsRepository) GetOwnMidEventsWithAnotherUserFollowed(midEvents *models.MidEventList, admin, member int) (int, error) {
+	return http.StatusNotImplemented, nil
+}
+
+func (er *eventsRepository) GetSubscriptionMidEventsWithAnotherUserFollowed(midEvents *models.MidEventList, uid, visitor int) (int, error) {
+	return http.StatusNotImplemented, nil
+}

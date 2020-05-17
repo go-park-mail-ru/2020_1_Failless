@@ -33,6 +33,6 @@ func Start() {
 	log.Println("server is running on " + strconv.Itoa(serverSettings.Port))
 	err := serve.ListenAndServe()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }

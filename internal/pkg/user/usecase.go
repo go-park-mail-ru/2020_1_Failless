@@ -15,7 +15,7 @@ type UseCase interface {
 	UpdateUserBase(form *forms.SignForm) (int, error)
 	InitUsersByUserPreferences(users *[]models.UserGeneral, request *models.UserRequest) (int, error)
 	GetUserSubscriptions(subscriptions *models.MidAndBigEventList, uid int) models.WorkMessage
-	GetFeedResults(users *[]models.UserGeneral, form *[]forms.GeneralForm) (models.FeedResults, error)
+	GetFeedResultsFor(uid int, users *[]models.UserGeneral) (models.FeedResults, models.WorkMessage)
 	GetUserOwnEvents(ownEvents *models.OwnEventsList, uid int) models.WorkMessage
 	GetSmallEventsForUser(smallEvents *models.SmallEventList, uid int) models.WorkMessage
 }

@@ -5,7 +5,6 @@ import (
 	"failless/internal/pkg/event"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/settings"
-	"fmt"
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
 	"log"
@@ -387,7 +386,7 @@ func (er *sqlEventsRepository) GetSmallEventsForUser(smallEvents *models.SmallEv
 			&tags,
 			&eventInfo.Photos)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return http.StatusInternalServerError, err
 		}
 
@@ -396,7 +395,7 @@ func (er *sqlEventsRepository) GetSmallEventsForUser(smallEvents *models.SmallEv
 		}
 
 		if err = tags.AssignTo(&eventInfo.TagsId); err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 		*smallEvents = append(*smallEvents, eventInfo)
 	}
@@ -437,7 +436,7 @@ func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
 func (er *sqlEventsRepository) GetOwnMidEvents(midEvents *models.MidEventList, uid int) (int, error) {
 	sqlStatement := `
 		SELECT
-			eid, admin_id, title, description, tags, date, photos, member_limit, members, is_public
+			eid, title, description, tags, date, photos, member_limit, members, is_public
 		FROM
 			mid_events
 		WHERE
@@ -551,8 +550,8 @@ func (er *sqlEventsRepository) GetSubscriptionMidEvents(midEvents *models.MidEve
 func (er *sqlEventsRepository) GetMidEventsWithFollowed(midEvents *models.MidEventList, request *models.EventRequest) (int, error) {
 	sqlStatement := `
 		SELECT
-			eid, title, description, tags, date, photos, member_limit, members, is_public,
-			CASE WHEN ev.uid IS NULL THEN FALSE ELSE TRUE END AS followed
+			mid_events.eid, title, description, tags, date, photos, member_limit, members, is_public,
+			CASE WHEN MEM.uid IS NULL THEN FALSE ELSE TRUE END AS followed
 		FROM
 			mid_events
 			LEFT JOIN
@@ -643,7 +642,6 @@ func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
 }
 
 func (er *sqlEventsRepository) LeaveMidEvent(uid, eid int) (int, error) {
-	fmt.Println("here i am")
 	sqlStatement := `
 		DELETE FROM
 			mid_event_members
@@ -672,6 +670,89 @@ func (er *sqlEventsRepository) LeaveMidEvent(uid, eid int) (int, error) {
 			log.Println(err)
 			return http.StatusInternalServerError, err
 		}
+	}
+
+	return http.StatusOK, nil
+}
+
+func (er *sqlEventsRepository) GetOwnMidEventsWithAnotherUserFollowed(midEvents *models.MidEventList, admin, member int) (int, error) {
+	sqlStatement := `
+		SELECT
+			ME.eid, title, description, tags, date, photos, member_limit, members, is_public,
+			CASE WHEN MEM.uid IS NULL THEN FALSE ELSE TRUE END AS followed
+		FROM
+			mid_events ME
+			LEFT JOIN
+				mid_event_members MEM
+				ON
+					MEM.eid = ME.eid
+						AND
+					MEM.uid = $2
+		WHERE
+			admin_id = $1
+		ORDER BY
+			(current_timestamp - date) ASC, time_created DESC
+		LIMIT
+			20;`
+	rows, err := er.db.Query(sqlStatement, admin, member)
+
+	if err != nil {
+		log.Println("GetOwnMidEventsWithAnotherUserFollowed", err)
+		return http.StatusInternalServerError, err
+	}
+	defer rows.Close()
+
+	err = er.retrieveMidEventsFrom(rows, midEvents, "find")
+	if err != nil {
+		log.Println("GetOwnMidEventsWithAnotherUserFollowed", err)
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
+}
+
+func (er *sqlEventsRepository) GetSubscriptionMidEventsWithAnotherUserFollowed(midEvents *models.MidEventList, uid, visitor int) (int, error) {
+	sqlStatement := `
+		SELECT
+			grouped.eid, title, description, tags, date, photos, member_limit, members, is_public, followed
+		FROM
+			(SELECT
+				ME.eid, title, description, tags, date, photos, member_limit, members, is_public,
+				CASE WHEN COUNT(ME.eid) = 1 THEN FALSE ELSE TRUE END AS followed
+			FROM
+				mid_events ME
+				JOIN
+					mid_event_members MEM
+					ON
+						ME.eid = MEM.eid
+							AND
+						(MEM.uid = $1
+							OR
+						MEM.uid = $2)
+			GROUP BY
+				ME.eid, date, time_created) AS grouped
+		JOIN
+			mid_event_members MEM
+			ON
+				MEM.eid = grouped.eid
+					AND
+				MEM.uid = $1
+		ORDER BY
+			(current_timestamp - date) ASC
+		LIMIT
+			30;`
+	rows, err := er.db.Query(sqlStatement, uid, visitor)
+	if err != nil {
+		log.Println("GetSubscriptionMidEventsWithAnotherUserFollowed", err)
+		return http.StatusInternalServerError, err
+	}
+	defer rows.Close()
+
+	err = er.retrieveMidEventsFrom(rows, midEvents, "find")
+
+	if err != nil {
+		log.Println("GetSubscriptionMidEventsWithAnotherUserFollowed", err)
+		return http.StatusInternalServerError, err
 	}
 
 	return http.StatusOK, nil
