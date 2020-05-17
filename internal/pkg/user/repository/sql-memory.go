@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
 	"log"
+	"net/http"
 	"time"
 )
 
@@ -336,6 +337,8 @@ func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string,
 	baseSql += sqlStatement
 	rows, err := ur.db.Query(baseSql, args...)
 	if err != nil {
+		log.Println("getUsers: ", err)
+		log.Println(rows)
 		return nil, err
 	}
 
@@ -411,4 +414,33 @@ func (ur *sqlUserRepository) GetUserSubscriptions(uid int) ([]models.Event, erro
 		return nil, err
 	}
 	return subs, nil
+}
+
+func (ur *sqlUserRepository) GetUsersForChat(cid int64, users *models.UserGeneralList) models.WorkMessage {
+	withCondition := `
+		WITH members_id AS (
+			SELECT  mem.uid
+			FROM    mid_events
+			JOIN    mid_event_members mem
+			ON      mid_events.eid = mem.eid
+			WHERE   chat_id = $1
+		)`
+	sqlCondition := `
+		JOIN		members_id AS mi
+		ON			p.pid = mi.uid;`
+	var err error
+	*users, err = ur.getUsers(withCondition, sqlCondition, cid)
+	if err != nil {
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
+	} else {
+		return models.WorkMessage{
+			Request: nil,
+			Message: "",
+			Status:  http.StatusOK,
+		}
+	}
 }

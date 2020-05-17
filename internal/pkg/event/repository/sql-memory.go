@@ -17,6 +17,15 @@ import (
 	"time"
 )
 
+const (
+	QueryInsertMidEventMember = `
+		INSERT INTO		mid_event_members (uid, eid)
+		VALUES			($1, $2)
+		ON CONFLICT
+		ON CONSTRAINT 	unique_member
+		DO				NOTHING;`
+)
+
 type sqlEventsRepository struct {
 	db *pgx.ConnPool
 }
@@ -469,6 +478,12 @@ func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
 		return err
 	}
 
+	// Add first member
+	if cTag, err := tx.Exec(QueryInsertMidEventMember, event.AdminId, event.EId); err != nil || cTag.RowsAffected() == 0 {
+		log.Println("CreateMidEvent: ", err)
+		return err
+	}
+
 	// Update eid in global chats
 	if cTag, err := tx.Exec(chatRepository.QueryUpdateEidAvatarInChatUser, event.EId, photo, chatID); err != nil || cTag.RowsAffected() == 0 {
 		log.Println("CreateMidEvent: ", err)
@@ -657,16 +672,7 @@ func (er *sqlEventsRepository) GetMidEventsWithFollowed(midEvents *models.MidEve
 }
 
 func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
-	sqlStatement := `
-		INSERT INTO
-			mid_event_members (uid, eid)
-		VALUES
-			($1, $2)
-		ON CONFLICT
-			ON CONSTRAINT unique_member
-		DO
-			NOTHING;`
-	cTag, err := er.db.Exec(sqlStatement, uid, eid)
+	cTag, err := er.db.Exec(QueryInsertMidEventMember, uid, eid)
 	if err != nil {
 		log.Println(err)
 		return http.StatusInternalServerError, err
@@ -675,13 +681,10 @@ func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
 	if cTag.RowsAffected() == 0 {
 		log.Println("Member already in base", cTag)
 	} else {
-		sqlStatement = `
-		UPDATE
-			mid_events
-		SET
-			members = members + 1
-		WHERE
-			eid = $1;`
+		sqlStatement := `
+		UPDATE		mid_events
+		SET			members = members + 1
+		WHERE		eid = $1;`
 		cTag, err = er.db.Exec(sqlStatement, eid)
 		if err != nil || cTag.RowsAffected() == 0 {
 			log.Println(err)

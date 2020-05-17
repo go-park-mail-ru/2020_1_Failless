@@ -3,6 +3,7 @@ package repository
 import (
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/user"
+	"net/http"
 )
 
 type userRepository struct {
@@ -94,4 +95,12 @@ func (ur *userRepository) GetRandomFeedUsers(uid int, limit int, page int) ([]mo
 
 func (ur *userRepository) GetUserSubscriptions(uid int) ([]models.Event, error) {
 	return nil, nil
+}
+
+func (ur *userRepository) GetUsersForChat(cid int64, users *models.UserGeneralList) models.WorkMessage {
+	return models.WorkMessage{
+		Request: nil,
+		Message: http.StatusText(http.StatusNotImplemented),
+		Status:  http.StatusNotImplemented,
+	}
 }

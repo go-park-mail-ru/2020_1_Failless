@@ -5,6 +5,7 @@ import (
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
 	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/pgtype"
 	"log"
 )
 
@@ -25,6 +26,12 @@ const (
 		SET     		eid = $1,
 						avatar = $2
 		WHERE   		chat_id = $3;`
+	QuerySelectChatInfoByUserId = `
+		SELECT 		cu.chat_id, cu.admin_id, cu.date, cu.user_count, cu.title
+		FROM 		user_chat uc 
+		JOIN 		chat_user cu
+		ON 			uc.chat_local_id = cu.chat_id
+		WHERE 		uid = $1;`
 )
 
 type sqlChatRepository struct {
@@ -133,9 +140,7 @@ func (cr *sqlChatRepository) getMessages(sqlStatement string, cid int64, uid int
 }
 
 func (cr *sqlChatRepository) GetUsersRooms(uid int64) ([]models.ChatRoom, error) {
-	sqlStatement := `SELECT cu.chat_id, cu.admin_id, cu.date, cu.user_count, cu.title FROM user_chat uc 
-						JOIN chat_user cu ON uc.chat_local_id = cu.chat_id WHERE uid = $1;`
-	rows, err := cr.db.Query(sqlStatement, uid)
+	rows, err := cr.db.Query(QuerySelectChatInfoByUserId, uid)
 	if err != nil {
 		return nil, err
 	}
@@ -243,11 +248,12 @@ func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]m
 			MAX(m.created) AS last_date,
 			SUBSTRING(MAX(m.created || '-----' || m.message) from '%#"-----%#"%' for '#') last_msg,
 			uc.avatar,
-			uc.title
+			uc.title,
+			c.user_count
 		FROM 
 			user_chat uc
 			JOIN chat_user c
-				ON c.chat_id = uc.chat_local_id 
+				ON c.chat_id = uc.chat_local_id
 			JOIN message m
 				ON m.user_local_id = uc.user_local_id
 		WHERE
@@ -267,24 +273,22 @@ func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]m
 	}
 	var chatsMeta []models.ChatMeta
 	for rows.Next() {
-		photo := ""
-		photoPtr := &photo
 		meta := models.ChatMeta{}
+		ava := pgtype.Varchar{}
 		err = rows.Scan(
 			&meta.ChatID,
 			&meta.Title,
 			&meta.Unseen,
 			&meta.LastDate,
 			&meta.LastMsg,
-			&photoPtr,
-			&meta.Name)
+			&ava,
+			&meta.Name,
+			&meta.UserCount)
 		if err != nil {
 			log.Println(err)
 			return nil, err
 		}
-		if photoPtr != nil {
-			meta.Photos = append(meta.Photos, photo)
-		}
+		meta.Avatar = ava.String
 		chatsMeta = append(chatsMeta, meta)
 	}
 	err = rows.Err()

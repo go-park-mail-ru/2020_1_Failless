@@ -14,5 +14,6 @@ type UseCase interface {
 	Notify(message *forms.Message)
 	GetMessagesForChat(msgRequest *models.MessageRequest) (forms.MessageList, error)
 	GetUserRooms(msgRequest *models.ChatRequest) (models.ChatList, error)
+	GetUsersForChat(cid int64, users *models.UserGeneralList) models.WorkMessage
 }
 

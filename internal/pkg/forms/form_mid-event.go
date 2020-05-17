@@ -20,7 +20,7 @@ type MidEventForm struct {
 func (mef *MidEventForm) ValidationLimits() bool {
 	res := 3 <= mef.Limit && mef.Limit <= MiddleEventLimit
 	if !res {
-		log.Println("MIDEVENT: Limit validation failed")
+		log.Println("MIDEVENT: UserCount validation failed")
 	}
 	return res
 }
