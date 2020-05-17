@@ -61,12 +61,15 @@ func (vc *voteUseCase) VoteUser(vote models.Vote) models.WorkMessage {
 
 			go func(clients map[string]*Client, voteId, matchId int64) {
 				for _, item := range clients {
+					log.Println(item.Uid, matchId)
 					if item.Uid == matchId {
-						MainHandler.MessagesChannel <- models.Match{
+						log.Println("Write to the channel")
+						item.MessagesChannel <- models.Match{
 							Uid:     matchId,
 							MatchID: voteId,
-							Message: "You've matched someone",
+							Message: "You were matched by someone",
 						}
+						break
 					}
 				}
 			}(MainHandler.Clients, int64(vote.Uid), int64(vote.Id))
@@ -127,26 +130,24 @@ func (vc *voteUseCase) GetEventFollowers(eid int) (models.UserGeneralList, error
 }
 
 type Client struct {
-	Mut  sync.Mutex
-	Conn *websocket.Conn
-	Id   string
-	Uid  int64
-	Cond *sync.Cond
+	Mut             sync.Mutex
+	Conn            *websocket.Conn
+	Id              string
+	Uid             int64
+	Cond            *sync.Cond
+	MessagesChannel chan models.Match
 }
 
 func (cc *Client) Run() {
 	for {
-		//cc.Mut.Lock()
-		//cc.Cond.Wait()
-		//cc.Mut.Unlock()
-		message := <-MainHandler.MessagesChannel
+		message := <-cc.MessagesChannel
+		log.Println("Read from channel", message)
 		MainHandler.Notify(&message)
 	}
 }
 
 type Handler struct {
-	Clients         map[string]*Client
-	MessagesChannel chan models.Match
+	Clients map[string]*Client
 }
 
 func (h *Handler) Notify(message *models.Match) {
@@ -179,6 +180,7 @@ func (cc *voteUseCase) Subscribe(conn *websocket.Conn, uid int64) {
 	cs.Id = id
 	cs.Uid = uid
 	cs.Cond = sync.NewCond(&cs.Mut)
+	cs.MessagesChannel = make(chan models.Match)
 	MainHandler.Clients[id] = cs
 	cs.Run()
 }

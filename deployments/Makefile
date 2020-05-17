@@ -24,7 +24,7 @@ help: Makefile
 	@echo
 
 
-all: go-get generate compile
+all: generate compile
 
 ## Start: Run development mode.
 start: start-auth start-server start-chat
