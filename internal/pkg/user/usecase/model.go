@@ -94,9 +94,30 @@ func (uc *UserUseCase) GetFeedResultsFor(uid int, users *[]models.UserGeneral) (
 		feedResult.Birthday = feedUser.Birthday
 		feedResult.Gender = feedUser.Gender
 
-		_, _ = er.GetSmallEventsForUser(&feedResult.OnwEvents.SmallEvents, feedResult.Uid)
-		_, _ = er.GetOwnMidEventsWithAnotherUserFollowed(&feedResult.OnwEvents.MidEvents, feedResult.Uid, uid)
-		_, _ = er.GetSubscriptionMidEventsWithAnotherUserFollowed(&feedResult.Subscriptions.MidEvents, feedResult.Uid, uid)
+		code, err := er.GetSmallEventsForUser(&feedResult.OnwEvents.SmallEvents, feedResult.Uid)
+		if err != nil {
+			return feedResults, models.WorkMessage{
+				Request: nil,
+				Message: err.Error(),
+				Status:  code,
+			}
+		}
+		code, err = er.GetOwnMidEventsWithAnotherUserFollowed(&feedResult.OnwEvents.MidEvents, feedResult.Uid, uid)
+		if err != nil {
+			return feedResults, models.WorkMessage{
+				Request: nil,
+				Message: err.Error(),
+				Status:  code,
+			}
+		}
+		code, err = er.GetSubscriptionMidEventsWithAnotherUserFollowed(&feedResult.Subscriptions.MidEvents, feedResult.Uid, uid)
+		if err != nil {
+			return feedResults, models.WorkMessage{
+				Request: nil,
+				Message: err.Error(),
+				Status:  code,
+			}
+		}
 
 		feedResults = append(feedResults, feedResult)
 	}

@@ -10,21 +10,12 @@ import (
 	"net/http"
 )
 
-func (uc *UserUseCase) UpdateUserMeta(form *forms.MetaForm) (int, error) {
-	var photos []string
-	for _, photo := range form.Photos {
-		photos = append(photos, photo.ImgName)
-	}
-	if err := uc.Rep.UpdateUserSimple(form.Uid, form.Social, &form.About, photos); err != nil {
-		return http.StatusNotModified, err
-	}
+func (uc *UserUseCase) UpdateUserAbout(uid int, about string) models.WorkMessage {
+	return uc.Rep.UpdateUserAbout(uid, about)
+}
 
-	for _, tag := range form.Tags {
-		if err := uc.Rep.UpdateUserTags(form.Uid, tag); err != nil {
-			return http.StatusNotModified, err
-		}
-	}
-	return http.StatusOK, nil
+func (uc *UserUseCase) UpdateUserTags(uid int, tagIDs []int) models.WorkMessage {
+	return uc.Rep.UpdateUserTags(uid, tagIDs)
 }
 
 func (uc *UserUseCase) UpdateUserInfo(form *forms.GeneralForm) (int, error) {
@@ -77,18 +68,16 @@ func (uc *UserUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 		log.Println(err.Error())
 	}
 
-	(*profile).Tags, err = uc.Rep.GetUserTags(base.Uid)
-	if err != nil {
-		log.Println("error in get user tags. Not fatal")
-		log.Println(err.Error())
-	}
-
 	return http.StatusOK, nil
 }
 
-func (uc *UserUseCase) AddImageToProfile(uid int, name string) error {
-	err := uc.Rep.UpdateUserPhotos(uid, name)
-	return err
+func (uc *UserUseCase) UpdateUserPhotos(uid int, newImages *forms.EImageList) models.WorkMessage {
+	var imageNames []string
+	for index := range *newImages {
+		imageNames = append(imageNames, (*newImages)[index].ImgName)
+		(*newImages)[index].ImgBase64 = ""
+	}
+	return uc.Rep.UpdateUserPhotos(uid, &imageNames)
 }
 
 func (uc *UserUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {

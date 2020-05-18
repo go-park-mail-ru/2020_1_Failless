@@ -5,7 +5,6 @@ import (
 	"failless/internal/pkg/event"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/settings"
-	"fmt"
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
 	"log"
@@ -387,7 +386,7 @@ func (er *sqlEventsRepository) GetSmallEventsForUser(smallEvents *models.SmallEv
 			&tags,
 			&eventInfo.Photos)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return http.StatusInternalServerError, err
 		}
 
@@ -396,7 +395,7 @@ func (er *sqlEventsRepository) GetSmallEventsForUser(smallEvents *models.SmallEv
 		}
 
 		if err = tags.AssignTo(&eventInfo.TagsId); err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 		*smallEvents = append(*smallEvents, eventInfo)
 	}
@@ -638,7 +637,6 @@ func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
 }
 
 func (er *sqlEventsRepository) LeaveMidEvent(uid, eid int) (int, error) {
-	fmt.Println("here i am")
 	sqlStatement := `
 		DELETE FROM
 			mid_event_members
@@ -702,7 +700,6 @@ func (er *sqlEventsRepository) GetOwnMidEventsWithAnotherUserFollowed(midEvents 
 	err = er.retrieveMidEventsFrom(rows, midEvents, "find")
 	if err != nil {
 		log.Println("GetOwnMidEventsWithAnotherUserFollowed", err)
-		fmt.Println(rows)
 		return http.StatusInternalServerError, err
 	}
 
@@ -750,7 +747,6 @@ func (er *sqlEventsRepository) GetSubscriptionMidEventsWithAnotherUserFollowed(m
 
 	if err != nil {
 		log.Println("GetSubscriptionMidEventsWithAnotherUserFollowed", err)
-		fmt.Println(rows)
 		return http.StatusInternalServerError, err
 	}
 

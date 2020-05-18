@@ -7,7 +7,6 @@ import (
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -174,7 +173,7 @@ func UpdateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]strin
 	var event models.SmallEvent
 	err := json.UnmarshalFromReader(r.Body, &event)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -216,7 +215,7 @@ func CreateMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]str
 	var midEventForm forms.MidEventForm
 	err := json.UnmarshalFromReader(r.Body, &midEventForm)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
 		return
 	}

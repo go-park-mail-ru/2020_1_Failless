@@ -4,7 +4,6 @@ import (
 	"failless/configs/server"
 	"failless/internal/pkg/logger"
 	"failless/internal/pkg/settings"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -33,6 +32,6 @@ func Start() {
 	log.Println("server is running on " + strconv.Itoa(serverSettings.Port))
 	err := serve.ListenAndServe()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }
