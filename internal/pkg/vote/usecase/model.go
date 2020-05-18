@@ -61,6 +61,7 @@ func (vc *voteUseCase) VoteUser(vote models.Vote) models.WorkMessage {
 			}
 
 			go func(clients map[string]*Client, voteId, matchId int64) {
+				count := uint8(0)
 				for _, item := range clients {
 					log.Println(item.Uid, matchId)
 					if item.Uid == matchId {
@@ -70,16 +71,22 @@ func (vc *voteUseCase) VoteUser(vote models.Vote) models.WorkMessage {
 							MatchID: voteId,
 							Message: "You were matched by someone",
 						}
+						count++
+					} else if item.Uid == voteId {
+						log.Println("Write to the channel")
+						item.MessagesChannel <- models.Match{
+							Uid:     voteId,
+							MatchID: matchId,
+							Message: "You've matched by someone",
+						}
+						count++
+					}
+					if count == 2 {
 						break
 					}
-				}
-			}(MainHandler.Clients, int64(vote.Uid), int64(vote.Id))
 
-			//MainHandler.MessagesChannel <- models.Match{
-			//	Uid:     int64(vote.Id),
-			//	MatchID: int64(vote.Uid),
-			//	Message: "You've matched someone",
-			//}
+				}
+			}(MainHandler.Clients, int64(vote.Id), int64(vote.Uid))
 
 			return models.WorkMessage{
 				Request: nil,
