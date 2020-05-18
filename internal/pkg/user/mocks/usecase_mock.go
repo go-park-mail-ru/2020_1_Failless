@@ -34,18 +34,18 @@ func (m *MockUseCase) EXPECT() *MockUseCaseMockRecorder {
 	return m.recorder
 }
 
-// AddImageToProfile mocks base method
+// UpdateUserPhotos mocks base method
 func (m *MockUseCase) AddImageToProfile(arg0 int, arg1 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddImageToProfile", arg0, arg1)
+	ret := m.ctrl.Call(m, "UpdateUserPhotos", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// AddImageToProfile indicates an expected call of AddImageToProfile
+// UpdateUserPhotos indicates an expected call of UpdateUserPhotos
 func (mr *MockUseCaseMockRecorder) AddImageToProfile(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddImageToProfile", reflect.TypeOf((*MockUseCase)(nil).AddImageToProfile), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPhotos", reflect.TypeOf((*MockUseCase)(nil).AddImageToProfile), arg0, arg1)
 }
 
 // FillFormIfExist mocks base method

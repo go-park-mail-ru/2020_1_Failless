@@ -20,6 +20,10 @@ const (
 		UPDATE  profile_info
 		SET     tags = $1
 		WHERE   pid = $2;`
+	QueryUpdateUserPhotos = `
+		UPDATE 	profile_info
+		SET 	photos = $1
+		WHERE 	pid = $2;`
 )
 
 type sqlUserRepository struct {
@@ -166,12 +170,6 @@ func (ur *sqlUserRepository) UpdateUserTags(uid int, tagIDs []int) models.WorkMe
 	}
 }
 
-func (ur *sqlUserRepository) UpdateUserSimple(uid int, social []string, about *string, photos []string) error {
-	sqlStatement := `UPDATE profile_info SET about = $1, social = $2, photos = $3 WHERE pid = $4;`
-	_, err := ur.db.Exec(sqlStatement, *about, social, photos, uid)
-	return err
-}
-
 func (ur *sqlUserRepository) UpdateUserAbout(uid int, about string) models.WorkMessage {
 	cTag, err := ur.db.Exec(QueryUpdateUserAbout, about, uid)
 	if err != nil || cTag.RowsAffected() == 0 {
@@ -275,15 +273,20 @@ func (ur *sqlUserRepository) GetUserTags(uid int) ([]models.Tag, error) {
 	return tags, nil
 }
 
-func (ur *sqlUserRepository) UpdateUserPhotos(uid int, name string) error {
-	sqlStatement := `UPDATE profile_info SET photos = array_append(photos, $1) WHERE pid = $2;`
-	_, err := ur.db.Exec(sqlStatement, name, uid)
-	if err != nil {
-		log.Println(sqlStatement, name, uid)
-		log.Println(err.Error())
-		return err
+func (ur *sqlUserRepository) UpdateUserPhotos(uid int, newImages *[]string) models.WorkMessage {
+	if cTag, err := ur.db.Exec(QueryUpdateUserPhotos, &newImages, uid); err != nil || cTag.RowsAffected() == 0 {
+		log.Println(err)
+		return models.WorkMessage{
+			Request: nil,
+			Message: err.Error(),
+			Status:  http.StatusInternalServerError,
+		}
 	}
-	return nil
+	return models.WorkMessage{
+		Request: nil,
+		Message: "",
+		Status:  http.StatusOK,
+	}
 }
 
 func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.User) error {

@@ -40,38 +40,6 @@ func UpdProfileGeneral(w http.ResponseWriter, r *http.Request, ps map[string]str
 	network.Jsonify(w, form, http.StatusOK)
 }
 
-func UpdUserMetaData(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	uid := security.CompareUidsFromURLAndToken(w, r, ps)
-	if uid < 0 {
-		return
-	}
-
-	var form forms.MetaForm
-	err := json.UnmarshalFromReader(r.Body, &form)
-	if err != nil {
-		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
-		return
-	}
-
-	form.Uid = uid
-	for index := range form.Photos {
-		if form.Photos[index].ImgName == "" {
-			if !images.ValidateImage(&form.Photos[index], images.Users) {
-				network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
-				return
-			}
-		}
-	}
-
-	uc := usecase.GetUseCase()
-	if code, err := uc.UpdateUserMeta(&form); err != nil {
-		network.GenErrorCode(w, r, err.Error(), code)
-		return
-	}
-
-	network.Jsonify(w, form, http.StatusOK)
-}
-
 func UpdUserAbout(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := security.CompareUidsFromURLAndToken(w, r, ps)
 	if uid < 0 {
@@ -150,33 +118,36 @@ func UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string
 	network.Jsonify(w, form, http.StatusOK)
 }
 
-func UploadNewImage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func UpdUserPhotos(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := security.CompareUidsFromURLAndToken(w, r, ps)
 	if uid < 0 {
 		return
 	}
 
-	var form forms.UploadedImage
-	err := json.UnmarshalFromReader(r.Body, &form)
+	var newImages forms.EImageList
+	err := json.UnmarshalFromReader(r.Body, &newImages)
 	if err != nil {
 		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
 		return
 	}
 
-	form.Uid = uid
-	if form.Uploaded.ImgBase64 == "" ||
-		!images.ValidateImage(&form.Uploaded, images.Users) {
-		network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
-		return
+	for index := range newImages {
+		if newImages[index].ImgBase64 != "" {
+			if !images.ValidateImage(&newImages[index], images.Users) {
+				network.GenErrorCode(w, r, "image validation failed", http.StatusNotFound)
+				return
+			}
+		}
 	}
 
 	uc := usecase.GetUseCase()
-	if err := uc.AddImageToProfile(form.Uid, form.Uploaded.ImgName); err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+	message := uc.UpdateUserPhotos(uid, &newImages)
+	if message.Status != http.StatusOK {
+		network.GenErrorCode(w, r, message.Message, message.Status)
 		return
 	}
 
-	network.Jsonify(w, models.WorkMessage{Message: "ok", Status: 200}, http.StatusOK)
+	network.Jsonify(w, newImages, message.Status)
 }
 
 func GetProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string) {

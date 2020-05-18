@@ -6,14 +6,13 @@ import (
 )
 
 type UseCase interface {
-	UpdateUserMeta(form *forms.MetaForm) (int, error)
 	UpdateUserAbout(uid int, about string) models.WorkMessage
 	UpdateUserTags(uid int, tagIDs []int) models.WorkMessage
+	UpdateUserPhotos(uid int, newImages *forms.EImageList) models.WorkMessage
 	UpdateUserInfo(form *forms.GeneralForm) (int, error)
 	GetUserInfo(profile *forms.GeneralForm) (int, error)
 	FillFormIfExist(cred *models.User) (int, error)
 	RegisterNewUser(user *forms.SignForm) error
-	AddImageToProfile(uid int, name string) error
 	UpdateUserBase(form *forms.SignForm) (int, error)
 	InitUsersByUserPreferences(users *[]models.UserGeneral, request *models.UserRequest) (int, error)
 	GetUserSubscriptions(subscriptions *models.MidAndBigEventList, uid int) models.WorkMessage

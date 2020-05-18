@@ -254,22 +254,6 @@ var routesMap = map[string][]settings.MapHandler{
 	/***********************************************
                  		Profile
      ***********************************************/
-	"/api/srv/profile/:id/upload": {{
-		Type:         "PUT",
-		Handler:      userDelivery.UploadNewImage,
-		CORS:         true,
-		AuthRequired: true,
-		CSRF:         true,
-		WS:           false,
-	}},
-	"/api/srv/profile/:id/meta": {{
-		Type:         "PUT",
-		Handler:      userDelivery.UpdUserMetaData,
-		CORS:         true,
-		AuthRequired: true,
-		CSRF:         true,
-		WS:           false,
-	}},
 	"/api/srv/profile/:id/meta/about": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UpdUserAbout,
@@ -281,6 +265,14 @@ var routesMap = map[string][]settings.MapHandler{
 	"/api/srv/profile/:id/meta/tags": {{
 		Type:         "PUT",
 		Handler:      userDelivery.UpdUserTags,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
+	"/api/srv/profile/:id/meta/photos": {{
+		Type:         "PUT",
+		Handler:      userDelivery.UpdUserPhotos,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,

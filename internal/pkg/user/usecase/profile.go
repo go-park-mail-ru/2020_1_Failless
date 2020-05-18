@@ -10,23 +10,6 @@ import (
 	"net/http"
 )
 
-func (uc *UserUseCase) UpdateUserMeta(form *forms.MetaForm) (int, error) {
-	var photos []string
-	for _, photo := range form.Photos {
-		photos = append(photos, photo.ImgName)
-	}
-	if err := uc.Rep.UpdateUserSimple(form.Uid, form.Social, &form.About, photos); err != nil {
-		return http.StatusNotModified, err
-	}
-
-	//for _, tag := range form.Tags {
-	//	if err := uc.Rep.UpdateUserTags(form.Uid, tag); err != nil {
-	//		return http.StatusNotModified, err
-	//	}
-	//}
-	return http.StatusOK, nil
-}
-
 func (uc *UserUseCase) UpdateUserAbout(uid int, about string) models.WorkMessage {
 	return uc.Rep.UpdateUserAbout(uid, about)
 }
@@ -88,9 +71,13 @@ func (uc *UserUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 	return http.StatusOK, nil
 }
 
-func (uc *UserUseCase) AddImageToProfile(uid int, name string) error {
-	err := uc.Rep.UpdateUserPhotos(uid, name)
-	return err
+func (uc *UserUseCase) UpdateUserPhotos(uid int, newImages *forms.EImageList) models.WorkMessage {
+	var imageNames []string
+	for index := range *newImages {
+		imageNames = append(imageNames, (*newImages)[index].ImgName)
+		(*newImages)[index].ImgBase64 = ""
+	}
+	return uc.Rep.UpdateUserPhotos(uid, &imageNames)
 }
 
 func (uc *UserUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {
