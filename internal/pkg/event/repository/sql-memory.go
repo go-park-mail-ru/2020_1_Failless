@@ -699,7 +699,14 @@ func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
 		var userLocalID int
 		row := tx.QueryRow(chatRepository.QueryInsertNewLocalChat, chatID, uid, nil, eventTitle)
 		if err = row.Scan(&userLocalID); err != nil {
-			log.Println("CreateMidEvent: ", err)
+			log.Println("JoinMidEvent: ", err)
+			log.Println(row)
+			return http.StatusInternalServerError, err
+		}
+
+		//Insert first message
+		if row, err := tx.Exec(chatRepository.QueryInsertFirstMessage, uid, chatID, userLocalID, true); err != nil {
+			log.Println("JoinMidEvent: ", err)
 			log.Println(row)
 			return http.StatusInternalServerError, err
 		}
@@ -707,7 +714,7 @@ func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
 
 	// Close transaction
 	if err = tx.Commit(); err != nil {
-		log.Println("CreateMidEvent: ", err)
+		log.Println("JoinMidEvent: ", err)
 		return http.StatusInternalServerError, err
 	}
 
