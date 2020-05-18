@@ -77,6 +77,29 @@ func GetMessages(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	network.Jsonify(w, messages, http.StatusOK)
 }
 
+func GetUsersForChat(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	log.Print("GetMessages: ")
+	uid := security.CheckCredentials(w, r)
+	if uid < 0 {
+		return
+	}
+	cid := int64(0)
+	if cid = network.GetIdFromRequest(w, r, ps); cid < 0 {
+		network.GenErrorCode(w, r, "url cid is incorrect", http.StatusBadRequest)
+		return
+	}
+
+	var users models.UserGeneralList
+	uc := usecase.GetUseCase()
+	message := uc.GetUsersForChat(cid, &users)
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
+		return
+	}
+
+	network.Jsonify(w, users, message.Status)
+}
+
 func GetChatList(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Print("GetChatList: ")
 	uid := security.CheckCredentials(w, r)

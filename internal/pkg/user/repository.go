@@ -27,4 +27,5 @@ type Repository interface {
 	DeleteUser(mail string) error
 	GetValidTags() ([]models.Tag, error)
 	GetRandomFeedUsers(uid int, limit int, page int) ([]models.UserGeneral, error)
+	GetUsersForChat(cid int64, users *models.UserGeneralList) models.WorkMessage
 }

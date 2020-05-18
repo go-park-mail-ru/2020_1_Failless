@@ -27,7 +27,7 @@ func FeedEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 }
 
 // Get events limited by number strings with offset from JSON (POST parameter)
-// Limit have to be set in the /configs/*/settings.go file using global variable
+// UserCount have to be set in the /configs/*/settings.go file using global variable
 // UseCaseConf
 func GetEventsByKeyWords(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	var searchRequest models.EventRequest

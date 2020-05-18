@@ -6,6 +6,7 @@ import (
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
+	userRepository "failless/internal/pkg/user/repository"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
@@ -61,7 +62,7 @@ func (cc *Client) Run() {
 	//	lastMsgs, err := uc.GetMessagesForChat(&models.MessageRequest{
 	//		ChatID: room,
 	//		Uid:    cc.Uid,
-	//		Limit:  10,
+	//		UserCount:  10,
 	//		Page:   0,
 	//	})
 	//	fmt.Println("uc.GetMessagesForChat(&models.MessageRequest{", lastMsgs)
@@ -190,4 +191,9 @@ func (cc *chatUseCase) GetMessagesForChat(msgRequest *models.MessageRequest) (fo
 
 func (cc *chatUseCase) GetUserRooms(msgRequest *models.ChatRequest) (models.ChatList, error) {
 	return cc.Rep.GetUserTopMessages(msgRequest.Uid, msgRequest.Page, msgRequest.Limit)
+}
+
+func (cc *chatUseCase) GetUsersForChat(cid int64, users *models.UserGeneralList) models.WorkMessage {
+	uc := userRepository.NewSqlUserRepository(db.ConnectToDB())
+	return uc.GetUsersForChat(cid, users)
 }

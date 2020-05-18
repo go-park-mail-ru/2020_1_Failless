@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	chatRepository "failless/internal/pkg/chat/repository"
 	"failless/internal/pkg/event"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/settings"
@@ -14,6 +15,19 @@ import (
 	"strings"
 	"sync"
 	"time"
+)
+
+const (
+	QueryInsertMidEventMember = `
+		INSERT INTO		mid_event_members (uid, eid)
+		VALUES			($1, $2)
+		ON CONFLICT
+		ON CONSTRAINT 	unique_member
+		DO				NOTHING;`
+	QueryIncrementMemberAmount = `
+		UPDATE		mid_events
+		SET			members = members + 1
+		WHERE		eid = $1 `
 )
 
 type sqlEventsRepository struct {
@@ -404,17 +418,53 @@ func (er *sqlEventsRepository) GetSmallEventsForUser(smallEvents *models.SmallEv
 }
 
 func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
+	tx, err := er.db.Begin()
+	if err != nil {
+		log.Println("CreateMidEvent: Failed to start transaction", err)
+		return err
+	}
+	defer tx.Rollback()
+
+	// Create global chat
+	var chatID int64
+	row := tx.QueryRow(chatRepository.QueryInsertGlobalChat, event.AdminId, event.Limit, event.Title)
+	if err = row.Scan(&chatID); err != nil {
+		log.Println("CreateMidEvent: ", err)
+		log.Println(row)
+		return err
+	}
+
+	// Create local chat
+	var userLocalID int
+	var photo *string
+	if event.Photos != nil {
+		photo = &event.Photos[0]
+	} else {
+		photo = nil
+	}
+	row = tx.QueryRow(chatRepository.QueryInsertNewLocalChat, chatID, event.AdminId, photo, event.Title)
+	if err = row.Scan(&userLocalID); err != nil {
+		log.Println("CreateMidEvent: ", err)
+		log.Println(row)
+		return err
+	}
+
+	//Insert first message
+	if row, err := tx.Exec(chatRepository.QueryInsertFirstMessage, event.AdminId, chatID, userLocalID, true); err != nil {
+		log.Println("CreateMidEvent: ", err)
+		log.Println(row)
+		return err
+	}
+
+	// Create event
 	sqlStatement := `
-		INSERT INTO
-			mid_events (admin_id, title, description, date, tags, photos, member_limit, is_public, title_tsv)
-		VALUES
-			($1, $2, $3, $4, $5, $6, $7, $8,
-			setweight(to_tsvector($9), 'A')
-				|| 
-			setweight(to_tsvector($10), 'B'))
-		RETURNING
-			eid, members;`
-	err := er.db.QueryRow(sqlStatement,
+		INSERT INTO	mid_events (admin_id, title, description, date, tags, photos, member_limit, is_public, chat_id, title_tsv)
+		SELECT		$1, $2, $3, $4, $5, $6, $7, $8, $9,
+					setweight(to_tsvector($10), 'A')
+						|| 
+					setweight(to_tsvector($11), 'B')
+		RETURNING	eid, members;`
+	row = tx.QueryRow(sqlStatement,
 		event.AdminId,
 		event.Title,
 		event.Descr,
@@ -423,10 +473,30 @@ func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
 		event.Photos,
 		event.Limit,
 		event.Public,
+		chatID,
 		event.Title,
-		event.Descr).Scan(&event.EId, &event.MemberAmount)
-	if err != nil {
-		log.Println(err)
+		event.Descr)
+	if err = row.Scan(&event.EId, &event.MemberAmount); err != nil {
+		log.Println("CreateMidEvent: ", err)
+		log.Println(row)
+		return err
+	}
+
+	// Add first member
+	if cTag, err := tx.Exec(QueryInsertMidEventMember, event.AdminId, event.EId); err != nil || cTag.RowsAffected() == 0 {
+		log.Println("CreateMidEvent: ", err)
+		return err
+	}
+
+	// Update eid in global chats
+	if cTag, err := tx.Exec(chatRepository.QueryUpdateEidAvatarInChatUser, event.EId, photo, chatID); err != nil || cTag.RowsAffected() == 0 {
+		log.Println("CreateMidEvent: ", err)
+		return err
+	}
+
+	// Close transaction
+	if err = tx.Commit(); err != nil {
+		log.Println("CreateMidEvent: ", err)
 		return err
 	}
 
@@ -601,16 +671,14 @@ func (er *sqlEventsRepository) GetMidEventsWithFollowed(midEvents *models.MidEve
 }
 
 func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
-	sqlStatement := `
-		INSERT INTO
-			mid_event_members (uid, eid)
-		VALUES
-			($1, $2)
-		ON CONFLICT
-			ON CONSTRAINT unique_member
-		DO
-			NOTHING;`
-	cTag, err := er.db.Exec(sqlStatement, uid, eid)
+	tx, err := er.db.Begin()
+	if err != nil {
+		log.Println("JoinMidEvent: Failed to start transaction", err)
+		return http.StatusInternalServerError, err
+	}
+	defer tx.Rollback()
+
+	cTag, err := tx.Exec(QueryInsertMidEventMember, uid, eid)
 	if err != nil {
 		log.Println(err)
 		return http.StatusInternalServerError, err
@@ -619,18 +687,28 @@ func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
 	if cTag.RowsAffected() == 0 {
 		log.Println("Member already in base", cTag)
 	} else {
-		sqlStatement = `
-		UPDATE
-			mid_events
-		SET
-			members = members + 1
-		WHERE
-			eid = $1;`
-		cTag, err = er.db.Exec(sqlStatement, eid)
-		if err != nil || cTag.RowsAffected() == 0 {
+		var chatID int
+		var eventTitle string
+		sqlStatement := QueryIncrementMemberAmount + `
+		RETURNING 	chat_id, title;`
+		if err = er.db.QueryRow(sqlStatement, eid).Scan(&chatID, &eventTitle); err != nil {
 			log.Println(err)
 			return http.StatusInternalServerError, err
 		}
+
+		var userLocalID int
+		row := tx.QueryRow(chatRepository.QueryInsertNewLocalChat, chatID, uid, nil, eventTitle)
+		if err = row.Scan(&userLocalID); err != nil {
+			log.Println("CreateMidEvent: ", err)
+			log.Println(row)
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	// Close transaction
+	if err = tx.Commit(); err != nil {
+		log.Println("CreateMidEvent: ", err)
+		return http.StatusInternalServerError, err
 	}
 
 	return http.StatusOK, nil

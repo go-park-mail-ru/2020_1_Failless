@@ -55,6 +55,14 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         false,
 		WS:           false,
 	}},
+	"/api/chats/:id/users": {{
+		Type:         "GET",
+		Handler:      delivery.GetUsersForChat,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         false,
+		WS:           false,
+	}},
 	"/metrics": {{
 		Type:         "GET",
 		Handler:      mDelivery.MetricsHandler,
