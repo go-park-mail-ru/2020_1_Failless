@@ -23,6 +23,9 @@ type EImage struct {
 	Img       image.Image `json:"-"`
 }
 
+//easyjson:json
+type EImageList []EImage
+
 func (pic *EImage) SaveImage(folder string) error {
 	//err := imaging.Save(pic.Img, path.Join(Media, pic.ImgName))
 	buf, err := pic.ImageToBuffer()

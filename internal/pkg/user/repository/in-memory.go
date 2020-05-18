@@ -3,6 +3,7 @@ package repository
 import (
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/user"
+	"net/http"
 )
 
 type userRepository struct {
@@ -47,12 +48,20 @@ func (ur *userRepository) UpdateUserRating(uid int, rating float32) error {
 	return nil
 }
 
-func (ur *userRepository) UpdateUserTags(uid int, tagId int) error {
-	return nil
+func (ur *userRepository) UpdateUserTags(uid int, tagIDs []int) models.WorkMessage {
+	return models.WorkMessage{
+		Request: nil,
+		Message: http.StatusText(http.StatusNotImplemented),
+		Status:  http.StatusNotImplemented,
+	}
 }
 
-func (ur *userRepository) UpdateUserSimple(uid int, social []string, about *string, photos []string) error {
-	return nil
+func (ur *userRepository) UpdateUserAbout(uid int, about string) models.WorkMessage {
+	return models.WorkMessage{
+		Request: nil,
+		Message: http.StatusText(http.StatusNotImplemented),
+		Status:  http.StatusNotImplemented,
+	}
 }
 
 func (ur *userRepository) GetProfileInfo(uid int) (info models.JsonInfo, err error) {
@@ -76,8 +85,12 @@ func (ur *userRepository) GetUserTags(uid int) ([]models.Tag, error) {
 	return nil, nil
 }
 
-func (ur *userRepository) UpdateUserPhotos(uid int, name string) error {
-	return nil
+func (ur *userRepository) UpdateUserPhotos(uid int, newImages *[]string) models.WorkMessage {
+	return models.WorkMessage{
+		Request: nil,
+		Message: http.StatusText(http.StatusNotImplemented),
+		Status:  http.StatusNotImplemented,
+	}
 }
 
 func (ur *userRepository) UpdUserGeneral(info models.JsonInfo, usr models.User) error {

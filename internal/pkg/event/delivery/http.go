@@ -7,7 +7,6 @@ import (
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
-	"fmt"
 	"log"
 	"net/http"
 
