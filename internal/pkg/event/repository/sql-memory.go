@@ -550,18 +550,12 @@ func (er *sqlEventsRepository) GetSubscriptionMidEvents(midEvents *models.MidEve
 func (er *sqlEventsRepository) GetMidEventsWithFollowed(midEvents *models.MidEventList, request *models.EventRequest) (int, error) {
 	sqlStatement := `
 		SELECT
-			mid_events.eid, title, description, tags, date, photos, member_limit, members, is_public,
-			CASE WHEN MEM.uid IS NULL THEN FALSE ELSE TRUE END AS followed
-		FROM
-			mid_events
-			LEFT JOIN
-				mid_event_members MEM
-				ON
-					MEM.eid = mid_events.eid
-						AND
-					MEM.uid = $1
-		WHERE
-			admin_id <> $1`
+			me.eid, me.title, me.description, me.tags, me.date, me.photos, me.member_limit, me.members, me.is_public,
+			CASE WHEN me_mem.uid IS NULL THEN FALSE ELSE TRUE END AS followed
+			FROM mid_events AS me
+				LEFT JOIN mid_event_members AS me_mem ON 
+					me_mem.eid = me.eid AND me_mem.uid = $1
+			WHERE me.admin_id <> $1`
 	var rows *pgx.Rows
 	var err error
 	if len(request.Query) > 0 {
@@ -570,19 +564,19 @@ func (er *sqlEventsRepository) GetMidEventsWithFollowed(midEvents *models.MidEve
 			return http.StatusInternalServerError, errors.New("Incorrect symbols in the query\n")
 		}
 		args := generator.GenerateArgSlice(request.Limit, request.Page)
-		sqlStatement += `, e.title_tsv @@ phraseto_tsquery( $2 )
+		sqlStatement += ` AND me.title_tsv @@ phraseto_tsquery( $2 )
 			ORDER BY
-				(current_timestamp - date) ASC, time_created DESC
+				(current_timestamp - me.date) ASC, me.time_created DESC
 			LIMIT
 				$3
 			OFFSET
-				$4 * 0;` // TODO: offset 0
+				$4 * 0;` // TODO: offset 0 (it's by default 0 .-.)
 		args = append([]interface{}{request.Uid}, args...)
 		rows, err = er.db.Query(sqlStatement, args...)
 	} else {
 		sqlStatement += `
 			ORDER BY
-				(current_timestamp - date) ASC, time_created DESC
+				(current_timestamp - me.date) ASC, me.time_created DESC
 			LIMIT 
 				$2 
 			OFFSET 
@@ -591,6 +585,7 @@ func (er *sqlEventsRepository) GetMidEventsWithFollowed(midEvents *models.MidEve
 	}
 	if err != nil {
 		log.Println("EventRepo: GetMidEventsWithFollowed: ", err)
+		log.Println(sqlStatement)
 		return http.StatusInternalServerError, err
 	}
 	defer rows.Close()

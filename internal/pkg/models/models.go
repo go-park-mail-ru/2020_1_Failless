@@ -30,13 +30,13 @@ type User struct {
 }
 
 type UserGeneral struct {
-	Uid     	int       	`json:"uid, omitempty"`
-	Name     	string    	`json:"name, omitempty"`
-	Photos   	[]string  	`json:"photos, omitempty"`
-	About    	string    	`json:"about, omitempty"`
-	Birthday 	time.Time 	`json:"birthday, omitempty"`
-	Gender   	int       	`json:"gender, omitempty"`
-	TagsId	 	[]int32	   	`json:"tags,omitempty"`
+	Uid      int       `json:"uid, omitempty"`
+	Name     string    `json:"name, omitempty"`
+	Photos   []string  `json:"photos, omitempty"`
+	About    string    `json:"about, omitempty"`
+	Birthday time.Time `json:"birthday, omitempty"`
+	Gender   int       `json:"gender, omitempty"`
+	TagsId   []int32   `json:"tags,omitempty"`
 }
 
 //easyjson:json
@@ -182,31 +182,31 @@ type EventRequest struct {
 }
 
 type SmallEvent struct {
-	EId 	int		 	`json:"eid,omitempty"`
-	UId     int      	`json:"uid"`
-	Title   string   	`json:"title"`
-	Descr   string   	`json:"description,omitempty"`
-	TagsId  []int32    	`json:"tags,omitempty"`
-	Date    time.Time	`json:"date,omitempty"`
-	Photos  []string 	`json:"photos,omitempty"`
+	EId    int       `json:"eid,omitempty"`
+	UId    int       `json:"uid"`
+	Title  string    `json:"title"`
+	Descr  string    `json:"description,omitempty"`
+	TagsId []int32   `json:"tags,omitempty"`
+	Date   time.Time `json:"date,omitempty"`
+	Photos []string  `json:"photos,omitempty"`
 }
 
 //easyjson:json
 type SmallEventList []SmallEvent
 
 type MidEvent struct {
-	EId 			int		 	`json:"eid,omitempty"`
-	AdminId    		int      	`json:"uid"`
-	Title   		string   	`json:"title"`
-	Descr   		string   	`json:"description,omitempty"`
-	TagsId  		[]int32    	`json:"tags,omitempty"`
-	Date    		time.Time	`json:"date,omitempty"`
-	Photos  		[]string 	`json:"photos,omitempty"`
-	Limit			int			`json:"limit"`
-	MemberAmount	int			`json:"member_amount, omitempty"`
-	ChatId			int			`json:"chat_id, omitempty"`
-	Public			bool		`json:"public"`
-	Followed		bool		`json:"followed,omitempty"`
+	EId          int       `json:"eid,omitempty"`
+	AdminId      int       `json:"uid"`
+	Title        string    `json:"title"`
+	Descr        string    `json:"description,omitempty"`
+	TagsId       []int32   `json:"tags,omitempty"`
+	Date         time.Time `json:"date,omitempty"`
+	Photos       []string  `json:"photos,omitempty"`
+	Limit        int       `json:"limit"`
+	MemberAmount int       `json:"member_amount, omitempty"`
+	ChatId       int       `json:"chat_id, omitempty"`
+	Public       bool      `json:"public"`
+	Followed     bool      `json:"followed,omitempty"`
 }
 
 //easyjson:json
@@ -214,18 +214,18 @@ type MidEventList []MidEvent
 
 //easyjson:json
 type OwnEventsList struct {
-	SmallEvents 	SmallEventList	`json:"small_events, omitempty"`
-	MidEvents 		MidEventList	`json:"mid_events, omitempty"`
+	SmallEvents SmallEventList `json:"small_events, omitempty"`
+	MidEvents   MidEventList   `json:"mid_events, omitempty"`
 }
 
 type EventFollow struct {
-	Uid  int    `json:"uid"`
-	Eid  int    `json:"eid"`
+	Uid int `json:"uid"`
+	Eid int `json:"eid"`
 }
 
 //easyjson:json
 type MidAndBigEventList struct {
-	MidEvents	MidEventList		`json:"mid_events,omitempty"`
+	MidEvents MidEventList `json:"mid_events"`
 	//BigEvent 	BigEventList
 }
 
@@ -247,9 +247,15 @@ type TagList []Tag
 //Mix up of UserGeneral, GeneralForm and Subs
 type FeedPost struct {
 	UserGeneral
-	OnwEvents		OwnEventsList	 	`json:"own_events,omitempty"`
-	Subscriptions	MidAndBigEventList	`json:"subscriptions,omitempty"`
+	OnwEvents     OwnEventsList      `json:"own_events,omitempty"`
+	Subscriptions MidAndBigEventList `json:"subscriptions,omitempty"`
 }
 
 //easyjson:json
 type FeedResults []FeedPost
+
+type Match struct {
+	Uid     int64  `json:"uid"`
+	MatchID int64  `json:"match_id"`
+	Message string `json:"message"`
+}

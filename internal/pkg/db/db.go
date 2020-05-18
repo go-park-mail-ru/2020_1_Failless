@@ -17,9 +17,9 @@ var (
 	dbname   = os.Getenv("POSTGRES_DB")
 )
 
-
 var db *pgx.ConnPool = nil
 var syncOnce = sync.Once{}
+
 func init() {
 	pgxConfig := pgx.ConnConfig{
 		Host:     host,
