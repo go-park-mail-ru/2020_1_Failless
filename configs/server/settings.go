@@ -361,7 +361,7 @@ var routesMap = map[string][]settings.MapHandler{
 	***********************************************/
 	"/api/srv/tags/feed": {{
 		Type:         "GET",
-		Handler:      tagDelivery.FeedTags,
+		Handler:      tagDelivery.GetDelivery().FeedTags,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
