@@ -44,7 +44,7 @@ func EncryptPassword(password string) ([]byte, error) {
 func CheckCredentials(w http.ResponseWriter, r *http.Request) int {
 	data := r.Context().Value(CtxUserKey)
 	if data == nil {
-		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
+		network.GenErrorCode(w, r, network.MessageErrorAuthRequired, http.StatusUnauthorized)
 		return -1
 	}
 

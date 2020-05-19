@@ -8,6 +8,7 @@ import (
 
 const (
 	MessageErrorParseJSON = "Error within parse json"
+	MessageErrorAuthRequired = "auth required"
 )
 
 func DecodeToMsg(body *bytes.Buffer) (models.WorkMessage, error) {

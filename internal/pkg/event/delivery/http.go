@@ -31,7 +31,7 @@ func (ed *eventDelivery) GetEventsByKeyWords(w http.ResponseWriter, r *http.Requ
 	var searchRequest models.EventRequest
 	err := json.UnmarshalFromReader(r.Body, &searchRequest)
 	if err != nil {
-		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
+		network.GenErrorCode(w, r, network.MessageErrorParseJSON, http.StatusBadRequest)
 		return
 	}
 	log.Println(searchRequest)
@@ -139,7 +139,7 @@ func (ed *eventDelivery) UpdateSmallEvent(w http.ResponseWriter, r *http.Request
 	err := json.UnmarshalFromReader(r.Body, &event)
 	if err != nil {
 		log.Println(err)
-		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		network.GenErrorCode(w, r, network.MessageErrorParseJSON, http.StatusBadRequest)
 		return
 	}
 

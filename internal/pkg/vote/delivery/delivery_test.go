@@ -195,14 +195,13 @@ func TestVoteDelivery_VoteUser_IncorrectBody(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	var ps map[string]string
-	user := security.UserClaims{
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.UserClaims{
 		Uid:   1,
 		Phone: "88005553535",
 		Email: "mail@mail.ru",
 		Name:  "mrTester",
-	}
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, security.CtxUserKey, user)
+	})
 	vd.VoteUser(rr, req.WithContext(ctx), ps)
 	// Check the status code is what we expect.
 	if status := rr.Code; status != http.StatusOK {
