@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"failless/internal/pkg/event"
 	"failless/internal/pkg/event/usecase"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/images"
@@ -13,23 +14,20 @@ import (
 	json "github.com/mailru/easyjson"
 )
 
-// Get ALL events ordered by date.
-// Deprecated: DO NOT USE IN THE PRODUCTION MODE
-func FeedEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	uc := usecase.GetUseCase()
-	var events models.EventList
-	if code, err := uc.InitEventsByTime(&events); err != nil {
-		network.GenErrorCode(w, r, err.Error(), code)
-		return
-	}
+type eventDelivery struct {
+	UseCase event.UseCase
+}
 
-	network.Jsonify(w, events, http.StatusOK)
+func GetDelivery() event.Delivery {
+	return &eventDelivery{
+		UseCase: usecase.GetUseCase(),
+	}
 }
 
 // Get events limited by number strings with offset from JSON (POST parameter)
 // UserCount have to be set in the /configs/*/settings.go file using global variable
 // UseCaseConf
-func GetEventsByKeyWords(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+func (ed *eventDelivery) GetEventsByKeyWords(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	var searchRequest models.EventRequest
 	err := json.UnmarshalFromReader(r.Body, &searchRequest)
 	if err != nil {
@@ -43,8 +41,7 @@ func GetEventsByKeyWords(w http.ResponseWriter, r *http.Request, _ map[string]st
 	}
 
 	var events models.EventList
-	uc := usecase.GetUseCase()
-	if code, err := uc.InitEventsByKeyWords(&events, searchRequest.Query, searchRequest.Page); err != nil {
+	if code, err := ed.UseCase.InitEventsByKeyWords(&events, searchRequest.Query, searchRequest.Page); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
@@ -52,36 +49,7 @@ func GetEventsByKeyWords(w http.ResponseWriter, r *http.Request, _ map[string]st
 	network.Jsonify(w, events, http.StatusOK)
 }
 
-func OLDGetEventsFeed(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	uid := security.CheckCredentials(w, r)
-	if uid < 0 {
-		return
-	}
-
-	var searchRequest models.EventRequest
-	err := json.UnmarshalFromReader(r.Body, &searchRequest)
-	if err != nil {
-		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
-		return
-	}
-
-	log.Println(searchRequest)
-
-	if searchRequest.Page < 1 {
-		searchRequest.Page = 1
-	}
-
-	var events models.EventList
-	uc := usecase.GetUseCase()
-	if code, err := uc.InitEventsByUserPreferences(&events, &searchRequest); err != nil {
-		network.GenErrorCode(w, r, err.Error(), code)
-		return
-	}
-
-	network.Jsonify(w, events, http.StatusOK)
-}
-
-func GetSearchEvents(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func (ed *eventDelivery) GetSearchEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	var searchRequest models.EventRequest
 	err := json.UnmarshalFromReader(r.Body, &searchRequest)
 	if err != nil {
@@ -96,23 +64,21 @@ func GetSearchEvents(w http.ResponseWriter, r *http.Request, ps map[string]strin
 	}
 
 	var events models.MidAndBigEventList
-	uc := usecase.GetUseCase()
-	if code, err := uc.SearchEventsByUserPreferences(&events, &searchRequest); err != nil {
+	if code, err := ed.UseCase.SearchEventsByUserPreferences(&events, &searchRequest); err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
 	}
 	network.Jsonify(w, events, http.StatusOK)
 }
 
-func GetSmallEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+func (ed *eventDelivery) GetSmallEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return
 	}
 
 
-	uc := usecase.GetUseCase()
-	events, err := uc.GetSmallEventsByUID(int64(uid))
+	events, err := ed.UseCase.GetSmallEventsByUID(int64(uid))
 	if err != nil {
 		log.Println(err)
 		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
@@ -122,7 +88,7 @@ func GetSmallEvents(w http.ResponseWriter, r *http.Request, _ map[string]string)
 	network.Jsonify(w, events, http.StatusOK)
 }
 
-func CreateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+func (ed *eventDelivery) CreateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return
@@ -152,8 +118,7 @@ func CreateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]strin
 		}
 	}
 
-	uc := usecase.GetUseCase()
-	event, err := uc.CreateSmallEvent(&eventForm)
+	event, err := ed.UseCase.CreateSmallEvent(&eventForm)
 	if err != nil {
 		log.Println(err)
 		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
@@ -163,7 +128,7 @@ func CreateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]strin
 	network.Jsonify(w, event, http.StatusOK)
 }
 
-func UpdateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+func (ed *eventDelivery) UpdateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return
@@ -178,8 +143,7 @@ func UpdateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]strin
 		return
 	}
 
-	uc := usecase.GetUseCase()
-	code, err := uc.UpdateSmallEvent(&event)
+	code, err := ed.UseCase.UpdateSmallEvent(&event)
 	if err != nil {
 		network.GenErrorCode(w, r, err.Error(), code)
 		return
@@ -188,7 +152,7 @@ func UpdateSmallEvent(w http.ResponseWriter, r *http.Request, _ map[string]strin
 	network.Jsonify(w, event, code)
 }
 
-func DeleteSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func (ed *eventDelivery) DeleteSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return
@@ -199,13 +163,12 @@ func DeleteSmallEvent(w http.ResponseWriter, r *http.Request, ps map[string]stri
 		network.GenErrorCode(w, r, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
-	uc := usecase.GetUseCase()
-	message := uc.DeleteSmallEvent(uid, eid)
+	message := ed.UseCase.DeleteSmallEvent(uid, eid)
 
 	network.Jsonify(w, message, message.Status)
 }
 
-func CreateMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func (ed *eventDelivery) CreateMiddleEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return
@@ -232,8 +195,7 @@ func CreateMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]str
 		}
 	}
 
-	uc := usecase.GetUseCase()
-	midEvent, message := uc.CreateMidEvent(&midEventForm)
+	midEvent, message := ed.UseCase.CreateMidEvent(&midEventForm)
 	if message.Message != "" {
 		network.GenErrorCode(w, r, message.Message, message.Status)
 		return
@@ -242,20 +204,19 @@ func CreateMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]str
 	network.Jsonify(w, midEvent, message.Status)
 }
 
-func GetMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	network.GenErrorCode(w, r, "Not implemented", 502)
+func (ed *eventDelivery) GetMiddleEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	network.GenErrorCode(w, r, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 }
 
-func UpdateMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	network.GenErrorCode(w, r, "Not implemented", 502)
-
+func (ed *eventDelivery) UpdateMiddleEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	network.GenErrorCode(w, r, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 }
 
-func DeleteMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	network.GenErrorCode(w, r, "Not implemented", 502)
+func (ed *eventDelivery) DeleteMiddleEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	network.GenErrorCode(w, r, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 }
 
-func JoinMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func (ed *eventDelivery) JoinMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	if uid := security.CheckCredentials(w, r); uid < 0 {
 		return
 	}
@@ -271,8 +232,7 @@ func JoinMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]strin
 		return
 	}
 
-	uc := usecase.GetUseCase()
-	message := uc.JoinMidEvent(&subscription)
+	message := ed.UseCase.JoinMidEvent(&subscription)
 	if message.Message != "" {
 		network.GenErrorCode(w, r, message.Message, message.Status)
 		return
@@ -281,7 +241,7 @@ func JoinMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]strin
 	network.Jsonify(w, message, message.Status)
 }
 
-func LeaveMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func (ed *eventDelivery) LeaveMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	if uid := security.CheckCredentials(w, r); uid < 0 {
 		return
 	}
@@ -297,8 +257,7 @@ func LeaveMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]stri
 		return
 	}
 
-	uc := usecase.GetUseCase()
-	message := uc.LeaveMidEvent(&subscription)
+	message := ed.UseCase.LeaveMidEvent(&subscription)
 	if message.Message != "" {
 		network.GenErrorCode(w, r, message.Message, message.Status)
 		return
@@ -307,26 +266,26 @@ func LeaveMiddleEvent(w http.ResponseWriter, r *http.Request, ps map[string]stri
 	network.Jsonify(w, message, message.Status)
 }
 
-func CreateBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+func (ed *eventDelivery) CreateBigEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	network.GenErrorCode(w, r, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 }
 
-func GetBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+func (ed *eventDelivery) GetBigEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	network.GenErrorCode(w, r, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 }
 
-func UpdateBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+func (ed *eventDelivery) UpdateBigEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	network.GenErrorCode(w, r, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 }
 
-func DeleteBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+func (ed *eventDelivery) DeleteBigEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	network.GenErrorCode(w, r, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 }
 
-func AddVisitorForBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+func (ed *eventDelivery) AddVisitorForBigEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	network.GenErrorCode(w, r, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 }
 
-func RemoveVisitorForBigEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	panic("impement me!")
+func (ed *eventDelivery) RemoveVisitorForBigEvent(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	network.GenErrorCode(w, r, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 }
