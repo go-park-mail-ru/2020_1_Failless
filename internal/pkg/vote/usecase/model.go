@@ -15,6 +15,10 @@ import (
 	chatRep "failless/internal/pkg/chat/repository"
 )
 
+const (
+	MessageMatchHappened = "You matched with someone! Check your messages!!"
+)
+
 type voteUseCase struct {
 	rep vote.Repository
 }
@@ -44,7 +48,7 @@ func (vc *voteUseCase) VoteUser(vote models.Vote) models.WorkMessage {
 
 		match, _ := vc.rep.CheckMatching(vote.Uid, vote.Id)
 		if match {
-			log.Println("OK: Match occured between", vote.Uid, "and", vote.Id)
+			log.Println("OK: Match happened between", vote.Uid, "and", vote.Id)
 			// Create dialogue
 			cr := chatRep.NewSqlChatRepository(db.ConnectToDB())
 			if _, err = cr.InsertDialogue(
@@ -90,29 +94,9 @@ func (vc *voteUseCase) VoteUser(vote models.Vote) models.WorkMessage {
 
 			return models.WorkMessage{
 				Request: nil,
-				Message: "You matched with someone! Check your messages!!",
+				Message: MessageMatchHappened,
 				Status:  http.StatusOK,
 			}
-		}
-	}
-
-	return models.WorkMessage{
-		Request: nil,
-		Message: "OK",
-		Status:  http.StatusOK,
-	}
-}
-
-func (vc *voteUseCase) VoteEvent(vote models.Vote) models.WorkMessage {
-	// TODO: add check is vote already be here
-	vote.Value = vc.ValidateValue(vote.Value)
-	err := vc.rep.AddEventVote(vote.Uid, vote.Id, vote.Value)
-	// i think that there could be an error in one case - invalid event id
-	if err != nil {
-		return models.WorkMessage{
-			Request: nil,
-			Message: err.Error(),
-			Status:  http.StatusBadRequest,
 		}
 	}
 
@@ -131,10 +115,6 @@ func (vc *voteUseCase) ValidateValue(value int8) int8 {
 		return -1
 	}
 	return 0
-}
-
-func (vc *voteUseCase) GetEventFollowers(eid int) (models.UserGeneralList, error) {
-	return vc.rep.FindFollowers(eid)
 }
 
 type Client struct {

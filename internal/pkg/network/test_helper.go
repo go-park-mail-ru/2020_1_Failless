@@ -6,6 +6,10 @@ import (
 	"failless/internal/pkg/models"
 )
 
+const (
+	MessageErrorParseJSON = "Error within parse json"
+)
+
 func DecodeToMsg(body *bytes.Buffer) (models.WorkMessage, error) {
 	var msg models.WorkMessage
 	decoder := json.NewDecoder(body)

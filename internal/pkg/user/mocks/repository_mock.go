@@ -90,6 +90,21 @@ func (mr *MockRepositoryMockRecorder) GetProfileInfo(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProfileInfo", reflect.TypeOf((*MockRepository)(nil).GetProfileInfo), arg0)
 }
 
+// GetRandomFeedUsers mocks base method
+func (m *MockRepository) GetRandomFeedUsers(arg0, arg1, arg2 int) ([]models.UserGeneral, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRandomFeedUsers", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]models.UserGeneral)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRandomFeedUsers indicates an expected call of GetRandomFeedUsers
+func (mr *MockRepositoryMockRecorder) GetRandomFeedUsers(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRandomFeedUsers", reflect.TypeOf((*MockRepository)(nil).GetRandomFeedUsers), arg0, arg1, arg2)
+}
+
 // GetUserByPhoneOrEmail mocks base method
 func (m *MockRepository) GetUserByPhoneOrEmail(arg0, arg1 string) (models.User, error) {
 	m.ctrl.T.Helper()
@@ -135,6 +150,21 @@ func (mr *MockRepositoryMockRecorder) GetUserEvents(arg0 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserEvents", reflect.TypeOf((*MockRepository)(nil).GetUserEvents), arg0)
 }
 
+// GetUserSubscriptions mocks base method
+func (m *MockRepository) GetUserSubscriptions(arg0 int) ([]models.Event, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserSubscriptions", arg0)
+	ret0, _ := ret[0].([]models.Event)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserSubscriptions indicates an expected call of GetUserSubscriptions
+func (mr *MockRepositoryMockRecorder) GetUserSubscriptions(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSubscriptions", reflect.TypeOf((*MockRepository)(nil).GetUserSubscriptions), arg0)
+}
+
 // GetUserTags mocks base method
 func (m *MockRepository) GetUserTags(arg0 int) ([]models.Tag, error) {
 	m.ctrl.T.Helper()
@@ -148,6 +178,35 @@ func (m *MockRepository) GetUserTags(arg0 int) ([]models.Tag, error) {
 func (mr *MockRepositoryMockRecorder) GetUserTags(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserTags", reflect.TypeOf((*MockRepository)(nil).GetUserTags), arg0)
+}
+
+// GetUsersForChat mocks base method
+func (m *MockRepository) GetUsersForChat(arg0 int64, arg1 *models.UserGeneralList) models.WorkMessage {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUsersForChat", arg0, arg1)
+	ret0, _ := ret[0].(models.WorkMessage)
+	return ret0
+}
+
+// GetUsersForChat indicates an expected call of GetUsersForChat
+func (mr *MockRepositoryMockRecorder) GetUsersForChat(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsersForChat", reflect.TypeOf((*MockRepository)(nil).GetUsersForChat), arg0, arg1)
+}
+
+// GetValidTags mocks base method
+func (m *MockRepository) GetValidTags() ([]models.Tag, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetValidTags")
+	ret0, _ := ret[0].([]models.Tag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetValidTags indicates an expected call of GetValidTags
+func (mr *MockRepositoryMockRecorder) GetValidTags() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValidTags", reflect.TypeOf((*MockRepository)(nil).GetValidTags))
 }
 
 // SetUserLocation mocks base method
@@ -178,11 +237,25 @@ func (mr *MockRepositoryMockRecorder) UpdUserGeneral(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdUserGeneral", reflect.TypeOf((*MockRepository)(nil).UpdUserGeneral), arg0, arg1)
 }
 
+// UpdateUserAbout mocks base method
+func (m *MockRepository) UpdateUserAbout(arg0 int, arg1 string) models.WorkMessage {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserAbout", arg0, arg1)
+	ret0, _ := ret[0].(models.WorkMessage)
+	return ret0
+}
+
+// UpdateUserAbout indicates an expected call of UpdateUserAbout
+func (mr *MockRepositoryMockRecorder) UpdateUserAbout(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserAbout", reflect.TypeOf((*MockRepository)(nil).UpdateUserAbout), arg0, arg1)
+}
+
 // UpdateUserPhotos mocks base method
-func (m *MockRepository) UpdateUserPhotos(arg0 int, arg1 string) error {
+func (m *MockRepository) UpdateUserPhotos(arg0 int, arg1 *[]string) models.WorkMessage {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateUserPhotos", arg0, arg1)
-	ret0, _ := ret[0].(error)
+	ret0, _ := ret[0].(models.WorkMessage)
 	return ret0
 }
 
@@ -206,25 +279,11 @@ func (mr *MockRepositoryMockRecorder) UpdateUserRating(arg0, arg1 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserRating", reflect.TypeOf((*MockRepository)(nil).UpdateUserRating), arg0, arg1)
 }
 
-// UpdateUserSimple mocks base method
-func (m *MockRepository) UpdateUserSimple(arg0 int, arg1 []string, arg2 *string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserSimple", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateUserSimple indicates an expected call of UpdateUserSimple
-func (mr *MockRepositoryMockRecorder) UpdateUserSimple(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserSimple", reflect.TypeOf((*MockRepository)(nil).UpdateUserSimple), arg0, arg1, arg2)
-}
-
 // UpdateUserTags mocks base method
-func (m *MockRepository) UpdateUserTags(arg0, arg1 int) error {
+func (m *MockRepository) UpdateUserTags(arg0 int, arg1 []int) models.WorkMessage {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateUserTags", arg0, arg1)
-	ret0, _ := ret[0].(error)
+	ret0, _ := ret[0].(models.WorkMessage)
 	return ret0
 }
 

@@ -1,8 +1,8 @@
 package usecase
 
 import (
+	"errors"
 	"failless/internal/pkg/models"
-	"failless/internal/pkg/network"
 	"failless/internal/pkg/vote"
 	"failless/internal/pkg/vote/mocks"
 	"github.com/golang/mock/gomock"
@@ -19,36 +19,6 @@ func getTestUseCase(mockRep *mocks.MockRepository) vote.UseCase {
 	}
 }
 
-func TestGetUseCase(t *testing.T) {
-
-}
-
-func TestVoteUseCase_VoteEvent(t *testing.T) {
-	// Create mock
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	mockRep := mocks.NewMockRepository(mockCtrl)
-	vc := getTestUseCase(mockRep)
-
-	var testVote = models.Vote{
-		Uid:   0,
-		Id:    0,
-		Value: -1,
-		Date:  time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
-	}
-
-	mockRep.EXPECT().AddEventVote(testVote.Uid, testVote.Id, testVote.Value).Return(nil)
-
-	res := vc.VoteEvent(testVote)
-	assert.Equal(t,
-		network.Message{
-			Request: nil,
-			Message: "OK",
-			Status:  http.StatusOK,
-		},
-		res)
-}
-
 func TestVoteUseCase_ValidateValue(t *testing.T) {
 	vc := new(voteUseCase)
 	assert.Equal(t, int8(1), vc.ValidateValue(1))
@@ -58,14 +28,64 @@ func TestVoteUseCase_ValidateValue(t *testing.T) {
 	assert.Equal(t, int8(-1), vc.ValidateValue(-math.MaxInt8))
 }
 
-func TestVoteUseCase_GetEventFollowers(t *testing.T) {
+func TestVoteUseCase_VoteUser(t *testing.T) {
 	// Create mock
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockRep := mocks.NewMockRepository(mockCtrl)
 	vc := getTestUseCase(mockRep)
 
-	mockRep.EXPECT().FindFollowers(0)
+	testVote := models.Vote{
+		Uid:   1,
+		Id:    2,
+		Value: 1,
+		Date:  time.Time{},
+	}
 
-	vc.GetEventFollowers(0)
+	mockRep.EXPECT().AddUserVote(testVote.Uid, testVote.Id, testVote.Value)
+	mockRep.EXPECT().CheckMatching(testVote.Uid, testVote.Id)
+
+	vc.VoteUser(testVote)
 }
+
+func TestVoteUseCase_VoteUser_InvalidUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	vc := getTestUseCase(mockRep)
+
+	testVote := models.Vote{
+		Uid:   0,
+		Id:    2,
+		Value: 1,
+		Date:  time.Time{},
+	}
+
+	mockRep.EXPECT().AddUserVote(testVote.Uid, testVote.Id, testVote.Value).Return(errors.New("DB error"))
+
+	msg := vc.VoteUser(testVote)
+	assert.Equal(t, msg.Status, http.StatusBadRequest)
+}
+
+//func TestVoteUseCase_VoteUser_Check(t *testing.T) {
+//	// Create mock
+//	mockCtrl := gomock.NewController(t)
+//	defer mockCtrl.Finish()
+//	mockRep := mocks.NewMockRepository(mockCtrl)
+//	vc := getTestUseCase(mockRep)
+//
+//	testVote := models.Vote{
+//		Uid:   1,
+//		Id:    2,
+//		Value: 1,
+//		Date:  time.Time{},
+//	}
+//
+//	mockRep.EXPECT().AddUserVote(testVote.Uid, testVote.Id, testVote.Value).Return(nil)
+//	mockRep.EXPECT().CheckMatching(testVote.Uid, testVote.Id).Return(true, nil)
+//
+//	msg := vc.VoteUser(testVote)
+//	assert.Equal(t, msg.Status, http.StatusOK)
+//	assert.Equal(t, msg.Message, MessageMatchHappened)
+//}
