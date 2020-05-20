@@ -260,7 +260,8 @@ func (ed *eventDelivery) LeaveMiddleEvent(w http.ResponseWriter, r *http.Request
 	var subscription models.EventFollow
 	err := json.UnmarshalFromReader(r.Body, &subscription)
 	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		log.Println(err)
+		network.GenErrorCode(w, r, network.MessageErrorParseJSON, http.StatusBadRequest)
 		return
 	}
 

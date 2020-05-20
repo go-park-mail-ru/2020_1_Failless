@@ -1176,3 +1176,155 @@ func TestEventDelivery_JoinMiddleEvent_Correct(t *testing.T) {
 
 	assert.Equal(t, 0, msg.Status)
 }
+
+func TestEventDelivery_LeaveMiddleEvent_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testEventFollow)
+	req, err := http.NewRequest("DELETE", "/api/srv/events/mid/:eid/member", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.LeaveMiddleEvent(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusUnauthorized, msg.Status)
+	assert.Equal(t, network.MessageErrorAuthRequired, msg.Message)
+}
+
+func TestEventDelivery_LeaveMiddleEvent_IncorrectEidInUrl(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testEventFollow)
+	req, err := http.NewRequest("DELETE", "/api/srv/events/mid/:eid/member", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ps := make(map[string]string)
+	ps["eid"] = "kek"
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.LeaveMiddleEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorRetrievingEidFromUrl, msg.Message)
+}
+
+func TestEventDelivery_LeaveMiddleEvent_IncorrectBody(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testInvalidUidType)
+	req, err := http.NewRequest("DELETE", "/api/srv/events/mid/:eid/member", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ps := make(map[string]string)
+	ps["eid"] = strconv.Itoa(testEventFollow.Eid)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.LeaveMiddleEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
+}
+
+func TestEventDelivery_LeaveMiddleEvent_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testEventFollow)
+	req, err := http.NewRequest("DELETE", "/api/srv/events/mid/:eid/member", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ps := make(map[string]string)
+	ps["eid"] = strconv.Itoa(testEventFollow.Eid)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().LeaveMidEvent(&testEventFollow).Return(testMessageUseCaseError)
+	ed.LeaveMiddleEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, testMessageUseCaseError.Status, msg.Status)
+	assert.Equal(t, testMessageUseCaseError.Message, msg.Message)
+}
+
+func TestEventDelivery_LeaveMiddleEvent_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testEventFollow)
+	req, err := http.NewRequest("DELETE", "/api/srv/events/mid/:eid/member", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ps := make(map[string]string)
+	ps["eid"] = strconv.Itoa(testEventFollow.Eid)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().LeaveMidEvent(&testEventFollow)
+	ed.LeaveMiddleEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, testMessageUseCaseOk.Status, msg.Status)
+}
