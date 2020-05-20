@@ -24,31 +24,6 @@ func GetDelivery() event.Delivery {
 	}
 }
 
-// Get events limited by number strings with offset from JSON (POST parameter)
-// UserCount have to be set in the /configs/*/settings.go file using global variable
-// UseCaseConf
-func (ed *eventDelivery) GetEventsByKeyWords(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	var searchRequest models.EventRequest
-	err := json.UnmarshalFromReader(r.Body, &searchRequest)
-	if err != nil {
-		network.GenErrorCode(w, r, network.MessageErrorParseJSON, http.StatusBadRequest)
-		return
-	}
-	log.Println(searchRequest)
-
-	if searchRequest.Page < 1 {
-		searchRequest.Page = 1
-	}
-
-	var events models.EventList
-	if code, err := ed.UseCase.InitEventsByKeyWords(&events, searchRequest.Query, searchRequest.Page); err != nil {
-		network.GenErrorCode(w, r, err.Error(), code)
-		return
-	}
-
-	network.Jsonify(w, events, http.StatusOK)
-}
-
 func (ed *eventDelivery) GetSearchEvents(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	var searchRequest models.EventRequest
 	err := json.UnmarshalFromReader(r.Body, &searchRequest)

@@ -8,7 +8,6 @@ import (
 
 type GeneralForm struct {
 	SignForm
-	Events   []models.Event       	`json:"events"`
 	Tags     []int32         		`json:"tags,omitempty"`
 	Avatar   EImage               	`json:"avatar"`
 	Photos   []EImage             	`json:"photos, omitempty"`

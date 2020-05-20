@@ -6,7 +6,6 @@ import (
 	"failless/internal/pkg/event/repository"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
-	"failless/internal/pkg/settings"
 	"log"
 	"net/http"
 )
@@ -16,38 +15,9 @@ type eventUseCase struct {
 }
 
 func GetUseCase() event.UseCase {
-	if settings.UseCaseConf.InHDD {
-		log.Println("IN HDD")
-		return &eventUseCase{
-			rep: repository.NewSqlEventRepository(db.ConnectToDB()),
-		}
-	} else {
-		log.Println("IN MEMORY")
-		return &eventUseCase{
-			rep: repository.NewEventRepository(),
-		}
+	return &eventUseCase{
+		rep: repository.NewSqlEventRepository(db.ConnectToDB()),
 	}
-}
-
-func (ec *eventUseCase) InitEventsByTime(events *models.EventList) (status int, err error) {
-	*events, err = ec.rep.GetAllEvents()
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-	return http.StatusOK, nil
-}
-
-func (ec *eventUseCase) InitEventsByKeyWords(events *models.EventList, keys string, page int) (status int, err error) {
-	if keys == "" {
-		*events, err = ec.rep.GetAllEvents()
-	} else {
-		*events, err = ec.rep.GetEventsByKeyWord(keys, page)
-	}
-	log.Println(events)
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-	return http.StatusOK, nil
 }
 
 func (ec *eventUseCase) GetSmallEventsByUID(uid int64) (models.SmallEventList, error) {
@@ -81,33 +51,6 @@ func (ec *eventUseCase) CreateMidEvent(midEventForm *forms.MidEventForm) (models
 		Message: "",
 		Status:  http.StatusCreated,
 	}
-}
-
-func (ec *eventUseCase) InitEventsByUserPreferences(events *models.EventList, request *models.EventRequest) (int, error) {
-	dbTags, err := ec.rep.GetValidTags()
-	if err != nil {
-		return http.StatusBadRequest, err
-	}
-
-	valid := ec.TakeValidTagsOnly(request.Tags, dbTags)
-	log.Println(request)
-	if valid != nil {
-		*events, err = ec.rep.GetNewEventsByTags(valid, request.Uid, request.Limit, request.Page)
-	} else {
-		*events, err = ec.rep.GetFeedEvents(request.Uid, request.Limit, request.Page)
-	}
-
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	for i := 0; i < len(*events); i++ {
-		(*events)[i].Tag = dbTags[(*events)[i].Type-1]
-		log.Println(dbTags[(*events)[i].Type-1])
-	}
-
-	log.Println(events)
-	return http.StatusOK, nil
 }
 
 func (ec *eventUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int {

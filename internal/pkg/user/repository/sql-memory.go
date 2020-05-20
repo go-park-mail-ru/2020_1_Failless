@@ -63,39 +63,6 @@ func (ur *sqlUserRepository) getUser(sqlStatement string, args ...interface{}) (
 	return user, nil
 }
 
-// Private method
-func (ur *sqlUserRepository) getEvents(sqlStatement string, args ...interface{}) ([]models.Event, error) {
-	rows, err := ur.db.Query(sqlStatement, args...)
-	if err != nil && rows != nil && !rows.Next() {
-		log.Println(sqlStatement)
-		log.Println("user has no events")
-		return nil, nil
-	} else if err != nil || rows == nil {
-		return nil, err
-	}
-
-	var events []models.Event
-	for rows.Next() {
-		event := models.Event{}
-		err = rows.Scan(
-			&event.EId,
-			&event.AuthorId,
-			&event.Title,
-			&event.EDate,
-			&event.Message,
-			&event.Edited,
-			&event.Author,
-			&event.Type,
-			&event.Limit)
-		if err != nil {
-			log.Println("Error while getting events")
-			return nil, err
-		}
-		events = append(events, event)
-	}
-	return events, nil
-}
-
 func (ur *sqlUserRepository) AddNewUser(user *models.User) error {
 	uid := 0
 	sqlStatement := `INSERT INTO profile VALUES (default, $1, $2, LOWER($3), $4) RETURNING uid;`
@@ -234,18 +201,6 @@ func (ur *sqlUserRepository) DeleteUser(mail string) error {
 	sqlStatement := `DELETE FROM profile WHERE email=$1;`
 	_, err := ur.db.Exec(sqlStatement, mail)
 	return err
-}
-
-// TODO: move it to event pkg
-func (ur *sqlUserRepository) GetUserEvents(uid int) ([]models.Event, error) {
-	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events WHERE uid = $1 LIMIT 10;`
-	return ur.getEvents(sqlStatement, uid)
-}
-
-// TODO: move it to event pkg
-func (ur *sqlUserRepository) GetEventsByTag(tag string) ([]models.Event, error) {
-	sqlStatement := `SELECT eid, uid, title, edate, message, is_edited, author, etype, range FROM events WHERE etype = $1 ;`
-	return ur.getEvents(sqlStatement, tag)
 }
 
 func (ur *sqlUserRepository) GetUserTags(uid int) ([]models.Tag, error) {
@@ -425,48 +380,6 @@ func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string,
 	}
 
 	return users, nil
-}
-
-func (ur *sqlUserRepository) GetUserSubscriptions(uid int) ([]models.Event, error) {
-	sqlStatement := `
-		SELECT
-			events.eid, events.uid, title, edate, message, events.is_edited, author, etype, range
-		FROM
-			events
-			JOIN event_vote 
-				ON events.eid = event_vote.eid
-		WHERE
-			event_vote.uid = $1
-			AND
-			event_vote.value = 1;`
-	rows, err := ur.db.Query(sqlStatement, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	var subs []models.Event
-	for rows.Next() {
-		event := models.Event{}
-		err = rows.Scan(
-			&event.EId,
-			&event.AuthorId,
-			&event.Title,
-			&event.EDate,
-			&event.Message,
-			&event.Edited,
-			&event.Author,
-			&event.Type,
-			&event.Limit)
-		if err != nil {
-			return nil, err
-		}
-		subs = append(subs, event)
-	}
-	err = rows.Err()
-	if err != nil {
-		return nil, err
-	}
-	return subs, nil
 }
 
 func (ur *sqlUserRepository) GetUsersForChat(cid int64, users *models.UserGeneralList) models.WorkMessage {

@@ -27,10 +27,6 @@ func (ur *userRepository) getUser(sqlStatement string, args ...interface{}) (use
 	return models.User{}, nil
 }
 
-// Private method
-func (ur *userRepository) getEvents(sqlStatement string, args ...interface{}) ([]models.Event, error) {
-	return nil, nil
-}
 
 func (ur *userRepository) AddNewUser(user *models.User) error {
 	return nil
@@ -73,14 +69,6 @@ func (ur *userRepository) DeleteUser(mail string) error {
 	return nil
 }
 
-func (ur *userRepository) GetUserEvents(uid int) ([]models.Event, error) {
-	return nil, nil
-}
-
-func (ur *userRepository) GetEventsByTag(tag string) ([]models.Event, error) {
-	return nil, nil
-}
-
 func (ur *userRepository) GetUserTags(uid int) ([]models.Tag, error) {
 	return nil, nil
 }
@@ -102,10 +90,6 @@ func (ur *userRepository) GetValidTags() ([]models.Tag, error) {
 }
 
 func (ur *userRepository) GetRandomFeedUsers(uid int, limit int, page int) ([]models.UserGeneral, error) {
-	return nil, nil
-}
-
-func (ur *userRepository) GetUserSubscriptions(uid int) ([]models.Event, error) {
 	return nil, nil
 }
 

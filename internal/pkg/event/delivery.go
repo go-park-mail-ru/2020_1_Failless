@@ -4,7 +4,6 @@ import "net/http"
 
 type Delivery interface {
 	// Search
-	GetEventsByKeyWords(w http.ResponseWriter, r *http.Request, ps map[string]string)
 	GetSearchEvents(w http.ResponseWriter, r *http.Request, _ map[string]string)
 
 	// Small events

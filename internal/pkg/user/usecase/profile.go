@@ -62,12 +62,6 @@ func (uc *UserUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 	(*profile).Email = base.Email
 	(*profile).Uid = base.Uid
 
-	(*profile).Events, err = uc.Rep.GetUserEvents(base.Uid)
-	if err != nil {
-		log.Println("error in get user events. Not fatal")
-		log.Println(err.Error())
-	}
-
 	return http.StatusOK, nil
 }
 
