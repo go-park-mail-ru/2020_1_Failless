@@ -53,6 +53,7 @@ func TestListObjects(t *testing.T) {
 }
 
 func TestUploadToAWS(t *testing.T) {
+	t.Skip()
 	path := "../../../media/images/" + testImageName
 	service, _ := StartAWS()
 
