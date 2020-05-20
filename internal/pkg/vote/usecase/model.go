@@ -3,6 +3,7 @@ package usecase
 //go:generate mockgen -destination=../mocks/mock_usecase.go -package=mocks failless/internal/pkg/vote UseCase
 
 import (
+	"failless/internal/pkg/chat"
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/vote"
@@ -21,20 +22,30 @@ const (
 	MessageMatchHappened = "You matched with someone! Check your messages!!"
 )
 
+var (
+	CorrectMessage = models.WorkMessage{
+		Request: nil,
+		Message: "",
+		Status:  http.StatusOK,
+	}
+)
+
 type voteUseCase struct {
-	rep vote.Repository
+	Rep vote.Repository
+	chatRep chat.Repository
 }
 
 func GetUseCase() vote.UseCase {
 	return &voteUseCase{
-		rep: repository.NewSqlVoteRepository(db.ConnectToDB()),
+		Rep: repository.NewSqlVoteRepository(db.ConnectToDB()),
+		chatRep: chatRep.NewSqlChatRepository(db.ConnectToDB()),
 	}
 }
 
 func (vc *voteUseCase) VoteUser(vote models.Vote) models.WorkMessage {
 	// TODO: add check is vote already be here
 	vote.Value = vc.ValidateValue(vote.Value)
-	err := vc.rep.AddUserVote(vote.Uid, vote.Id, vote.Value)
+	err := vc.Rep.AddUserVote(vote.Uid, vote.Id, vote.Value)
 	// i think that there could be an error in one case - invalid event id
 	if err != nil {
 		return models.WorkMessage{
@@ -48,12 +59,11 @@ func (vc *voteUseCase) VoteUser(vote models.Vote) models.WorkMessage {
 	if vote.Value == 1 {
 		log.Print("OK: check for matching\n")
 
-		match, _ := vc.rep.CheckMatching(vote.Uid, vote.Id)
+		match, _ := vc.Rep.CheckMatching(vote.Uid, vote.Id)
 		if match {
 			log.Println("OK: Match happened between", vote.Uid, "and", vote.Id)
 			// Create dialogue
-			cr := chatRep.NewSqlChatRepository(db.ConnectToDB())
-			if _, err = cr.InsertDialogue(
+			if _, err = vc.chatRep.InsertDialogue(
 				vote.Uid,
 				vote.Id,
 				2,
@@ -102,11 +112,7 @@ func (vc *voteUseCase) VoteUser(vote models.Vote) models.WorkMessage {
 		}
 	}
 
-	return models.WorkMessage{
-		Request: nil,
-		Message: "OK",
-		Status:  http.StatusOK,
-	}
+	return CorrectMessage
 }
 
 func (vc *voteUseCase) ValidateValue(value int8) int8 {
