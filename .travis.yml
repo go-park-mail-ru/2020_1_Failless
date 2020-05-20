@@ -8,8 +8,6 @@ addons:
   - 163.172.133.90
 before_install:
 - openssl aes-256-cbc -K $encrypted_db2095f63ba3_key -iv $encrypted_db2095f63ba3_iv
-  -in deploy_rsa.enc -out deploy_rsa -d
-- openssl aes-256-cbc -K $encrypted_db2095f63ba3_key -iv $encrypted_db2095f63ba3_iv
   -in deployments/deploy_rsa.enc -out deployments/deploy_rsa -d
 - eval "$(ssh-agent -s)"
 - cp deployments/deploy_rsa ~/.ssh/deploy_rsa
