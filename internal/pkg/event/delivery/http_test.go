@@ -87,7 +87,8 @@ func TestEventDelivery_GetEventsByKeyWords_IncorrectPage(t *testing.T) {
 	ed := getTestDelivery(mockUC)
 
 	mockVoteBody := map[string]interface{}{
-		"page": testEventRequest.Page - 1,			// Invalid type
+		"page": 0,			// Invalid type
+		"query": testEventRequest.Query,
 	}
 	body, _ := json.Marshal(mockVoteBody)
 	req, err := http.NewRequest("POST", "/api/srv/events/search", bytes.NewReader(body))
@@ -98,6 +99,7 @@ func TestEventDelivery_GetEventsByKeyWords_IncorrectPage(t *testing.T) {
 	rr := httptest.NewRecorder()
 	var ps map[string]string
 
+	mockUC.EXPECT().InitEventsByKeyWords(new(models.EventList), testEventRequest.Query, 1)
 	ed.GetEventsByKeyWords(rr, req, ps)
 
 	msg, err := network.DecodeToMsg(rr.Body)
@@ -106,8 +108,7 @@ func TestEventDelivery_GetEventsByKeyWords_IncorrectPage(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, http.StatusBadRequest, msg.Status)
-	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
+	assert.Equal(t, 0, msg.Status)
 }
 
 func TestEventDelivery_GetEventsByKeyWords_Incorrect(t *testing.T) {
@@ -205,10 +206,9 @@ func TestEventDelivery_GetSearchEvents_IncorrectPage(t *testing.T) {
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	ed := getTestDelivery(mockUC)
 
-	mockVoteBody := map[string]interface{}{
-		"page": testEventRequest.Page - 1,			// Invalid type
-	}
-	body, _ := json.Marshal(mockVoteBody)
+	searchReq := testEventRequest
+	searchReq.Page = 0
+	body, _ := json.Marshal(searchReq)
 	req, err := http.NewRequest("POST", "/api/srv/events/search", bytes.NewReader(body))
 	if err != nil {
 		t.Fatal(err)
@@ -217,6 +217,7 @@ func TestEventDelivery_GetSearchEvents_IncorrectPage(t *testing.T) {
 	rr := httptest.NewRecorder()
 	var ps map[string]string
 
+	mockUC.EXPECT().SearchEventsByUserPreferences(new(models.MidAndBigEventList), &testEventRequest)
 	ed.GetSearchEvents(rr, req, ps)
 
 	msg, err := network.DecodeToMsg(rr.Body)
@@ -225,8 +226,7 @@ func TestEventDelivery_GetSearchEvents_IncorrectPage(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, http.StatusBadRequest, msg.Status)
-	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
+	assert.Equal(t, 0, msg.Status)
 }
 
 func TestEventDelivery_GetSearchEvents_Incorrect(t *testing.T) {
