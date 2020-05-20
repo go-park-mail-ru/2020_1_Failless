@@ -7,6 +7,8 @@ import (
 	"errors"
 	"failless/internal/pkg/event"
 	"failless/internal/pkg/event/mocks"
+	"failless/internal/pkg/forms"
+	"failless/internal/pkg/images"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
@@ -41,6 +43,21 @@ var (
 		TagsId: nil,
 		Date:   time.Time{},
 		Photos: nil,
+	}
+	testSmallEventForm = forms.SmallEventForm{
+		Uid:    testSmallEvent.EId,
+		Title:  testSmallEvent.Title,
+		Descr:  testSmallEvent.Descr,
+		TagsId: testSmallEvent.TagsId,
+		Date:   testSmallEvent.Date,
+		Photos: nil,
+	}
+	testEventFollow = models.EventFollow{
+		Uid: 1,
+		Eid: 1,
+	}
+	testInvalidUidType = map[string]interface{}{
+		"uid": strconv.Itoa(1),			// Invalid type
 	}
 )
 
@@ -375,6 +392,189 @@ func TestEventDelivery_GetSmallEvents_Correct(t *testing.T) {
 	assert.Equal(t, 0, msg.Status)
 }
 
+func TestEventDelivery_CreateSmallEvent_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testSmallEvent)
+	req, err := http.NewRequest("POST", "/api/srv/events/small", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	var ps map[string]string
+
+	ed.CreateSmallEvent(rr, req, ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusUnauthorized, msg.Status)
+	assert.Equal(t, network.MessageErrorAuthRequired, msg.Message)
+}
+
+func TestEventDelivery_CreateSmallEvent_IncorrectBody(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testInvalidUidType)
+	req, err := http.NewRequest("POST", "/api/srv/events/small", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	var ps map[string]string
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.CreateSmallEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
+}
+
+func TestEventDelivery_CreateSmallEvent_InvalidForm(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	eventReq := testSmallEventForm
+	eventReq.Uid = 0
+	body, _ := json.Marshal(eventReq)
+	req, err := http.NewRequest("POST", "/api/srv/events/small", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	var ps map[string]string
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.CreateSmallEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, forms.MessageSmallEventValidationFailed, msg.Message)
+}
+
+func TestEventDelivery_CreateSmallEvent_InvalidPhotos(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	eventReq := testSmallEventForm
+	eventReq.Photos = []forms.EImage{{ImgBase64:""}, {ImgBase64:""}}
+	body, _ := json.Marshal(eventReq)
+	req, err := http.NewRequest("POST", "/api/srv/events/small", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	var ps map[string]string
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.CreateSmallEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, images.MessageImageValidationFailed, msg.Message)
+}
+
+func TestEventDelivery_CreateSmallEvent_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testSmallEventForm)
+	req, err := http.NewRequest("POST", "/api/srv/events/small", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	var ps map[string]string
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().CreateSmallEvent(&testSmallEventForm).Return(models.SmallEvent{}, errors.New("error in usecase"))
+	ed.CreateSmallEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, "error in usecase", msg.Message)
+}
+
+func TestEventDelivery_CreateSmallEvent_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testSmallEventForm)
+	req, err := http.NewRequest("POST", "/api/srv/events/small", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	var ps map[string]string
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().CreateSmallEvent(&testSmallEventForm).Return(models.SmallEvent{}, nil)
+	ed.CreateSmallEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
 func TestEventDelivery_UpdateSmallEvent_IncorrectUid(t *testing.T) {
 	// Create mock
 	mockCtrl := gomock.NewController(t)
@@ -467,7 +667,6 @@ func TestEventDelivery_UpdateSmallEvent_Incorrect(t *testing.T) {
 	assert.Equal(t, "error in usecase", msg.Message)
 }
 
-
 func TestEventDelivery_UpdateSmallEvent_Correct(t *testing.T) {
 	// Create mock
 	mockCtrl := gomock.NewController(t)
@@ -488,6 +687,163 @@ func TestEventDelivery_UpdateSmallEvent_Correct(t *testing.T) {
 
 	mockUC.EXPECT().UpdateSmallEvent(&testSmallEvent).Return(http.StatusOK, nil)
 	ed.UpdateSmallEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
+func TestEventDelivery_JoinMiddleEvent_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testEventFollow)
+	req, err := http.NewRequest("POST", "/api/srv/events/mid/:eid/member", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	var ps map[string]string
+
+	ed.JoinMiddleEvent(rr, req, ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusUnauthorized, msg.Status)
+	assert.Equal(t, network.MessageErrorAuthRequired, msg.Message)
+}
+
+func TestEventDelivery_JoinMiddleEvent_IncorrectEidInUrl(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testEventFollow)
+	req, err := http.NewRequest("POST", "/api/srv/events/mid/:eid/member", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ps := make(map[string]string)
+	ps["eid"] = "kek"
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.JoinMiddleEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorRetrievingEidFromUrl, msg.Message)
+}
+
+func TestEventDelivery_JoinMiddleEvent_IncorrectBody(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testInvalidUidType)
+	req, err := http.NewRequest("POST", "/api/srv/events/mid/:eid/member", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ps := make(map[string]string)
+	ps["eid"] = strconv.Itoa(testEventFollow.Eid)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.JoinMiddleEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
+}
+
+func TestEventDelivery_JoinMiddleEvent_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testEventFollow)
+	req, err := http.NewRequest("POST", "/api/srv/events/mid/:eid/member", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ps := make(map[string]string)
+	ps["eid"] = strconv.Itoa(testEventFollow.Eid)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().JoinMidEvent(&testEventFollow).Return(models.WorkMessage{
+		Request: nil,
+		Message: "error in usecase",
+		Status:  http.StatusInternalServerError,
+	})
+	ed.JoinMiddleEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusInternalServerError, msg.Status)
+	assert.Equal(t, "error in usecase", msg.Message)
+}
+
+func TestEventDelivery_JoinMiddleEvent_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testEventFollow)
+	req, err := http.NewRequest("POST", "/api/srv/events/mid/:eid/member", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ps := make(map[string]string)
+	ps["eid"] = strconv.Itoa(testEventFollow.Eid)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().JoinMidEvent(&testEventFollow)
+	ed.JoinMiddleEvent(rr, req.WithContext(ctx), ps)
 
 	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {

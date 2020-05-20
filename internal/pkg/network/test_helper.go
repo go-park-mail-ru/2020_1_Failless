@@ -9,6 +9,7 @@ import (
 const (
 	MessageErrorParseJSON = "Error within parse json"
 	MessageErrorAuthRequired = "auth required"
+	MessageErrorRetrievingEidFromUrl = "Error in retrieving eid from url"
 )
 
 func DecodeToMsg(body *bytes.Buffer) (models.WorkMessage, error) {
