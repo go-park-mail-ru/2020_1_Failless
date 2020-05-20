@@ -13,8 +13,8 @@ before_install:
 - cp deployments/deploy_rsa ~/.ssh/deploy_rsa
 - chmod 600 ~/.ssh/deploy_rsa
 - ssh-add ~/.ssh/deploy_rsa
-- apt install -y wget unzip
-- apt install -y protobuf
+- sudo apt install -y wget unzip
+- sudo apt install -y protobuf
 - go install google.golang.org/protobuf/cmd/protoc-gen-go
 - go get google.golang.org/grpc
 - go get -u github.com/golang/protobuf/protoc-gen-go
