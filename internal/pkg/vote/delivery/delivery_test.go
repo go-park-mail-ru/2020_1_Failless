@@ -37,14 +37,7 @@ func TestVoteUser(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	var ps map[string]string
-	vd.VoteUser(rr, req, ps)
-	// Check the status code is what we expect.
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusOK)
-		return
-	}
+	vd.VoteUser(rr, req, map[string]string{})
 	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
 		t.Fail()

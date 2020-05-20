@@ -105,9 +105,8 @@ func TestUserDelivery_UpdProfileGeneral_IncorrectBody(t *testing.T) {
 	rr := httptest.NewRecorder()
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
-	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
 
-	ud.UpdProfileGeneral(rr, req.WithContext(ctx), ps)
+	ud.UpdProfileGeneral(rr, req.WithContext(ctx), map[string]string{"id": strconv.Itoa(testSignForm.Uid)})
 
 	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
