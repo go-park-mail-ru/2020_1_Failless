@@ -324,7 +324,7 @@ func TestUserUseCase_UpdateUserBase_Incorrect1(t *testing.T) {
 	mockRep := mocks.NewMockRepository(mockCtrl)
 	uUC := getTestUseCase(mockRep, eventMocks.NewMockRepository(mockCtrl))
 
-	mockRep.EXPECT().GetUserByUID(testGeneralForm.Uid).Return(models.User{}, testRepError)
+	mockRep.EXPECT().GetUserByUID(1).Return(models.User{}, testRepError)
 
 	code, err := uUC.UpdateUserBase(&testSignForm)
 
