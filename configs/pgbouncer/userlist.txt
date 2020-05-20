@@ -1,1 +1,1 @@
-"eventum" "PASSWORD OR MD5"
+"exampledb" "PASSWORD OR MD5"

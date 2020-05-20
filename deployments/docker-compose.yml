@@ -67,7 +67,7 @@ services:
     build:
       context: ../.
       dockerfile: ./build/chat.dockerfile
-# for pgbouncer  Cannot start service pgbouncer: driver failed programming external connectivity on endpoint pgbouncer
+
   pgbouncer:
     container_name: pgbouncer
     restart: always
@@ -76,13 +76,15 @@ services:
       dockerfile: ./build/pgbouncer.dockerfile
       args:
         dbuser: ${POSTGRES_USER}
+        dbname: ${POSTGRES_DB}
+        dbpasswd: ${POSTGRES_PASSWORD}
     links:
       - eventumdb
     networks:
       - backend
-    volumes:
-      - ../configs/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
-      - ../configs/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+#    volumes:
+#      - ../configs/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+#      - ../configs/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
     env_file:
       - ./pgbouncer.env
     ports:
