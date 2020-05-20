@@ -32,10 +32,6 @@ func (ur *userRepository) AddNewUser(user *models.User) error {
 	return nil
 }
 
-func (ur *userRepository) AddUserInfo(credentials models.User, info models.JsonInfo) error {
-	return nil
-}
-
 func (ur *userRepository) SetUserLocation(uid int, point models.LocationPoint) error {
 	return nil
 }

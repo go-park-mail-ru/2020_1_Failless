@@ -84,31 +84,6 @@ func (ur *sqlUserRepository) AddNewUser(user *models.User) error {
 	return nil
 }
 
-func (ur *sqlUserRepository) AddUserInfo(credentials models.User, info models.JsonInfo) error {
-	if credentials.Uid < 0 {
-		sqlStatement := `SELECT uid FROM profile WHERE LOWER(email) = LOWER($1) OR phone = $2;`
-		row := ur.db.QueryRow(sqlStatement, credentials.Email, credentials.Phone)
-		err := row.Scan(&credentials.Uid)
-		if err == pgx.ErrNoRows {
-			return errors.New("User " + credentials.Email + "doesn't exist")
-		} else if err != nil {
-			log.Println(err.Error())
-			return err
-		}
-	}
-
-	gender := user.GenderById(info.Gender)
-
-	sqlStatement := `UPDATE profile_info SET about = $1, photos = array_append(photos, $2), birthday = $3, gender = $4 WHERE pid = $5;`
-	_, err := ur.db.Exec(sqlStatement, info.About, info.Photos[0], info.Birthday, gender, credentials.Uid)
-	if err != nil {
-		log.Println(sqlStatement, info.About, info.Photos[0], info.Birthday, info.Gender, credentials.Uid)
-		log.Println(err.Error())
-		return err
-	}
-	return nil
-}
-
 func (ur *sqlUserRepository) SetUserLocation(uid int, point models.LocationPoint) error {
 	sqlStatement := `UPDATE profile_info SET location = ST_POINT($1, $2) WHERE pid = $3;`
 	_, err := ur.db.Exec(sqlStatement, point.Latitude, point.Longitude, uid)

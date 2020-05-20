@@ -275,24 +275,14 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         true,
 		WS:           false,
 	}},
-	"/api/srv/profile/:id": {
-		{
-			Type:         "PUT",
-			Handler:      userDelivery.GetDelivery().UpdProfilePage,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         true,
-			WS:           false,
-		},
-		{
-			Type:         "GET",
-			Handler:      userDelivery.GetDelivery().GetProfilePage,
-			CORS:         true,
-			AuthRequired: false,
-			CSRF:         false,
-			WS:           false,
-		},
-	},
+	"/api/srv/profile/:id": {{
+		Type:         "GET",
+		Handler:      userDelivery.GetDelivery().GetProfilePage,
+		CORS:         true,
+		AuthRequired: false,
+		CSRF:         false,
+		WS:           false,
+	}},
 	"/api/srv/users/:vote": {{
 		Type:         "PUT",
 		Handler:      voteDelivery.GetDelivery().VoteUser,

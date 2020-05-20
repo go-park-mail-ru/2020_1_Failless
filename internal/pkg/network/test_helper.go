@@ -10,6 +10,9 @@ const (
 	MessageErrorParseJSON = "Error within parse json"
 	MessageErrorAuthRequired = "auth required"
 	MessageErrorRetrievingEidFromUrl = "Error in retrieving eid from url"
+	MessageInvalidID = "Incorrect id"
+	MessageValidationFailed = "Validation failed"
+	MessageSuccessfulLogout = "Successful logout"
 )
 
 func DecodeToMsg(body *bytes.Buffer) (models.WorkMessage, error) {

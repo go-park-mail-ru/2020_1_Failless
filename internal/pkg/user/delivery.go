@@ -16,7 +16,6 @@ type Delivery interface {
 	UpdProfileGeneral(w http.ResponseWriter, r *http.Request, ps map[string]string)
 	UpdUserAbout(w http.ResponseWriter, r *http.Request, ps map[string]string)
 	UpdUserTags(w http.ResponseWriter, r *http.Request, ps map[string]string)
-	UpdProfilePage(w http.ResponseWriter, r *http.Request, ps map[string]string)
 	UpdUserPhotos(w http.ResponseWriter, r *http.Request, ps map[string]string)
 
 	// Events

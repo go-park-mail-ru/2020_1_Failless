@@ -9,7 +9,6 @@ type UseCase interface {
 	UpdateUserAbout(uid int, about string) models.WorkMessage
 	UpdateUserTags(uid int, tagIDs []int) models.WorkMessage
 	UpdateUserPhotos(uid int, newImages *forms.EImageList) models.WorkMessage
-	UpdateUserInfo(form *forms.GeneralForm) (int, error)
 	GetUserInfo(profile *forms.GeneralForm) (int, error)
 	FillFormIfExist(cred *models.User) (int, error)
 	RegisterNewUser(user *forms.SignForm) error

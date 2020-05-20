@@ -142,28 +142,6 @@ func (uc *UserUseCase) UpdateUserTags(uid int, tagIDs []int) models.WorkMessage 
 	return uc.Rep.UpdateUserTags(uid, tagIDs)
 }
 
-func (uc *UserUseCase) UpdateUserInfo(form *forms.GeneralForm) (int, error) {
-	form.Photos = append(form.Photos, form.Avatar)
-
-	var info models.JsonInfo
-	var user models.User
-
-	if err := form.GetDBFormat(&info, &user); err != nil {
-		return http.StatusInternalServerError, err
-	}
-	user.Uid = form.Uid
-	if err := uc.Rep.AddUserInfo(user, info); err != nil {
-		return http.StatusNotModified, err
-	}
-
-	form.Avatar.ImgBase64 = ""
-	for _, item := range form.Photos {
-		item.ImgBase64 = ""
-		item.Img = nil
-	}
-	return http.StatusOK, nil
-}
-
 func (uc *UserUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 	row, err := uc.Rep.GetProfileInfo(profile.Uid)
 	if err != nil {

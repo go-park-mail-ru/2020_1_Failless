@@ -132,10 +132,9 @@ func TestEventDelivery_GetSearchEvents_IncorrectPage(t *testing.T) {
 		return
 	}
 	rr := httptest.NewRecorder()
-	var ps map[string]string
 
 	mockUC.EXPECT().SearchEventsByUserPreferences(new(models.MidAndBigEventList), &TestEventRequest)
-	ed.GetSearchEvents(rr, req, ps)
+	ed.GetSearchEvents(rr, req, map[string]string{})
 
 	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
@@ -217,9 +216,8 @@ func TestEventDelivery_GetSmallEvents_IncorrectUid(t *testing.T) {
 		return
 	}
 	rr := httptest.NewRecorder()
-	var ps map[string]string
 
-	ed.GetSmallEvents(rr, req, ps)
+	ed.GetSmallEvents(rr, req, map[string]string{})
 
 	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
@@ -245,12 +243,11 @@ func TestEventDelivery_GetSmallEvents_Incorrect(t *testing.T) {
 		return
 	}
 	rr := httptest.NewRecorder()
-	var ps map[string]string
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
 
 	mockUC.EXPECT().GetSmallEventsByUID(int64(1)).Return(nil, errors.New("error in usecase"))
-	ed.GetSmallEvents(rr, req.WithContext(ctx), ps)
+	ed.GetSmallEvents(rr, req.WithContext(ctx), map[string]string{})
 
 	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
@@ -276,12 +273,11 @@ func TestEventDelivery_GetSmallEvents_Correct(t *testing.T) {
 		return
 	}
 	rr := httptest.NewRecorder()
-	var ps map[string]string
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
 
 	mockUC.EXPECT().GetSmallEventsByUID(int64(1)).Return(nil, nil)
-	ed.GetSmallEvents(rr, req.WithContext(ctx), ps)
+	ed.GetSmallEvents(rr, req.WithContext(ctx), map[string]string{})
 
 	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
@@ -306,9 +302,8 @@ func TestEventDelivery_CreateSmallEvent_IncorrectUid(t *testing.T) {
 		return
 	}
 	rr := httptest.NewRecorder()
-	var ps map[string]string
 
-	ed.CreateSmallEvent(rr, req, ps)
+	ed.CreateSmallEvent(rr, req, map[string]string{})
 
 	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
@@ -334,11 +329,10 @@ func TestEventDelivery_CreateSmallEvent_IncorrectBody(t *testing.T) {
 		return
 	}
 	rr := httptest.NewRecorder()
-	var ps map[string]string
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
 
-	ed.CreateSmallEvent(rr, req.WithContext(ctx), ps)
+	ed.CreateSmallEvent(rr, req.WithContext(ctx), map[string]string{})
 
 	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
@@ -705,8 +699,7 @@ func TestEventDelivery_DeleteSmallEvent_Correct(t *testing.T) {
 		return
 	}
 	rr := httptest.NewRecorder()
-	ps := make(map[string]string)
-	ps["eid"] = strconv.Itoa(testSmallEvent.EId)
+	ps := map[string]string{"eid": strconv.Itoa(testSmallEvent.EId)}
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
 
@@ -729,8 +722,7 @@ func TestEventDelivery_CreateMiddleEvent_IncorrectUid(t *testing.T) {
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	ed := getTestDelivery(mockUC)
 
-	body, _ := json.Marshal(testMidEventForm)
-	req, err := http.NewRequest("POST", "/api/srv/events/mid", bytes.NewReader(body))
+	req, err := http.NewRequest("POST", "/api/srv/events/mid", nil)
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -753,8 +745,7 @@ func TestEventDelivery_CreateMiddleEvent_IncorrectBody(t *testing.T) {
 	// Create mock
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	mockUC := mocks.NewMockUseCase(mockCtrl)
-	ed := getTestDelivery(mockUC)
+	ed := getTestDelivery(mocks.NewMockUseCase(mockCtrl))
 
 	body, _ := json.Marshal(testInvalidUidType)
 	req, err := http.NewRequest("POST", "/api/srv/events/mid", bytes.NewReader(body))

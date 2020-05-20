@@ -76,7 +76,6 @@ func CompareUidsFromURLAndToken(w http.ResponseWriter, r *http.Request, ps map[s
 
 	uid := int64(0)
 	if uid = network.GetIdFromRequest(w, r, ps); uid < 0 {
-		network.GenErrorCode(w, r, "url uid is incorrect", http.StatusBadRequest)
 		return -1
 	}
 
