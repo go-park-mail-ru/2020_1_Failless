@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	testEventRequest = models.EventRequest{
+	TestEventRequest = models.EventRequest{
 		Uid:       1,
 		Page:      1,
 		Limit:     10,
@@ -85,126 +85,6 @@ func getTestDelivery(mockUC *mocks.MockUseCase) event.Delivery {
 	return &eventDelivery{UseCase:mockUC}
 }
 
-func TestEventDelivery_GetEventsByKeyWords_IncorrectBody(t *testing.T) {
-	// Create mock
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	mockUC := mocks.NewMockUseCase(mockCtrl)
-	ed := getTestDelivery(mockUC)
-
-	mockVoteBody := map[string]interface{}{
-		"page": strconv.Itoa(testEventRequest.Page),			// Invalid type
-	}
-	body, _ := json.Marshal(mockVoteBody)
-	req, err := http.NewRequest("POST", "/api/srv/events/search", bytes.NewReader(body))
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-	rr := httptest.NewRecorder()
-	var ps map[string]string
-
-	ed.GetEventsByKeyWords(rr, req, ps)
-
-	msg, err := network.DecodeToMsg(rr.Body)
-	if err != nil {
-		t.Fail()
-		return
-	}
-
-	assert.Equal(t, http.StatusBadRequest, msg.Status)
-	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
-}
-
-func TestEventDelivery_GetEventsByKeyWords_IncorrectPage(t *testing.T) {
-	// Create mock
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	mockUC := mocks.NewMockUseCase(mockCtrl)
-	ed := getTestDelivery(mockUC)
-
-	mockVoteBody := map[string]interface{}{
-		"page": 0,			// Invalid type
-		"query": testEventRequest.Query,
-	}
-	body, _ := json.Marshal(mockVoteBody)
-	req, err := http.NewRequest("POST", "/api/srv/events/search", bytes.NewReader(body))
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-	rr := httptest.NewRecorder()
-	var ps map[string]string
-
-	mockUC.EXPECT().InitEventsByKeyWords(new(models.EventList), testEventRequest.Query, 1)
-	ed.GetEventsByKeyWords(rr, req, ps)
-
-	msg, err := network.DecodeToMsg(rr.Body)
-	if err != nil {
-		t.Fail()
-		return
-	}
-
-	assert.Equal(t, 0, msg.Status)
-}
-
-func TestEventDelivery_GetEventsByKeyWords_Incorrect(t *testing.T) {
-	// Create mock
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	mockUC := mocks.NewMockUseCase(mockCtrl)
-	ed := getTestDelivery(mockUC)
-
-	body, _ := json.Marshal(testEventRequest)
-	req, err := http.NewRequest("POST", "/api/srv/events/search", bytes.NewReader(body))
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-	rr := httptest.NewRecorder()
-	var ps map[string]string
-
-	mockUC.EXPECT().InitEventsByKeyWords(new(models.EventList), testEventRequest.Query, testEventRequest.Page).Return(http.StatusInternalServerError, errors.New("error"))
-	ed.GetEventsByKeyWords(rr, req, ps)
-
-	msg, err := network.DecodeToMsg(rr.Body)
-	if err != nil {
-		t.Fail()
-		return
-	}
-
-	assert.Equal(t, http.StatusInternalServerError, msg.Status)
-	assert.Equal(t, "error", msg.Message)
-}
-
-func TestEventDelivery_GetEventsByKeyWords_Correct(t *testing.T) {
-	// Create mock
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	mockUC := mocks.NewMockUseCase(mockCtrl)
-	ed := getTestDelivery(mockUC)
-
-	body, _ := json.Marshal(testEventRequest)
-	req, err := http.NewRequest("POST", "/api/srv/events/search", bytes.NewReader(body))
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-	rr := httptest.NewRecorder()
-	var ps map[string]string
-
-	mockUC.EXPECT().InitEventsByKeyWords(new(models.EventList), testEventRequest.Query, testEventRequest.Page)
-	ed.GetEventsByKeyWords(rr, req, ps)
-
-	msg, err := network.DecodeToMsg(rr.Body)
-	if err != nil {
-		t.Fail()
-		return
-	}
-
-	assert.Equal(t, 0, msg.Status)
-}
-
 func TestEventDelivery_GetSearchEvents_IncorrectBody(t *testing.T) {
 	// Create mock
 	mockCtrl := gomock.NewController(t)
@@ -213,7 +93,7 @@ func TestEventDelivery_GetSearchEvents_IncorrectBody(t *testing.T) {
 	ed := getTestDelivery(mockUC)
 
 	mockVoteBody := map[string]interface{}{
-		"page": strconv.Itoa(testEventRequest.Page),			// Invalid type
+		"page": strconv.Itoa(TestEventRequest.Page),			// Invalid type
 	}
 	body, _ := json.Marshal(mockVoteBody)
 	req, err := http.NewRequest("POST", "/api/srv/events/search", bytes.NewReader(body))
@@ -243,7 +123,7 @@ func TestEventDelivery_GetSearchEvents_IncorrectPage(t *testing.T) {
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	ed := getTestDelivery(mockUC)
 
-	searchReq := testEventRequest
+	searchReq := TestEventRequest
 	searchReq.Page = 0
 	body, _ := json.Marshal(searchReq)
 	req, err := http.NewRequest("POST", "/api/srv/events/search", bytes.NewReader(body))
@@ -254,7 +134,7 @@ func TestEventDelivery_GetSearchEvents_IncorrectPage(t *testing.T) {
 	rr := httptest.NewRecorder()
 	var ps map[string]string
 
-	mockUC.EXPECT().SearchEventsByUserPreferences(new(models.MidAndBigEventList), &testEventRequest)
+	mockUC.EXPECT().SearchEventsByUserPreferences(new(models.MidAndBigEventList), &TestEventRequest)
 	ed.GetSearchEvents(rr, req, ps)
 
 	msg, err := network.DecodeToMsg(rr.Body)
@@ -273,7 +153,7 @@ func TestEventDelivery_GetSearchEvents_Incorrect(t *testing.T) {
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	ed := getTestDelivery(mockUC)
 
-	body, _ := json.Marshal(testEventRequest)
+	body, _ := json.Marshal(TestEventRequest)
 	req, err := http.NewRequest("POST", "/api/srv/events/search", bytes.NewReader(body))
 	if err != nil {
 		t.Fatal(err)
@@ -282,7 +162,7 @@ func TestEventDelivery_GetSearchEvents_Incorrect(t *testing.T) {
 	rr := httptest.NewRecorder()
 	var ps map[string]string
 
-	mockUC.EXPECT().SearchEventsByUserPreferences(new(models.MidAndBigEventList), &testEventRequest).Return(http.StatusInternalServerError, errors.New("error"))
+	mockUC.EXPECT().SearchEventsByUserPreferences(new(models.MidAndBigEventList), &TestEventRequest).Return(http.StatusInternalServerError, errors.New("error"))
 	ed.GetSearchEvents(rr, req, ps)
 
 	msg, err := network.DecodeToMsg(rr.Body)
@@ -302,7 +182,7 @@ func TestEventDelivery_GetSearchEvents_Correct(t *testing.T) {
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	ed := getTestDelivery(mockUC)
 
-	body, _ := json.Marshal(testEventRequest)
+	body, _ := json.Marshal(TestEventRequest)
 	req, err := http.NewRequest("POST", "/api/srv/events/search", bytes.NewReader(body))
 	if err != nil {
 		t.Fatal(err)
@@ -311,7 +191,7 @@ func TestEventDelivery_GetSearchEvents_Correct(t *testing.T) {
 	rr := httptest.NewRecorder()
 	var ps map[string]string
 
-	mockUC.EXPECT().SearchEventsByUserPreferences(new(models.MidAndBigEventList), &testEventRequest)
+	mockUC.EXPECT().SearchEventsByUserPreferences(new(models.MidAndBigEventList), &TestEventRequest)
 	ed.GetSearchEvents(rr, req, ps)
 
 	msg, err := network.DecodeToMsg(rr.Body)
@@ -330,7 +210,7 @@ func TestEventDelivery_GetSmallEvents_IncorrectUid(t *testing.T) {
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	ed := getTestDelivery(mockUC)
 
-	body, _ := json.Marshal(testEventRequest)
+	body, _ := json.Marshal(TestEventRequest)
 	req, err := http.NewRequest("GET", "/api/srv/events/small", bytes.NewReader(body))
 	if err != nil {
 		t.Fatal(err)
@@ -358,7 +238,7 @@ func TestEventDelivery_GetSmallEvents_Incorrect(t *testing.T) {
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	ed := getTestDelivery(mockUC)
 
-	body, _ := json.Marshal(testEventRequest)
+	body, _ := json.Marshal(TestEventRequest)
 	req, err := http.NewRequest("GET", "/api/srv/events/small", bytes.NewReader(body))
 	if err != nil {
 		t.Fatal(err)
@@ -389,7 +269,7 @@ func TestEventDelivery_GetSmallEvents_Correct(t *testing.T) {
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	ed := getTestDelivery(mockUC)
 
-	body, _ := json.Marshal(testEventRequest)
+	body, _ := json.Marshal(TestEventRequest)
 	req, err := http.NewRequest("GET", "/api/srv/events/small", bytes.NewReader(body))
 	if err != nil {
 		t.Fatal(err)
@@ -602,7 +482,7 @@ func TestEventDelivery_UpdateSmallEvent_IncorrectUid(t *testing.T) {
 	mockUC := mocks.NewMockUseCase(mockCtrl)
 	ed := getTestDelivery(mockUC)
 
-	body, _ := json.Marshal(testEventRequest)
+	body, _ := json.Marshal(TestEventRequest)
 	req, err := http.NewRequest("PUT", "/api/srv/events/small/:eid", bytes.NewReader(body))
 	if err != nil {
 		t.Fatal(err)

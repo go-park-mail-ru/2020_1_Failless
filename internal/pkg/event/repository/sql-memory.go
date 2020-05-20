@@ -1,5 +1,7 @@
 package repository
 
+//go:generate mockgen -destination=../mocks/mock_repository.go -package=mocks failless/internal/pkg/event Repository
+
 import (
 	"errors"
 	chatRepository "failless/internal/pkg/chat/repository"

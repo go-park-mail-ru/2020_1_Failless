@@ -1,13 +1,22 @@
 package usecase
 
+//go:generate mockgen -destination=../mocks/mock_usecase.go -package=mocks failless/internal/pkg/event UseCase
+
 import (
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/event"
 	"failless/internal/pkg/event/repository"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
-	"log"
 	"net/http"
+)
+
+var (
+	CorrectMessage = models.WorkMessage{
+		Request: nil,
+		Message: "",
+		Status:  http.StatusOK,
+	}
 )
 
 type eventUseCase struct {
@@ -46,24 +55,7 @@ func (ec *eventUseCase) CreateMidEvent(midEventForm *forms.MidEventForm) (models
 		}
 	}
 
-	return midEvent, models.WorkMessage{
-		Request: nil,
-		Message: "",
-		Status:  http.StatusCreated,
-	}
-}
-
-func (ec *eventUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int {
-	var valid []int = nil
-	for _, tagId := range tagIds {
-		for _, tag := range tags {
-			if tagId == tag.TagId {
-				valid = append(valid, tagId)
-			}
-		}
-	}
-
-	return valid
+	return midEvent, CorrectMessage
 }
 
 func (ec *eventUseCase) SearchEventsByUserPreferences(events *models.MidAndBigEventList, request *models.EventRequest) (int, error) {
@@ -71,13 +63,11 @@ func (ec *eventUseCase) SearchEventsByUserPreferences(events *models.MidAndBigEv
 		code, err := ec.rep.GetAllMidEvents(&events.MidEvents, request)
 		//bigEvents, _ := ec.rep.GetAllBigEvents()
 		if err != nil {
-			log.Println(err)
 			return code, err
 		}
 	} else {
 		code, err := ec.rep.GetMidEventsWithFollowed(&events.MidEvents, request)
 		if err != nil {
-			log.Println(err)
 			return code, err
 		}
 	}
@@ -100,11 +90,7 @@ func (ec *eventUseCase) DeleteSmallEvent(uid int, eid int64) models.WorkMessage 
 		}
 	}
 
-	return models.WorkMessage{
-		Request: nil,
-		Message: http.StatusText(http.StatusOK),
-		Status:  http.StatusOK,
-	}
+	return CorrectMessage
 }
 
 func (ec *eventUseCase) JoinMidEvent(eventVote *models.EventFollow) models.WorkMessage {
@@ -118,11 +104,7 @@ func (ec *eventUseCase) JoinMidEvent(eventVote *models.EventFollow) models.WorkM
 		}
 	}
 
-	return models.WorkMessage{
-		Request: nil,
-		Message: http.StatusText(http.StatusOK),
-		Status:  http.StatusOK,
-	}
+	return CorrectMessage
 }
 
 func (ec *eventUseCase) LeaveMidEvent(eventVote *models.EventFollow) models.WorkMessage {
@@ -136,9 +118,5 @@ func (ec *eventUseCase) LeaveMidEvent(eventVote *models.EventFollow) models.Work
 		}
 	}
 
-	return models.WorkMessage{
-		Request: nil,
-		Message: http.StatusText(http.StatusOK),
-		Status:  http.StatusOK,
-	}
+	return CorrectMessage
 }

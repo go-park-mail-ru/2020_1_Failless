@@ -1,5 +1,7 @@
 package delivery
 
+//go:generate mockgen -destination=../mocks/mock_delivery.go -package=mocks failless/internal/pkg/event Delivery
+
 import (
 	"failless/internal/pkg/event"
 	"failless/internal/pkg/event/usecase"

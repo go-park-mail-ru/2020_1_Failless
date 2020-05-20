@@ -34,20 +34,6 @@ func (m *MockUseCase) EXPECT() *MockUseCaseMockRecorder {
 	return m.recorder
 }
 
-// UpdateUserPhotos mocks base method
-func (m *MockUseCase) AddImageToProfile(arg0 int, arg1 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserPhotos", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateUserPhotos indicates an expected call of UpdateUserPhotos
-func (mr *MockUseCaseMockRecorder) AddImageToProfile(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPhotos", reflect.TypeOf((*MockUseCase)(nil).AddImageToProfile), arg0, arg1)
-}
-
 // FillFormIfExist mocks base method
 func (m *MockUseCase) FillFormIfExist(arg0 *models.User) (int, error) {
 	m.ctrl.T.Helper()
@@ -61,6 +47,35 @@ func (m *MockUseCase) FillFormIfExist(arg0 *models.User) (int, error) {
 func (mr *MockUseCaseMockRecorder) FillFormIfExist(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FillFormIfExist", reflect.TypeOf((*MockUseCase)(nil).FillFormIfExist), arg0)
+}
+
+// GetFeedResultsFor mocks base method
+func (m *MockUseCase) GetFeedResultsFor(arg0 int, arg1 *[]models.UserGeneral) (models.FeedResults, models.WorkMessage) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFeedResultsFor", arg0, arg1)
+	ret0, _ := ret[0].(models.FeedResults)
+	ret1, _ := ret[1].(models.WorkMessage)
+	return ret0, ret1
+}
+
+// GetFeedResultsFor indicates an expected call of GetFeedResultsFor
+func (mr *MockUseCaseMockRecorder) GetFeedResultsFor(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeedResultsFor", reflect.TypeOf((*MockUseCase)(nil).GetFeedResultsFor), arg0, arg1)
+}
+
+// GetSmallEventsForUser mocks base method
+func (m *MockUseCase) GetSmallEventsForUser(arg0 *models.SmallEventList, arg1 int) models.WorkMessage {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSmallEventsForUser", arg0, arg1)
+	ret0, _ := ret[0].(models.WorkMessage)
+	return ret0
+}
+
+// GetSmallEventsForUser indicates an expected call of GetSmallEventsForUser
+func (mr *MockUseCaseMockRecorder) GetSmallEventsForUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmallEventsForUser", reflect.TypeOf((*MockUseCase)(nil).GetSmallEventsForUser), arg0, arg1)
 }
 
 // GetUserInfo mocks base method
@@ -78,6 +93,49 @@ func (mr *MockUseCaseMockRecorder) GetUserInfo(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserInfo", reflect.TypeOf((*MockUseCase)(nil).GetUserInfo), arg0)
 }
 
+// GetUserOwnEvents mocks base method
+func (m *MockUseCase) GetUserOwnEvents(arg0 *models.OwnEventsList, arg1 int) models.WorkMessage {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserOwnEvents", arg0, arg1)
+	ret0, _ := ret[0].(models.WorkMessage)
+	return ret0
+}
+
+// GetUserOwnEvents indicates an expected call of GetUserOwnEvents
+func (mr *MockUseCaseMockRecorder) GetUserOwnEvents(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserOwnEvents", reflect.TypeOf((*MockUseCase)(nil).GetUserOwnEvents), arg0, arg1)
+}
+
+// GetUserSubscriptions mocks base method
+func (m *MockUseCase) GetUserSubscriptions(arg0 *models.MidAndBigEventList, arg1 int) models.WorkMessage {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserSubscriptions", arg0, arg1)
+	ret0, _ := ret[0].(models.WorkMessage)
+	return ret0
+}
+
+// GetUserSubscriptions indicates an expected call of GetUserSubscriptions
+func (mr *MockUseCaseMockRecorder) GetUserSubscriptions(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSubscriptions", reflect.TypeOf((*MockUseCase)(nil).GetUserSubscriptions), arg0, arg1)
+}
+
+// InitUsersByUserPreferences mocks base method
+func (m *MockUseCase) InitUsersByUserPreferences(arg0 *[]models.UserGeneral, arg1 *models.UserRequest) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InitUsersByUserPreferences", arg0, arg1)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InitUsersByUserPreferences indicates an expected call of InitUsersByUserPreferences
+func (mr *MockUseCaseMockRecorder) InitUsersByUserPreferences(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitUsersByUserPreferences", reflect.TypeOf((*MockUseCase)(nil).InitUsersByUserPreferences), arg0, arg1)
+}
+
 // RegisterNewUser mocks base method
 func (m *MockUseCase) RegisterNewUser(arg0 *forms.SignForm) error {
 	m.ctrl.T.Helper()
@@ -90,6 +148,20 @@ func (m *MockUseCase) RegisterNewUser(arg0 *forms.SignForm) error {
 func (mr *MockUseCaseMockRecorder) RegisterNewUser(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterNewUser", reflect.TypeOf((*MockUseCase)(nil).RegisterNewUser), arg0)
+}
+
+// UpdateUserAbout mocks base method
+func (m *MockUseCase) UpdateUserAbout(arg0 int, arg1 string) models.WorkMessage {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserAbout", arg0, arg1)
+	ret0, _ := ret[0].(models.WorkMessage)
+	return ret0
+}
+
+// UpdateUserAbout indicates an expected call of UpdateUserAbout
+func (mr *MockUseCaseMockRecorder) UpdateUserAbout(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserAbout", reflect.TypeOf((*MockUseCase)(nil).UpdateUserAbout), arg0, arg1)
 }
 
 // UpdateUserBase mocks base method
@@ -122,17 +194,30 @@ func (mr *MockUseCaseMockRecorder) UpdateUserInfo(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserInfo", reflect.TypeOf((*MockUseCase)(nil).UpdateUserInfo), arg0)
 }
 
-// UpdateUserMeta mocks base method
-func (m *MockUseCase) UpdateUserMeta(arg0 *forms.MetaForm) (int, error) {
+// UpdateUserPhotos mocks base method
+func (m *MockUseCase) UpdateUserPhotos(arg0 int, arg1 *forms.EImageList) models.WorkMessage {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserMeta", arg0)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "UpdateUserPhotos", arg0, arg1)
+	ret0, _ := ret[0].(models.WorkMessage)
+	return ret0
 }
 
-// UpdateUserMeta indicates an expected call of UpdateUserMeta
-func (mr *MockUseCaseMockRecorder) UpdateUserMeta(arg0 interface{}) *gomock.Call {
+// UpdateUserPhotos indicates an expected call of UpdateUserPhotos
+func (mr *MockUseCaseMockRecorder) UpdateUserPhotos(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserMeta", reflect.TypeOf((*MockUseCase)(nil).UpdateUserMeta), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPhotos", reflect.TypeOf((*MockUseCase)(nil).UpdateUserPhotos), arg0, arg1)
+}
+
+// UpdateUserTags mocks base method
+func (m *MockUseCase) UpdateUserTags(arg0 int, arg1 []int) models.WorkMessage {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserTags", arg0, arg1)
+	ret0, _ := ret[0].(models.WorkMessage)
+	return ret0
+}
+
+// UpdateUserTags indicates an expected call of UpdateUserTags
+func (mr *MockUseCaseMockRecorder) UpdateUserTags(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserTags", reflect.TypeOf((*MockUseCase)(nil).UpdateUserTags), arg0, arg1)
 }

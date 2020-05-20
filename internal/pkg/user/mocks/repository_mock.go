@@ -135,36 +135,6 @@ func (mr *MockRepositoryMockRecorder) GetUserByUID(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByUID", reflect.TypeOf((*MockRepository)(nil).GetUserByUID), arg0)
 }
 
-// GetUserEvents mocks base method
-func (m *MockRepository) GetUserEvents(arg0 int) ([]models.Event, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserEvents", arg0)
-	ret0, _ := ret[0].([]models.Event)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUserEvents indicates an expected call of GetUserEvents
-func (mr *MockRepositoryMockRecorder) GetUserEvents(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserEvents", reflect.TypeOf((*MockRepository)(nil).GetUserEvents), arg0)
-}
-
-// GetUserSubscriptions mocks base method
-func (m *MockRepository) GetUserSubscriptions(arg0 int) ([]models.Event, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserSubscriptions", arg0)
-	ret0, _ := ret[0].([]models.Event)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetUserSubscriptions indicates an expected call of GetUserSubscriptions
-func (mr *MockRepositoryMockRecorder) GetUserSubscriptions(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSubscriptions", reflect.TypeOf((*MockRepository)(nil).GetUserSubscriptions), arg0)
-}
-
 // GetUserTags mocks base method
 func (m *MockRepository) GetUserTags(arg0 int) ([]models.Tag, error) {
 	m.ctrl.T.Helper()
