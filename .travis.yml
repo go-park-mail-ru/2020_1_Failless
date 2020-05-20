@@ -1,6 +1,6 @@
-language: golang
-golang:
-- 1.13.7
+language: go
+go:
+- 1.13.x
 dist: trusty
 sudo: true
 addons:
