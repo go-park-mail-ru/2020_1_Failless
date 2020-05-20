@@ -1328,3 +1328,240 @@ func TestEventDelivery_LeaveMiddleEvent_Correct(t *testing.T) {
 
 	assert.Equal(t, testMessageUseCaseOk.Status, msg.Status)
 }
+
+
+// Not implemented
+
+func TestEventDelivery_GetMiddleEvent(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("GET", "/api/srv/events/mid/:eid", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.GetMiddleEvent(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusNotImplemented, msg.Status)
+	assert.Equal(t, http.StatusText(http.StatusNotImplemented), msg.Message)
+}
+
+func TestEventDelivery_UpdateMiddleEvent(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("PUT", "/api/srv/events/mid/:eid", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.UpdateMiddleEvent(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusNotImplemented, msg.Status)
+	assert.Equal(t, http.StatusText(http.StatusNotImplemented), msg.Message)
+}
+
+func TestEventDelivery_DeleteMiddleEvent(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("DELETE", "/api/srv/events/mid/:eid", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.DeleteMiddleEvent(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusNotImplemented, msg.Status)
+	assert.Equal(t, http.StatusText(http.StatusNotImplemented), msg.Message)
+}
+
+func TestEventDelivery_CreateBigEvent(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("POST", "/api/srv/events/big", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.CreateBigEvent(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusNotImplemented, msg.Status)
+	assert.Equal(t, http.StatusText(http.StatusNotImplemented), msg.Message)
+}
+
+func TestEventDelivery_GetBigEvent(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("GET", "/api/srv/events/big/:eid", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.GetBigEvent(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusNotImplemented, msg.Status)
+	assert.Equal(t, http.StatusText(http.StatusNotImplemented), msg.Message)
+}
+
+func TestEventDelivery_UpdateBigEvent(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("PUT", "/api/srv/events/big/:eid", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.UpdateBigEvent(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusNotImplemented, msg.Status)
+	assert.Equal(t, http.StatusText(http.StatusNotImplemented), msg.Message)
+}
+
+func TestEventDelivery_DeleteBigEvent(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("DELETE", "/api/srv/events/big/:eid", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.DeleteBigEvent(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusNotImplemented, msg.Status)
+	assert.Equal(t, http.StatusText(http.StatusNotImplemented), msg.Message)
+}
+
+func TestEventDelivery_AddVisitorForBigEvent(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("POST", "/api/srv/events/big/:eid/visitor", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.AddVisitorForBigEvent(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusNotImplemented, msg.Status)
+	assert.Equal(t, http.StatusText(http.StatusNotImplemented), msg.Message)
+}
+
+func TestEventDelivery_RemoveVisitorForBigEvent(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("DELETE", "/api/srv/events/big/:eid/visitor", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.RemoveVisitorForBigEvent(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusNotImplemented, msg.Status)
+	assert.Equal(t, http.StatusText(http.StatusNotImplemented), msg.Message)
+}
