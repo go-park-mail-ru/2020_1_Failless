@@ -6,25 +6,15 @@ sudo: true
 addons:
   ssh_known_hosts:
   - 163.172.133.90
-#services:
-#  - docker
 before_install:
-#  - sudo rm /usr/local/bin/docker-compose
-#  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-#  - chmod +x docker-compose
-#  - sudo mv docker-compose /usr/local/bin
-#  - docker login --email=$DOCKER_HUB_EMAIL --username=$DOCKER_HUB_USERNAME --password=$DOCKER_HUB_PASSWORD
-  - openssl aes-256-cbc -K $encrypted_db2095f63ba3_key -iv $encrypted_db2095f63ba3_iv
-    -in deployments/deploy_rsa.enc -out deployments/deploy_rsa -d
-  - eval "$(ssh-agent -s)"
-  - cp deployments/deploy_rsa ~/.ssh/deploy_rsa
-  - chmod 600 ~/.ssh/deploy_rsa
-  - ssh-add ~/.ssh/deploy_rsa
-#  - cd deployments
-#  - docker-compose build
-#  - docker-compose pull
-#  - docker-compose build
-#  - docker-compose start
+- openssl aes-256-cbc -K $encrypted_db2095f63ba3_key -iv $encrypted_db2095f63ba3_iv
+  -in deploy_rsa.enc -out deploy_rsa -d
+- openssl aes-256-cbc -K $encrypted_db2095f63ba3_key -iv $encrypted_db2095f63ba3_iv
+  -in deployments/deploy_rsa.enc -out deployments/deploy_rsa -d
+- eval "$(ssh-agent -s)"
+- cp deployments/deploy_rsa ~/.ssh/deploy_rsa
+- chmod 600 ~/.ssh/deploy_rsa
+- ssh-add ~/.ssh/deploy_rsa
 after_success:
 - go build -o bin/auth ./cmd/auth/main.go
 - go build -o bin/chat ./cmd/chat/main.go
@@ -48,4 +38,3 @@ env:
   - secure: QFc6rhe8wPRq7/rRfFTA/iihJKzwXaFdJDGMH9RiTimV6WAbagXc275056p9IX8Lx0pjgdjHZopSnYimgiyQKMRqr9ZCD9dQHdazafX4cqRpe8ingu69ZDkYYpwcLsr58WIHGUzdSjNW3Q3Mr055+08c+pD7LMeGnGWfKYqbA0NaGq2zqk8sV40uJn4EOcKev6O3q+eNeHCcl+LvmSJZvK2S+UH1Y+COgzRzADPum0jyP3vHzlq329rqyG4SpmjgOdh+zrVXFmU9sWtZmPgnFoP4qnfuCjmDidSG1CO1pKM1nUt0bS2nmzExH1jOMs2tmj1+dFRyQSKs4KaO6TFtccnfUwJpSny1qDWb7CCrneM8E4CswHPQX40HR2dDb1/AFzTIGwsHrKRiSE7DodNBlhoAUOthQK9DdbNWcOibB4J+KN5nYDX7AXZ0zHmKSIxVjlvGD9/DVmbVQc85oG5KZ+GOLzJQzkxqkq85kKgUVzmRoLDjn7+ZxQy5J6SyirK0FYuLwdqAUaXEokKzVU80yPN52K/CPfDuhcxA4dr/0gts1bIEQnVlEqCxHHyGiTl3trrjl5KOyqeqHHK8ERaeAaUixAc+PGgfoxyHbF7/zqMLc5JMIf7zYKCoyzaDpR+jyzNLijJKIFMwPtLCLH34QDBdF/JLXbU9NtFB5PDDSkE=
   - secure: biZzH6cx0/l/X76u1yvGW1huo1Xbe6x0PHu7CsTxyeKcGBJFXaknRw2lrsEmwKgoGAghUwvCiZe9vQZDzV80K+4qK1uP43gXEAY2+4gB7WJcF4V6GDmaoSejeiZirlqD/eOI8/QKFusv/45SVZ55AgnknAmE+iC5j9Iy7Dfc/a0hI4HEi9JRLTk0+zT/JcFzHdsS7dV0StwAliEZZGxCgp7Og+zGBt/PeQvSbEC/5N1cZQEtsqwSpdW/B4hY+fHDuMHESTJXUHko68gSKjuClTJzo9Ly6aSzJsrYP5oW6L98hhCA3CoRjOIaNqCZzuzjhJIwTi1S8/kMkmf0AtI+pQRSavga9dP2DCYREm10n+5b5kF7d8iZK3fwLMuEI5t6v5kWpCfQHVBpFS+ZoYENXCq3C0VVHIYzSH1dJ/ogGgvp5RughdsS5O9YTPXTkyJVfiMe3XKL5lEu7nGzUX6p9MdleMg5RK/sB2IqLAYteGPqa6yQYfA94SUPHGvnEIrk9rSst45EnlW7EBuO4P274z0+V2rqCNqIF5JHYPbGbsfm8FAHm/wkwMb4ODb9zpCyfOn9KNjEBHn65nCEPk/z4uVQ3hln/dDiZ8CU9KHiLCbDp4W/NPKnqgWv3inBOjbc37dHi3AOits69pkewt5zB1U9Ph89VcZfkarTXCxork8=
   - DOCKER_COMPOSE_VERSION=1.23.2
-
