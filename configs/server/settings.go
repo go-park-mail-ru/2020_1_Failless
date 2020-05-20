@@ -40,7 +40,7 @@ var routesMap = map[string][]settings.MapHandler{
 	     ***********************************************/
 	"/api/srv/getuser": {{
 		Type:         "GET",
-		Handler:      userDelivery.GetUserInfo,
+		Handler:      userDelivery.GetDelivery().GetUserInfo,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         false,
@@ -48,7 +48,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/api/srv/logout": {{
 		Type:         "GET",
-		Handler:      userDelivery.Logout,
+		Handler:      userDelivery.GetDelivery().Logout,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         false,
@@ -56,7 +56,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/api/srv/signin": {{
 		Type:         "POST",
-		Handler:      userDelivery.SignIn,
+		Handler:      userDelivery.GetDelivery().SignIn,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
@@ -64,7 +64,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/api/srv/signup": {{
 		Type:         "POST",
-		Handler:      userDelivery.SignUp,
+		Handler:      userDelivery.GetDelivery().SignUp,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
@@ -237,7 +237,7 @@ var routesMap = map[string][]settings.MapHandler{
    ***********************************************/
 	"/api/srv/profile/:id/meta/about": {{
 		Type:         "PUT",
-		Handler:      userDelivery.UpdUserAbout,
+		Handler:      userDelivery.GetDelivery().UpdUserAbout,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
@@ -245,7 +245,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/api/srv/profile/:id/meta/tags": {{
 		Type:         "PUT",
-		Handler:      userDelivery.UpdUserTags,
+		Handler:      userDelivery.GetDelivery().UpdUserTags,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
@@ -253,7 +253,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/api/srv/profile/:id/meta/photos": {{
 		Type:         "PUT",
-		Handler:      userDelivery.UpdUserPhotos,
+		Handler:      userDelivery.GetDelivery().UpdUserPhotos,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
@@ -261,7 +261,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/api/srv/profile/:id/general": {{
 		Type:         "PUT",
-		Handler:      userDelivery.UpdProfileGeneral,
+		Handler:      userDelivery.GetDelivery().UpdProfileGeneral,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
@@ -269,7 +269,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/api/srv/profile/:id/subscriptions": {{
 		Type:         "GET",
-		Handler:      userDelivery.GetProfileSubscriptions,
+		Handler:      userDelivery.GetDelivery().GetProfileSubscriptions,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
@@ -278,7 +278,7 @@ var routesMap = map[string][]settings.MapHandler{
 	"/api/srv/profile/:id": {
 		{
 			Type:         "PUT",
-			Handler:      userDelivery.UpdProfilePage,
+			Handler:      userDelivery.GetDelivery().UpdProfilePage,
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,
@@ -286,7 +286,7 @@ var routesMap = map[string][]settings.MapHandler{
 		},
 		{
 			Type:         "GET",
-			Handler:      userDelivery.GetProfilePage,
+			Handler:      userDelivery.GetDelivery().GetProfilePage,
 			CORS:         true,
 			AuthRequired: false,
 			CSRF:         false,
@@ -303,7 +303,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/api/srv/users/feed": {{
 		Type:         "POST",
-		Handler:      userDelivery.GetUsersFeed,
+		Handler:      userDelivery.GetDelivery().GetUsersFeed,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
@@ -311,7 +311,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/api/srv/profile/:id/own-events": {{
 		Type:         "GET",
-		Handler:      userDelivery.GetSmallAndMidEventsForUser,
+		Handler:      userDelivery.GetDelivery().GetSmallAndMidEventsForUser,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
@@ -319,7 +319,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	"/api/srv/profile/:id/small-events": {{
 		Type:         "GET",
-		Handler:      userDelivery.GetSmallEventsForUser,
+		Handler:      userDelivery.GetDelivery().GetSmallEventsForUser,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
@@ -327,7 +327,7 @@ var routesMap = map[string][]settings.MapHandler{
 	}},
 	//"/api/srv/profile/:id/mid-events": {{
 	//	Type:         "GET",
-	//	Handler:      userDelivery.GetOwnMidEvents,
+	//	Handler:      userDelivery.GetDelivery().GetOwnMidEvents,
 	//	CORS:         true,
 	//	AuthRequired: true,
 	//	CSRF:         true,

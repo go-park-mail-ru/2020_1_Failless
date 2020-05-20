@@ -1,5 +1,7 @@
 package usecase
 
+//go:generate mockgen -destination=../mocks/mock_usecase.go -package=mocks failless/internal/pkg/vote UseCase
+
 import (
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/models"

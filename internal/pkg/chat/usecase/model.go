@@ -1,5 +1,7 @@
 package usecase
 
+//go:generate mockgen -destination=../mocks/mock_usecase.go -package=mocks failless/internal/pkg/chat UseCase
+
 import (
 	"failless/internal/pkg/chat"
 	"failless/internal/pkg/chat/repository"
