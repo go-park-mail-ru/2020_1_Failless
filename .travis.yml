@@ -1,0 +1,50 @@
+language: golang
+golang:
+  - 1.13.7
+dist: trusty
+sudo: false
+addons:
+  ssh_known_hosts:
+    - 163.172.133.90
+before_install:
+  - openssl aes-256-cbc -K $encrypted_db2095f63ba3_key -iv $encrypted_db2095f63ba3_iv
+    -in .travis/deploy_rsa.enc -out .travis/deploy_rsa -d
+  - eval "$(ssh-agent -s)"
+  - cp .travis/deploy_rsa ~/.ssh/deploy_rsa
+  - chmod 600 ~/.ssh/deploy_rsa
+  - ssh-add ~/.ssh/deploy_rsa
+install:
+  - npm install
+after_success:
+  - npx webpack
+git:
+  depth: 9999999
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: '.travis/deploy.sh'
+    on:
+      branch: bugfix/connection-limit
+
+branches:
+  only:
+    - master
+    - develop
+    - bugfix/connection-limit
+
+before_install:
+  - openssl aes-256-cbc -K $encrypted_339d0c5b3f15_key -iv $encrypted_339d0c5b3f15_iv
+    -in travis_rsa.enc -out travis_rsa -d
+  - chmod 700 travis_rsa
+
+# and for my next trick ill turn the virtual machine into a useless ssh bot
+script:
+  - scp -r -o "StrictHostKeyChecking no" -i travis_rsa . root@ih1465635.vds.myihor.ru:/hexagon-build
+  - ssh -o "StrictHostKeyChecking no" -i travis_rsa root@ih1465635.vds.myihor.ru 'cd /hexagon-build/etc/docker &&
+    docker-compose build
+
+after_success:
+  - ssh -o "StrictHostKeyChecking no" -i travis_rsa root@ih1465635.vds.myihor.ru '
+    rm -rf /hexagon-build &&
+    docker rm $(docker ps -a -q) &&
+    docker rmi $(docker images | grep "^<none>" | awk "{print $3}")'

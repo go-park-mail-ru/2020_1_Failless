@@ -6,6 +6,7 @@ media/data/*
 data
 .DS_Store
 .env
+*.env
 *.log
 *.pb.go
 *_easyjson.go
