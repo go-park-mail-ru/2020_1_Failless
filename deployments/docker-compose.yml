@@ -85,8 +85,6 @@ services:
 #    volumes:
 #      - ../configs/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
 #      - ../configs/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
-    env_file:
-      - ./pgbouncer.env
     ports:
       - '6432:6432'
 

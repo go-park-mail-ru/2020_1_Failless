@@ -11,3 +11,5 @@ data
 *.pb.go
 *_easyjson.go
 easyjson-*
+deploy_rsa.pub
+deploy_rsa
