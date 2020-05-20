@@ -18,7 +18,6 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"testing"
-	"time"
 )
 
 var (
@@ -42,17 +41,6 @@ var (
 	testUserTags = models.UserTags{Tags:[]int{1,2}}
 	testUserPhotos = forms.EImageList{{ImgBase64:""}}
 	testUserPhotosInvalid = forms.EImageList{{ImgBase64:"kek", ImgName:""}}
-	testGeneralForm = forms.GeneralForm{
-		SignForm: testSignForm,
-		Tags:     nil,
-		Avatar:   forms.EImage{},
-		Photos:   nil,
-		Gender:   0,
-		About:    "",
-		Rating:   0,
-		Location: models.LocationPoint{},
-		Birthday: time.Time{},
-	}
 	testUserRequest = models.UserRequest{
 		Uid:      security.TestUser.Uid,
 		Page:     1,

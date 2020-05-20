@@ -5,32 +5,38 @@ package usecase
 import (
 	"errors"
 	"failless/internal/pkg/db"
+	"failless/internal/pkg/event"
 	eventRep "failless/internal/pkg/event/repository"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/security"
-	"failless/internal/pkg/settings"
 	"failless/internal/pkg/user"
 	"failless/internal/pkg/user/repository"
 	"log"
 	"net/http"
 )
 
+const (
+	MessageUserDoesntExist = "User doesn't exist\n"
+)
+
+var (
+	CorrectMessage = models.WorkMessage{
+		Request: nil,
+		Message: "",
+		Status:  http.StatusOK,
+	}
+)
+
 type UserUseCase struct {
 	Rep user.Repository
+	eventRep event.Repository
 }
 
 func GetUseCase() user.UseCase {
-	if settings.UseCaseConf.InHDD {
-		log.Println("IN HDD")
-		return &UserUseCase{
-			Rep: repository.NewSqlUserRepository(db.ConnectToDB()),
-		}
-	} else {
-		log.Println("IN MEMORY")
-		return &UserUseCase{
-			Rep: repository.NewUserRepository(),
-		}
+	return &UserUseCase{
+		Rep: repository.NewSqlUserRepository(db.ConnectToDB()),
+		eventRep: eventRep.NewSqlEventRepository(db.ConnectToDB()),
 	}
 }
 
@@ -50,23 +56,8 @@ func (uc *UserUseCase) InitUsersByUserPreferences(users *[]models.UserGeneral, r
 	return http.StatusOK, nil
 }
 
-func (uc *UserUseCase) TakeValidTagsOnly(tagIds []int, tags []models.Tag) []int {
-	var valid []int = nil
-	for _, tagId := range tagIds {
-		for _, tag := range tags {
-			if tagId == tag.TagId {
-				valid = append(valid, tagId)
-			}
-		}
-	}
-
-	return valid
-}
-
 func (uc *UserUseCase) GetUserSubscriptions(subscriptions *models.MidAndBigEventList, uid int) models.WorkMessage {
-	er := eventRep.NewSqlEventRepository(db.ConnectToDB())
-
-	code, err := er.GetSubscriptionMidEvents(&subscriptions.MidEvents, uid)
+	code, err := uc.eventRep.GetSubscriptionMidEvents(&subscriptions.MidEvents, uid)
 	//code, err != er.GetSubscriptionBigEvents(&subscriptions.BigEvents, uid)
 
 	if err != nil {
@@ -75,18 +66,11 @@ func (uc *UserUseCase) GetUserSubscriptions(subscriptions *models.MidAndBigEvent
 			Message: err.Error(),
 			Status:  code,
 		}
-	} else {
-		return models.WorkMessage{
-			Request: nil,
-			Message: "",
-			Status:  code,
-		}
 	}
+	return CorrectMessage
 }
 
 func (uc *UserUseCase) GetFeedResultsFor(uid int, users *[]models.UserGeneral) (models.FeedResults, models.WorkMessage) {
-	er := eventRep.NewSqlEventRepository(db.ConnectToDB())
-
 	var feedResults models.FeedResults
 
 	for _, feedUser := range *users {
@@ -99,7 +83,7 @@ func (uc *UserUseCase) GetFeedResultsFor(uid int, users *[]models.UserGeneral) (
 		feedResult.Birthday = feedUser.Birthday
 		feedResult.Gender = feedUser.Gender
 
-		code, err := er.GetSmallEventsForUser(&feedResult.OnwEvents.SmallEvents, feedResult.Uid)
+		code, err := uc.eventRep.GetSmallEventsForUser(&feedResult.OnwEvents.SmallEvents, feedResult.Uid)
 		if err != nil {
 			return feedResults, models.WorkMessage{
 				Request: nil,
@@ -107,7 +91,7 @@ func (uc *UserUseCase) GetFeedResultsFor(uid int, users *[]models.UserGeneral) (
 				Status:  code,
 			}
 		}
-		code, err = er.GetOwnMidEventsWithAnotherUserFollowed(&feedResult.OnwEvents.MidEvents, feedResult.Uid, uid)
+		code, err = uc.eventRep.GetOwnMidEventsWithAnotherUserFollowed(&feedResult.OnwEvents.MidEvents, feedResult.Uid, uid)
 		if err != nil {
 			return feedResults, models.WorkMessage{
 				Request: nil,
@@ -115,7 +99,7 @@ func (uc *UserUseCase) GetFeedResultsFor(uid int, users *[]models.UserGeneral) (
 				Status:  code,
 			}
 		}
-		code, err = er.GetSubscriptionMidEventsWithAnotherUserFollowed(&feedResult.Subscriptions.MidEvents, feedResult.Uid, uid)
+		code, err = uc.eventRep.GetSubscriptionMidEventsWithAnotherUserFollowed(&feedResult.Subscriptions.MidEvents, feedResult.Uid, uid)
 		if err != nil {
 			return feedResults, models.WorkMessage{
 				Request: nil,
@@ -127,11 +111,7 @@ func (uc *UserUseCase) GetFeedResultsFor(uid int, users *[]models.UserGeneral) (
 		feedResults = append(feedResults, feedResult)
 	}
 
-	return feedResults, models.WorkMessage{
-		Request: nil,
-		Message: "",
-		Status:  http.StatusOK,
-	}
+	return feedResults, CorrectMessage
 }
 
 func (uc *UserUseCase) UpdateUserAbout(uid int, about string) models.WorkMessage {
@@ -149,10 +129,7 @@ func (uc *UserUseCase) GetUserInfo(profile *forms.GeneralForm) (int, error) {
 		return http.StatusNotFound, err
 	}
 
-	err = profile.FillProfile(row)
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
+	profile.FillProfile(row)
 
 	base, err := uc.Rep.GetUserByUID(profile.Uid)
 	if err != nil {
@@ -202,29 +179,21 @@ func (uc *UserUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {
 }
 
 func (uc *UserUseCase) GetSmallEventsForUser(smallEvents *models.SmallEventList, uid int) models.WorkMessage {
-	er := eventRep.NewSqlEventRepository(db.ConnectToDB())
-	code, err := er.GetSmallEventsForUser(smallEvents, uid)
+	code, err := uc.eventRep.GetSmallEventsForUser(smallEvents, uid)
 	if err != nil {
 		return models.WorkMessage{
 			Request: nil,
 			Message: err.Error(),
 			Status:  code,
 		}
-	} else {
-		return models.WorkMessage{
-			Request: nil,
-			Message: "",
-			Status:  code,
-		}
 	}
+	return CorrectMessage
 }
 
 func (uc *UserUseCase) GetUserOwnEvents(ownEvents *models.OwnEventsList, uid int) models.WorkMessage {
-	er := eventRep.NewSqlEventRepository(db.ConnectToDB())
-
 	// Get Mid events
 	midEventList := models.MidEventList{}
-	code, err := er.GetOwnMidEvents(&midEventList, uid)
+	code, err := uc.eventRep.GetOwnMidEvents(&midEventList, uid)
 	if err != nil {
 		return models.WorkMessage{
 			Request: nil,
@@ -235,7 +204,7 @@ func (uc *UserUseCase) GetUserOwnEvents(ownEvents *models.OwnEventsList, uid int
 
 	// Get Small events
 	smallEventList := models.SmallEventList{}
-	code, err = er.GetSmallEventsForUser(&smallEventList, uid)
+	code, err = uc.eventRep.GetSmallEventsForUser(&smallEventList, uid)
 	if err != nil {
 		return models.WorkMessage{
 			Request: nil,
@@ -247,11 +216,7 @@ func (uc *UserUseCase) GetUserOwnEvents(ownEvents *models.OwnEventsList, uid int
 	// Assign and return
 	ownEvents.MidEvents = midEventList
 	ownEvents.SmallEvents = smallEventList
-	return models.WorkMessage{
-			Request: nil,
-			Message: "",
-			Status:  http.StatusOK,
-		}
+	return CorrectMessage
 	// TODO: rewrite in goroutines
 }
 
@@ -260,9 +225,8 @@ func (uc *UserUseCase) FillFormIfExist(cred *models.User) (int, error) {
 	user, err := uc.Rep.GetUserByPhoneOrEmail(cred.Phone, cred.Email)
 	if err == nil && user.Uid < 0 {
 		log.Println("user not found")
-		return http.StatusNotFound, errors.New("User doesn't exist\n")
+		return http.StatusNotFound, errors.New(MessageUserDoesntExist)
 	} else if err != nil {
-		log.Println("error was occurred")
 		log.Println(err.Error())
 		return http.StatusInternalServerError, err
 	}
