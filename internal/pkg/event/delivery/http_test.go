@@ -59,6 +59,26 @@ var (
 	testInvalidUidType = map[string]interface{}{
 		"uid": strconv.Itoa(1),			// Invalid type
 	}
+	testMidEventForm = forms.MidEventForm{
+		AdminId: 1,
+		Title:   "title",
+		Descr:   "about",
+		TagsId:  nil,
+		Date:    time.Time{},
+		Photos:  nil,
+		Limit:   10,
+		Public:  false,
+	}
+	testMessageUseCaseOk = models.WorkMessage{
+		Request: nil,
+		Message: "",
+		Status:  0,
+	}
+	testMessageUseCaseError = models.WorkMessage{
+		Request: nil,
+		Message: "error in usecase",
+		Status:  http.StatusInternalServerError,
+	}
 )
 
 func getTestDelivery(mockUC *mocks.MockUseCase) event.Delivery {
@@ -479,7 +499,7 @@ func TestEventDelivery_CreateSmallEvent_InvalidForm(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusBadRequest, msg.Status)
-	assert.Equal(t, forms.MessageSmallEventValidationFailed, msg.Message)
+	assert.Equal(t, forms.MessageEventValidationFailed, msg.Message)
 }
 
 func TestEventDelivery_CreateSmallEvent_InvalidPhotos(t *testing.T) {
@@ -820,6 +840,184 @@ func TestEventDelivery_DeleteSmallEvent_Correct(t *testing.T) {
 	}
 
 	assert.Equal(t, 0, msg.Status)
+}
+
+func TestEventDelivery_CreateMiddleEvent_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testMidEventForm)
+	req, err := http.NewRequest("POST", "/api/srv/events/mid", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.CreateMiddleEvent(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusUnauthorized, msg.Status)
+	assert.Equal(t, network.MessageErrorAuthRequired, msg.Message)
+}
+
+func TestEventDelivery_CreateMiddleEvent_IncorrectBody(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testInvalidUidType)
+	req, err := http.NewRequest("POST", "/api/srv/events/mid", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.CreateMiddleEvent(rr, req.WithContext(ctx), map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
+}
+
+func TestEventDelivery_CreateMiddleEvent_InvalidForm(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	eventReq := testMidEventForm
+	eventReq.AdminId = 0
+	body, _ := json.Marshal(eventReq)
+	req, err := http.NewRequest("POST", "/api/srv/events/mid", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.CreateMiddleEvent(rr, req.WithContext(ctx), map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, forms.MessageEventValidationFailed, msg.Message)
+}
+
+func TestEventDelivery_CreateMiddleEvent_InvalidPhotos(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	eventReq := testMidEventForm
+	eventReq.Photos = []forms.EImage{{ImgBase64:""}, {ImgBase64:""}}
+	body, _ := json.Marshal(eventReq)
+	req, err := http.NewRequest("POST", "/api/srv/events/mid", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.CreateMiddleEvent(rr, req.WithContext(ctx), map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, images.MessageImageValidationFailed, msg.Message)
+}
+
+func TestEventDelivery_CreateMiddleEvent_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testMidEventForm)
+	req, err := http.NewRequest("POST", "/api/srv/events/mid", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().CreateMidEvent(&testMidEventForm).Return(models.MidEvent{}, testMessageUseCaseError)
+	ed.CreateMiddleEvent(rr, req.WithContext(ctx), map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, testMessageUseCaseError.Status, msg.Status)
+	assert.Equal(t, testMessageUseCaseError.Message, msg.Message)
+}
+
+func TestEventDelivery_CreateMiddleEvent_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testMidEventForm)
+	req, err := http.NewRequest("POST", "/api/srv/events/mid", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	var ps map[string]string
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().CreateMidEvent(&testMidEventForm).Return(models.MidEvent{}, testMessageUseCaseOk)
+	ed.CreateMiddleEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, testMessageUseCaseOk.Status, msg.Status)
 }
 
 func TestEventDelivery_JoinMiddleEvent_IncorrectUid(t *testing.T) {

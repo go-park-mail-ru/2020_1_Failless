@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	MessageSmallEventValidationFailed = "Small event validation failed. Check server logs"
+	MessageEventValidationFailed = "Event validation failed. Check server logs"
 )
 
 type SmallEventForm struct {

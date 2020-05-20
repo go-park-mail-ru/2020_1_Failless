@@ -106,7 +106,7 @@ func (ed *eventDelivery) CreateSmallEvent(w http.ResponseWriter, r *http.Request
 
 	// Check form
 	if !eventForm.Validate() {
-		network.GenErrorCode(w, r, forms.MessageSmallEventValidationFailed, http.StatusBadRequest)
+		network.GenErrorCode(w, r, forms.MessageEventValidationFailed, http.StatusBadRequest)
 		return
 	}
 
@@ -184,11 +184,11 @@ func (ed *eventDelivery) CreateMiddleEvent(w http.ResponseWriter, r *http.Reques
 	err := json.UnmarshalFromReader(r.Body, &midEventForm)
 	if err != nil {
 		log.Println(err)
-		network.GenErrorCode(w, r, err.Error(), http.StatusBadRequest)
+		network.GenErrorCode(w, r, network.MessageErrorParseJSON, http.StatusBadRequest)
 		return
 	}
 	if !midEventForm.Validate() {
-		network.GenErrorCode(w, r, "incorrect data", http.StatusBadRequest)
+		network.GenErrorCode(w, r, forms.MessageEventValidationFailed, http.StatusBadRequest)
 		return
 	}
 
@@ -197,6 +197,7 @@ func (ed *eventDelivery) CreateMiddleEvent(w http.ResponseWriter, r *http.Reques
 		if midEventForm.Photos[iii].ImgBase64 == "" ||
 			!images.ValidateImage(&midEventForm.Photos[iii], images.Events) {
 			network.GenErrorCode(w, r, "Image validation failed. Check server logs", http.StatusBadRequest)
+			return
 		}
 	}
 
@@ -253,7 +254,7 @@ func (ed *eventDelivery) LeaveMiddleEvent(w http.ResponseWriter, r *http.Request
 	}
 
 	if eid := network.GetEIdFromRequest(w, r, ps); eid < 0 {
-		network.GenErrorCode(w, r, "Error in retrieving eid from url", http.StatusBadRequest)
+		return
 	}
 
 	var subscription models.EventFollow
