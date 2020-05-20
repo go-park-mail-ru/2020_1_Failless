@@ -161,10 +161,14 @@ func (ed *eventDelivery) DeleteSmallEvent(w http.ResponseWriter, r *http.Request
 
 	eid := network.GetEIdFromRequest(w, r, ps)
 	if eid < 0 {
-		network.GenErrorCode(w, r, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
 	}
 
 	message := ed.UseCase.DeleteSmallEvent(uid, eid)
+	if message.Message != "" {
+		network.GenErrorCode(w, r, message.Message, message.Status)
+		return
+	}
 
 	network.Jsonify(w, message, message.Status)
 }

@@ -697,6 +697,131 @@ func TestEventDelivery_UpdateSmallEvent_Correct(t *testing.T) {
 	assert.Equal(t, 0, msg.Status)
 }
 
+func TestEventDelivery_DeleteSmallEvent_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testSmallEvent)
+	req, err := http.NewRequest("DELETE", "/api/srv/events/small/:eid", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.DeleteSmallEvent(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusUnauthorized, msg.Status)
+	assert.Equal(t, network.MessageErrorAuthRequired, msg.Message)
+}
+
+func TestEventDelivery_DeleteSmallEvent_IncorrectEidInUrl(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testSmallEvent)
+	req, err := http.NewRequest("DELETE", "/api/srv/events/small/:eid", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ps := make(map[string]string)
+	ps["eid"] = "kek"
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.DeleteSmallEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorRetrievingEidFromUrl, msg.Message)
+}
+
+func TestEventDelivery_DeleteSmallEvent_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testSmallEvent)
+	req, err := http.NewRequest("DELETE", "/api/srv/events/small/:eid", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ps := make(map[string]string)
+	ps["eid"] = strconv.Itoa(testSmallEvent.EId)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().DeleteSmallEvent(testSmallEvent.UId, int64(testSmallEvent.EId)).Return(models.WorkMessage{
+		Request: nil,
+		Message: "error in usecase",
+		Status:  http.StatusInternalServerError,
+	})
+	ed.DeleteSmallEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusInternalServerError, msg.Status)
+	assert.Equal(t, "error in usecase", msg.Message)
+}
+
+func TestEventDelivery_DeleteSmallEvent_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testSmallEvent)
+	req, err := http.NewRequest("DELETE", "/api/srv/events/small/:eid", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ps := make(map[string]string)
+	ps["eid"] = strconv.Itoa(testSmallEvent.EId)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().DeleteSmallEvent(testSmallEvent.UId, int64(testSmallEvent.EId))
+	ed.DeleteSmallEvent(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
 func TestEventDelivery_JoinMiddleEvent_IncorrectUid(t *testing.T) {
 	// Create mock
 	mockCtrl := gomock.NewController(t)
