@@ -51,8 +51,8 @@ func TestVoteUser(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, msg.Status, http.StatusUnauthorized)
-	assert.Equal(t, msg.Message, "auth required")
+	assert.Equal(t, http.StatusUnauthorized, msg.Status)
+	assert.Equal(t, network.MessageErrorAuthRequired, msg.Message)
 }
 
 func TestVoteDelivery_VoteUser_IncorrectUidInBody(t *testing.T) {

@@ -11,8 +11,10 @@ const (
 	MessageErrorAuthRequired = "auth required"
 	MessageErrorRetrievingEidFromUrl = "Error in retrieving eid from url"
 	MessageInvalidID = "Incorrect id"
+	MessageInvalidCID = "Incorrect cid"
 	MessageValidationFailed = "Validation failed"
 	MessageSuccessfulLogout = "Successful logout"
+	MessageErrorWhileUpgrading = "Failed to upgrade a protocol"
 )
 
 func DecodeToMsg(body *bytes.Buffer) (models.WorkMessage, error) {
