@@ -16,7 +16,7 @@ before_install:
 - sudo apt install -y wget unzip
 - wget https://github.com/protocolbuffers/protobuf/archive/v3.12.0.tar.gz
 - tar -xzvf v3.12.0.tar.gz
-- pushd v3.12.0.tar.gz && ./configure --prefix=/usr && make && sudo make install && popd
+- pushd v3.12.0 && ./configure --prefix=/usr && make && sudo make install && popd
 - go install google.golang.org/protobuf/cmd/protoc-gen-go
 - go get google.golang.org/grpc
 - go get -u github.com/golang/protobuf/protoc-gen-go
