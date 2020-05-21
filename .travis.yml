@@ -14,7 +14,7 @@ before_install:
 - chmod 600 ~/.ssh/deploy_rsa
 - ssh-add ~/.ssh/deploy_rsa
 - go version
-- cd $TRAVIS_BUILD_DIR/deployments && sudo make all
+- cd $TRAVIS_BUILD_DIR/deployments && make all
 after_success:
 - go build -o bin/auth $TRAVIS_BUILD_DIR/cmd/auth/main.go
 - go build -o bin/chat $TRAVIS_BUILD_DIR/cmd/chat/main.go
