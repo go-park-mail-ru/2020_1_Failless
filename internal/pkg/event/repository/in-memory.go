@@ -13,9 +13,9 @@ func NewEventRepository() event.Repository {
 	return &eventsRepository{}
 }
 
-func (er *eventsRepository) getEvents(withCondition string, sqlStatement string, args ...interface{}) ([]models.Event, error) {
-	return nil, nil
-}
+//func (er *eventsRepository) getEvents(withCondition string, sqlStatement string, args ...interface{}) ([]models.Event, error) {
+//	return nil, nil
+//}
 
 func (er *eventsRepository) GetNameByID(uid int) (string, error) {
 	return "", nil
