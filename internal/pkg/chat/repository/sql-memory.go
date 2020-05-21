@@ -4,6 +4,7 @@ package repository
 
 import (
 	"failless/internal/pkg/chat"
+	mydb "failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
 	"github.com/jackc/pgx"
@@ -34,19 +35,57 @@ const (
 		JOIN 		chat_user cu
 		ON 			uc.chat_local_id = cu.chat_id
 		WHERE 		uid = $1;`
+	QuerySelectMessageHistory = `
+		SELECT		ms.mid, ms.uid, ms.chat_id, ms.user_local_id, ms.message, ms.is_shown, ms.created 
+		FROM		user_chat uc
+		JOIN 		message ms
+		ON 			uc.user_local_id = ms.user_local_id
+		AND			ms.chat_id = $1
+		WHERE		uc.uid = $2 
+		ORDER BY	ms.created DESC
+		LIMIT		$3
+		OFFSET		$4;`
+	QuerySelectCheckRoom = `
+		SELECT 	cu.chat_id, cu.admin_id, cu.date, cu.user_count, cu.title
+		FROM 	user_chat uc 
+		JOIN 	chat_user cu ON uc.chat_local_id = $1
+		WHERE 	uid = $2;`
+	QuerySelectChatsWithLastMsg = `
+		SELECT	c.chat_id,
+				c.title,
+				SUM(CASE WHEN m.is_shown = FALSE THEN 1 ELSE 0 END) AS unseen,
+				MAX(m.created) AS last_date,
+				SUBSTRING(MAX(m.created || '-----' || m.message) from '%#"-----%#"%' for '#') last_msg,
+				uc.avatar,
+				uc.title,
+				c.user_count
+		FROM 	user_chat uc
+		JOIN 	chat_user c
+		ON 		c.chat_id = uc.chat_local_id
+		JOIN 	message m
+		ON 		m.user_local_id = uc.user_local_id
+		WHERE	uc.uid = $1
+		GROUP BY	c.chat_id, uc.avatar, uc.title
+		ORDER BY	last_date DESC
+		LIMIT	$2
+		OFFSET	$3;`
 )
 
 type sqlChatRepository struct {
-	db *pgx.ConnPool
+	pgxdb *pgx.ConnPool
+	db mydb.MyDBInterface
 }
 
 func NewSqlChatRepository(db *pgx.ConnPool) chat.Repository {
-	return &sqlChatRepository{db: db}
+	return &sqlChatRepository{
+		pgxdb: db,
+		db: mydb.NewDBInterface(),
+	}
 }
 
 func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title string) (int64, error) {
 	// Create transaction
-	tx, err := cr.db.Begin()
+	tx, err := cr.pgxdb.Begin()
 	if err != nil {
 		log.Println(err)
 		return -1, err
@@ -168,12 +207,7 @@ func (cr *sqlChatRepository) GetUsersRooms(uid int64) ([]models.ChatRoom, error)
 }
 
 func (cr *sqlChatRepository) CheckRoom(cid int64, uid int64) (bool, error) {
-	sqlStatement := `
-		SELECT cu.chat_id, cu.admin_id, cu.date, cu.user_count, cu.title
-		FROM user_chat uc 
-		JOIN chat_user cu ON uc.chat_local_id = $1
-		WHERE uid = $2;`
-	rows, err := cr.db.Query(sqlStatement, cid, uid)
+	rows, err := cr.db.Query(QuerySelectCheckRoom, cid, uid)
 	if err != nil && rows != nil && !rows.Next() {
 		log.Println("CheckRoom: user has no rooms")
 		return false, nil
@@ -185,7 +219,7 @@ func (cr *sqlChatRepository) CheckRoom(cid int64, uid int64) (bool, error) {
 }
 
 func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats []int64) (int64, error) {
-	tx, err := cr.db.Begin()
+	tx, err := cr.pgxdb.Begin()
 	if err != nil {
 		return -1, err
 	}
@@ -242,33 +276,7 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 }
 
 func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]models.ChatMeta, error) {
-	sqlStatement := `
-		SELECT 
-			c.chat_id,
-			c.title,
-			SUM(CASE WHEN m.is_shown = FALSE THEN 1 ELSE 0 END) AS unseen,
-			MAX(m.created) AS last_date,
-			SUBSTRING(MAX(m.created || '-----' || m.message) from '%#"-----%#"%' for '#') last_msg,
-			uc.avatar,
-			uc.title,
-			c.user_count
-		FROM 
-			user_chat uc
-			JOIN chat_user c
-				ON c.chat_id = uc.chat_local_id
-			JOIN message m
-				ON m.user_local_id = uc.user_local_id
-		WHERE
-			uc.uid = $1
-		GROUP BY 
-			c.chat_id, uc.avatar, uc.title
-		ORDER BY 
-			last_date DESC
-		LIMIT
-			$2
-		OFFSET
-			$3;`
-	rows, err := cr.db.Query(sqlStatement, uid, limit, page)
+	rows, err := cr.db.Query(QuerySelectChatsWithLastMsg, uid, limit, page)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -302,23 +310,6 @@ func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]m
 }
 
 func (cr *sqlChatRepository) GetRoomMessages(uid, cid int64, page, limit int) ([]forms.Message, error) {
-	sqlStatement := `
-		SELECT
-			ms.mid, ms.uid, ms.chat_id, ms.user_local_id, ms.message, ms.is_shown, ms.created 
-		FROM
-			user_chat uc
-			JOIN message ms
-				ON uc.user_local_id = ms.user_local_id
-					AND
-				ms.chat_id = $1
-		WHERE
-			uc.uid = $2 
-		ORDER BY
-			ms.created DESC
-		LIMIT
-			$3
-		OFFSET
-			$4;`
 	page = 0
-	return cr.getMessages(sqlStatement, cid, uid, limit, page)
+	return cr.getMessages(QuerySelectMessageHistory, cid, uid, limit, page)
 }
