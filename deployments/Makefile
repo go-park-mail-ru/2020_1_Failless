@@ -87,7 +87,7 @@ easyjson:
 
 protoc:
 	@echo "  >  Generating proto files..."
-	sudo protoc -I $(GOFILES)/api/proto/ $(GOFILES)/api/proto/auth.proto --go_out=plugins=grpc:$(GOFILES)/api
+	protoc -I $(GOFILES)/api/proto/ $(GOFILES)/api/proto/auth.proto --go_out=plugins=grpc:$(GOFILES)/api
 
 go-get:
 	@echo "  >  Checking if there is any missing dependencies..."
@@ -105,9 +105,13 @@ clean-log:
 install:
 	@echo "  >  Installing dependencies..."
 	sudo apt install -y wget unzip
+	pushd /home/travis
 	wget https://github.com/protocolbuffers/protobuf/releases/download/v3.12.0/protoc-3.12.0-linux-x86_64.zip
-	unzip protoc-3.12.0-linux-x86_64.zip -d /tmp
-	sudo cp /tmp/bin/protoc /usr/local/bin/protoc
+	unzip protoc-3.12.0-linux-x86_64.zip
+	bin/protoc --version
+	popd
+	#unzip protoc-3.12.0-linux-x86_64.zip -d /tmp
+	#sudo cp /tmp/bin/protoc /usr/local/bin/protoc
 	go install google.golang.org/protobuf/cmd/protoc-gen-go
 	go get google.golang.org/grpc
 	go get -u github.com/golang/protobuf/protoc-gen-go
