@@ -22,7 +22,7 @@ before_install:
 #  - popd
 #  - cd $TRAVIS_BUILD_DIR/deployments && make all
 install:
-  - go get -t
+  - echo "Installed"
 after_success:
   - echo "OK"
 #  - go build -o bin/auth $TRAVIS_BUILD_DIR/cmd/auth/main.go
