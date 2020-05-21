@@ -3,17 +3,17 @@ package repository
 //go:generate mockgen -destination=../mocks/mock_repository.go -package=mocks failless/internal/pkg/vote Repository
 
 import (
+	mydb "failless/internal/pkg/db"
 	"failless/internal/pkg/vote"
-	"github.com/jackc/pgx"
 	"log"
 )
 
 type sqlVoteRepository struct {
-	db *pgx.ConnPool
+	db mydb.MyDBInterface
 }
 
-func NewSqlVoteRepository(db *pgx.ConnPool) vote.Repository {
-	return &sqlVoteRepository{db: db}
+func NewSqlVoteRepository() vote.Repository {
+	return &sqlVoteRepository{db: mydb.NewDBInterface()}
 }
 
 func (vr *sqlVoteRepository) AddUserVote(uid int, id int, value int8) error {
@@ -22,6 +22,7 @@ func (vr *sqlVoteRepository) AddUserVote(uid int, id int, value int8) error {
 		VALUES 		( $1 , $2 , $3 );`
 	_, err := vr.db.Exec(sqlStatement, uid, id, value)
 	if err != nil {
+		log.Println(err)
 		log.Println(sqlStatement, uid, id, value)
 		return err
 	}

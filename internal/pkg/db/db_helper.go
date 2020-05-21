@@ -5,6 +5,18 @@ import (
 	"testing"
 )
 
+type MyDB struct {
+	pgPool *pgx.ConnPool
+}
+
+func NewDBInterface() MyDBInterface {
+	return &MyDB{pgPool:ConnectToDB()}
+}
+
+func (dtbs *MyDB) Exec(sql string, arguments ...interface{}) (commandTag pgx.CommandTag, err error) {
+	return dtbs.pgPool.Exec(sql, arguments...)
+}
+
 var testConfig = pgx.ConnConfig {
 	Host: "localhost",
 	Port: uint16(5432),

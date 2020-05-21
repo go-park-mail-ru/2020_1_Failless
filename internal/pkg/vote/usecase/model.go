@@ -37,7 +37,7 @@ type voteUseCase struct {
 
 func GetUseCase() vote.UseCase {
 	return &voteUseCase{
-		Rep: repository.NewSqlVoteRepository(db.ConnectToDB()),
+		Rep: repository.NewSqlVoteRepository(),
 		chatRep: chatRep.NewSqlChatRepository(db.ConnectToDB()),
 	}
 }
