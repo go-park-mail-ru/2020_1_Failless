@@ -15,7 +15,7 @@ type Repository interface {
 	SetUserLocation(uid int, point models.LocationPoint) error
 	UpdUserGeneral(info models.JsonInfo, user models.User) error
 
-	// Deprecated: use UpdateUserTags, UpdateUserSimple,
+	// "Deprecated" (no): use UpdateUserTags, UpdateUserSimple,
 	// UpdateUserPhotos, UpdateUserRating instead
 	AddUserInfo(user models.User, info models.JsonInfo) error
 	AddNewUser(user *models.User) error
