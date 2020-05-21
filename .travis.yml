@@ -34,7 +34,7 @@ git:
 deploy:
   - provider: script
     skip_cleanup: true
-    script: $TRAVIS_BUILD_DIR/deployments/deploy.sh
+    script: deployments/deploy.sh
     on:
       branch: bugfix/connection-limit
 branches:
