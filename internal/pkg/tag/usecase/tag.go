@@ -3,7 +3,6 @@ package usecase
 //go:generate mockgen -destination=../mocks/mock_usecase.go -package=mocks failless/internal/pkg/tag UseCase
 
 import (
-	"failless/internal/pkg/db"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/tag"
 	"failless/internal/pkg/tag/repository"
@@ -16,7 +15,7 @@ type tagUseCase struct {
 
 func GetUseCase() tag.UseCase {
 	return &tagUseCase{
-		Rep: repository.NewSqlTagRepository(db.ConnectToDB()),
+		Rep: repository.NewSqlTagRepository(),
 	}
 }
 
