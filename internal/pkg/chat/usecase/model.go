@@ -36,7 +36,10 @@ func (h *Handler) Notify(message *forms.Message) {
 			if item == message.ChatID {
 				err := client.Conn.WriteJSON(message)
 				if err != nil {
-					client.Conn.Close()
+					err = client.Conn.Close()
+					if err != nil {
+						log.Println(err)
+					}
 					broken = append(broken, client.Id)
 				}
 			}
@@ -85,7 +88,10 @@ func (cc *Client) Run() {
 		//fmt.Println("cc.Conn.ReadJSON(&message)", message)
 
 		if err != nil {
-			cc.Conn.Close()
+			err = cc.Conn.Close()
+			if err != nil {
+				log.Println(err)
+			}
 			log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
 			return
 		}
@@ -104,7 +110,10 @@ func (cc *Client) Run() {
 					Message: err.Error(),
 					Status:  code})
 			if err != nil {
-				cc.Conn.Close()
+				err = cc.Conn.Close()
+				if err != nil {
+					log.Println(err)
+				}
 				log.Println(err.Error())
 				return
 			}

@@ -163,7 +163,10 @@ func (h *Handler) Notify(message *models.Match) {
 		if client.Uid == message.MatchID {
 			err := client.Conn.WriteJSON(message)
 			if err != nil {
-				client.Conn.Close()
+				err = client.Conn.Close()
+				if err != nil {
+					log.Println(err)
+				}
 				broken = append(broken, client.Id)
 			}
 		}
