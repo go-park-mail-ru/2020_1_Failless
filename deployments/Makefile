@@ -87,7 +87,7 @@ easyjson:
 
 protoc:
 	@echo "  >  Generating proto files..."
-	protoc -I $(GOFILES)/api/proto/ $(GOFILES)/api/proto/auth.proto --go_out=plugins=grpc:$(GOFILES)/api
+	sudo protoc -I $(GOFILES)/api/proto/ $(GOFILES)/api/proto/auth.proto --go_out=plugins=grpc:$(GOFILES)/api
 
 go-get:
 	@echo "  >  Checking if there is any missing dependencies..."
