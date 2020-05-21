@@ -115,7 +115,7 @@ run-tests:
 	@echo "  > Running tests..."
 	$(GO) generate $(GOFILES)/...
 	$(GO) test `go list all | grep "failless" | grep -v "mocks"` -coverprofile=coverage.out.tmp -cover $(GOFILES)/...
-	$(GO) coverage.out.tmp | grep -v ".*_easyjson.go.*" > $(GOFILES)/bin/coverage.out
+	cat coverage.out.tmp | grep -v ".*_easyjson.go.*" > $(GOFILES)/bin/coverage.out
 	$(GO) tool cover -func=$(GOFILES)/bin/coverage.out
 
 run-linters:
