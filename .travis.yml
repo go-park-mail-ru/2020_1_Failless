@@ -27,8 +27,8 @@ after_success:
   - go build -o bin/server $TRAVIS_BUILD_DIR/cmd/server/main.go
 script:
   - cd $TRAVIS_BUILD_DIR
-  - golangci-lint run  ./...     # run a bunch of code checkers/linters in parallel
-  - go test -v ./...
+#  - golangci-lint run  ./...     # run a bunch of code checkers/linters in parallel
+#  - go test -v ./...
 git:
   depth: 9999999
 deploy:
