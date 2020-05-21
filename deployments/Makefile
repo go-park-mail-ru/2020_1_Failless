@@ -94,18 +94,35 @@ go-get:
 	$(GO) get -t
 
 clean-bin:
-	@echo "  >  Cleaning build cache"
+	@echo "  >  Cleaning build cache..."
+	rm coverage.out.tmp
 	rm -rf $(GOFILES)/bin
 
 clean-log:
-	@echo "  >  Cleaning app logs"
+	@echo "  >  Cleaning app logs..."
 	rm $(GOFILES)/deployments/*.log
 	rm $(GOFILES)/*.log
 
+clean-json:
+	rm $(GOFILES)/internal/pkg/models/*_easyjson.go
+	rm $(GOFILES)/internal/pkg/forms/*_easyjson.go
+	rm $(GOFILES)/internal/pkg/security/*_easyjson.go
+	rm $(GOFILES)/internal/pkg/forms/easyjson-*.go
+	rm $(GOFILES)/internal/pkg/models/easyjson-*.go
+
+run-tests:
+	@echo "  > Running tests..."
+	$(GO) generate $(GOFILES)/...
+	$(GO) test `go list all | grep "failless" | grep -v "mocks"` -coverprofile=coverage.out.tmp -cover $(GOFILES)/...
+	$(GO) coverage.out.tmp | grep -v ".*_easyjson.go.*" > $(GOFILES)/bin/coverage.out
+	$(GO) tool cover -func=$(GOFILES)/bin/coverage.out
+
+run-linters:
+	@echo "  > Running linters..."
+	golangci-lint run $(GOFILES)/...
+
 install:
 	@echo "  >  Installing dependencies..."
-	#unzip protoc-3.12.0-linux-x86_64.zip -d /tmp
-	#sudo cp /tmp/bin/protoc /usr/local/bin/protoc
 	go install google.golang.org/protobuf/cmd/protoc-gen-go
 	go get google.golang.org/grpc
 	go get -u github.com/golang/protobuf/protoc-gen-go
@@ -116,7 +133,4 @@ install:
 	go get -u github.com/mailru/easyjson/...
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.27.0
 
-clean-json:
-	rm $(GOFILES)/internal/pkg/forms/*_easyjson.go
-	rm $(GOFILES)/internal/pkg/forms/easyjson-*.go
 
