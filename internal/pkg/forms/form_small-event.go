@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+const (
+	MessageEventValidationFailed = "Event validation failed. Check server logs"
+)
+
 type SmallEventForm struct {
 	Uid	    	int      	`json:"uid"`
 	Title   	string   	`json:"title"`

@@ -1,9 +1,7 @@
 package forms
 
 import (
-	"failless/internal/pkg/models"
 	"log"
-	"time"
 )
 
 const (
@@ -75,37 +73,4 @@ func (ef *EventForm) CheckTextFields() bool {
 func (ef *EventForm) Validate() bool {
 	return ef.ValidationIDs() && ef.ValidationLimits() &&
 		ef.CheckTextFields() && ef.ValidationType() // && ef.ValidationImages()
-}
-
-func (ef *EventForm) GetDBFormat(info *models.Event) {
-
-	for _, photo := range ef.Photos {
-		info.Photos = append(info.Photos, photo.ImgName)
-	}
-
-	*info = models.Event{
-		AuthorId: ef.UId,
-		Title:    ef.Title,
-		Message:  ef.Message,
-		Type:     ef.TagId,
-		Limit:    ef.Limit,
-	}
-	if ef.Limit < 3 {
-		(*info).Public = false
-	} else {
-		(*info).Public = true
-	}
-
-	var err error
-	if ef.Date == "-" || ef.Date == "" {
-		(*info).EDate = time.Now().Add(time.Hour * 8)
-	} else {
-		(*info).EDate, err = time.Parse(layoutISO, ef.Date)
-		if err != nil {
-			log.Println(ef.Date)
-			log.Println(err.Error())
-			return
-		}
-	}
-	log.Println((*info).EDate)
 }

@@ -38,5 +38,5 @@ func GenErrorCode(w http.ResponseWriter, r *http.Request, what string, status in
 }
 
 func ValidationFailed(w http.ResponseWriter, r *http.Request) {
-	GenErrorCode(w, r, "validation failed", http.StatusBadRequest)
+	GenErrorCode(w, r, MessageValidationFailed, http.StatusBadRequest)
 }

@@ -4,87 +4,50 @@ import (
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
+	"failless/internal/pkg/vote"
 	"failless/internal/pkg/vote/usecase"
 	"github.com/gorilla/websocket"
+	json "github.com/mailru/easyjson"
 	"log"
 	"net/http"
-
-	json "github.com/mailru/easyjson"
 )
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////// MANAGE ///////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-func VoteUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+const (
+	MessageInvalidUidInBody = "uid in the body is incorrect"
+)
+
+type voteDelivery struct {
+	UseCase vote.UseCase
+}
+
+func GetDelivery() vote.Delivery {
+	return &voteDelivery{
+		UseCase: usecase.GetUseCase(),
+	}
+}
+
+func (vd *voteDelivery) VoteUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Println("vote for event")
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
 		return
 	}
 
-	var vote models.Vote
-	err := json.UnmarshalFromReader(r.Body, &vote)
+	var tempVote models.Vote
+	err := json.UnmarshalFromReader(r.Body, &tempVote)
 	if err != nil {
-		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
+		network.GenErrorCode(w, r, network.MessageErrorParseJSON, http.StatusBadRequest)
 		return
 	}
 
-	if uid != vote.Uid {
-		network.GenErrorCode(w, r, "uid in the body is incorrect", http.StatusBadRequest)
+	if uid != tempVote.Uid {
+		network.GenErrorCode(w, r, MessageInvalidUidInBody, http.StatusBadRequest)
 		return
 	}
 
-	uc := usecase.GetUseCase()
-	message := uc.VoteUser(vote)
+	message := vd.UseCase.VoteUser(tempVote)
 	network.Jsonify(w, message, message.Status)
 }
-
-func VoteEvent(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	log.Println("vote for event")
-	uid := security.CheckCredentials(w, r)
-	if uid < 0 {
-		return
-	}
-
-	var vote models.Vote
-	err := json.UnmarshalFromReader(r.Body, &vote)
-	if err != nil {
-		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
-		return
-	}
-
-	if uid != vote.Uid {
-		network.GenErrorCode(w, r, "uid in the body is incorrect", http.StatusBadRequest)
-		return
-	}
-
-	uc := usecase.GetUseCase()
-	message := uc.VoteEvent(vote)
-	network.Jsonify(w, message, message.Status)
-}
-
-func EventFollowers(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	log.Println("follow for event")
-	uid := security.CheckCredentials(w, r)
-	if uid < 0 {
-		return
-	}
-
-	id := network.GetIdFromRequest(w, r, ps)
-	if id < 0 {
-		network.GenErrorCode(w, r, "url id is incorrect", http.StatusBadRequest)
-		return
-	}
-
-	uc := usecase.GetUseCase()
-	followers, err := uc.GetEventFollowers(int(id))
-	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	network.Jsonify(w, followers, http.StatusOK)
-}
-
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -98,7 +61,7 @@ type msgWithId struct {
 	Uid 	int64
 }
 
-func MatchPush(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func (vd *voteDelivery) MatchPush(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Println("MatchPush: started")
 	//if pusher, ok := w.(http.Pusher); ok {
 	//	// Push is supported.
@@ -130,6 +93,6 @@ func MatchPush(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	uc := usecase.GetUseCase()
-	uc.Subscribe(conn, uid.Uid)
+	vd.UseCase.Subscribe(conn, uid.Uid)
 }
+
