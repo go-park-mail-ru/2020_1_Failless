@@ -59,10 +59,7 @@ func (qg *queryGenerator) remove3PSymbols(keys string) bool {
 
 	keys = qg.exp.ReplaceAllString(keys, " ")
 	qg.vector = strings.FieldsFunc(keys, func(r rune) bool {
-		if r == ' ' {
-			return true
-		}
-		return false
+		return r == ' '
 	})
 	return true
 }
