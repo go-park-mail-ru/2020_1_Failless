@@ -317,6 +317,6 @@ func (cr *sqlChatRepository) GetRoomMessages(uid, cid int64, page, limit int) ([
 			$3
 		OFFSET
 			$4;`
-	page = 0
-	return cr.getMessages(sqlStatement, cid, uid, limit, page)
+	//page = 0
+	return cr.getMessages(sqlStatement, cid, uid, limit, 0)
 }
