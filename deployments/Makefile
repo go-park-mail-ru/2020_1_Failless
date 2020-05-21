@@ -95,20 +95,21 @@ go-get:
 
 clean-bin:
 	@echo "  >  Cleaning build cache..."
-	rm coverage.out.tmp
-	rm -rf $(GOFILES)/bin
+	rm coverage.out.tmp || return 0
+	rm -rf $(GOFILES)/bin || return 0
 
 clean-log:
 	@echo "  >  Cleaning app logs..."
-	rm $(GOFILES)/deployments/*.log
-	rm $(GOFILES)/*.log
+	rm $(GOFILES)/deployments/*.log || return 0
+	rm $(GOFILES)/*.log || return 0
 
 clean-json:
-	rm $(GOFILES)/internal/pkg/models/*_easyjson.go
-	rm $(GOFILES)/internal/pkg/forms/*_easyjson.go
-	rm $(GOFILES)/internal/pkg/security/*_easyjson.go
-	rm $(GOFILES)/internal/pkg/forms/easyjson-*.go
-	rm $(GOFILES)/internal/pkg/models/easyjson-*.go
+	@echo "  >  Cleaning easyjson generated files..."
+	rm $(GOFILES)/internal/pkg/models/*_easyjson.go || return 0
+	rm $(GOFILES)/internal/pkg/forms/*_easyjson.go || return 0
+	rm $(GOFILES)/internal/pkg/security/*_easyjson.go || return 0
+	rm $(GOFILES)/internal/pkg/forms/easyjson-*.go || return 0
+	rm $(GOFILES)/internal/pkg/models/easyjson-*.go || return 0
 
 run-tests:
 	@echo "  > Running tests..."
