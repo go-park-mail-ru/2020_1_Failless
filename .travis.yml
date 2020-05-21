@@ -13,6 +13,7 @@ before_install:
 - cp deployments/deploy_rsa ~/.ssh/deploy_rsa
 - chmod 600 ~/.ssh/deploy_rsa
 - ssh-add ~/.ssh/deploy_rsa
+- go version
 - cd $TRAVIS_BUILD_DIR/deployments && sudo make all
 after_success:
 - go build -o bin/auth $TRAVIS_BUILD_DIR/cmd/auth/main.go
