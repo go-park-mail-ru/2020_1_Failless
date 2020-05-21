@@ -13,7 +13,7 @@ before_install:
   - cp deployments/deploy_rsa ~/.ssh/deploy_rsa
   - chmod 600 ~/.ssh/deploy_rsa
   - ssh-add ~/.ssh/deploy_rsa
-  - sudo apt install -y wget unzip
+  - sudo apt install -y wget unzip scp
   - pushd /home/travis
   - wget https://github.com/protocolbuffers/protobuf/releases/download/v3.12.0/protoc-3.12.0-linux-x86_64.zip
   - unzip protoc-3.12.0-linux-x86_64.zip
@@ -36,7 +36,7 @@ git:
 deploy:
   - provider: script
     skip_cleanup: true
-    script: deployments/deploy.sh
+    script: $TRAVIS_BUILD_DIR/deployments/deploy.sh
     on:
       branch: master
 branches:
