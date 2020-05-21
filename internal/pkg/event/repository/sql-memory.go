@@ -423,8 +423,13 @@ func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
 		log.Println("CreateMidEvent: Failed to start transaction", err)
 		return err
 	}
-	defer tx.Rollback()
-
+	//defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	// Create global chat
 	var chatID int64
 	row := tx.QueryRow(chatRepository.QueryInsertGlobalChat, event.AdminId, event.Limit, event.Title)
@@ -676,8 +681,13 @@ func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
 		log.Println("JoinMidEvent: Failed to start transaction", err)
 		return http.StatusInternalServerError, err
 	}
-	defer tx.Rollback()
-
+	//defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	cTag, err := tx.Exec(QueryInsertMidEventMember, uid, eid)
 	if err != nil {
 		log.Println(err)

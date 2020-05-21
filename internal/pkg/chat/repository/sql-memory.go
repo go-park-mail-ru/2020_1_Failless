@@ -49,7 +49,13 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 		log.Println(err)
 		return -1, err
 	}
-	defer tx.Rollback()
+	//defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	// Create global chat
 	var chatId int64
@@ -189,8 +195,13 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 	}
 	// Rollback is safe to call even if the tx is already closed, so if
 	// the tx commits successfully, this is a no-op
-	defer tx.Rollback()
-
+	//defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	sqlStatement := `INSERT INTO message (uid, chat_id, user_local_id, message, is_shown)
 						SELECT $1, chat_local_id, user_local_id, $3, $4 FROM 
 							(SELECT * FROM user_chat uc WHERE $2 = uc.chat_local_id) AS s1
