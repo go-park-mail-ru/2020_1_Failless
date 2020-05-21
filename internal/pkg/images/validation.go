@@ -13,8 +13,11 @@ const (
 	Users = "users"
 	App = "app"
 	Events = "events"
+	MessageImageValidationFailed = "Image validation failed. Check server logs"
 )
 
+// For some reason validation also uploads
+// TODO: don't do it plz
 func ValidateImage(image *forms.EImage, folder string) bool {
 	imgBytes, err := base64.StdEncoding.DecodeString(image.ImgBase64)
 	if err != nil {

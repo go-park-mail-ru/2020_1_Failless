@@ -1,12 +1,15 @@
 package usecase
 
+//go:generate mockgen -destination=../mocks/mock_usecase.go -package=mocks failless/internal/pkg/chat UseCase
+
 import (
 	"failless/internal/pkg/chat"
 	"failless/internal/pkg/chat/repository"
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
-	"fmt"
+	"failless/internal/pkg/user"
+	userRepository "failless/internal/pkg/user/repository"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"log"
@@ -16,6 +19,14 @@ import (
 
 type chatUseCase struct {
 	Rep chat.Repository
+	userRep user.Repository
+}
+
+func GetUseCase() chat.UseCase {
+	return &chatUseCase{
+		Rep: repository.NewSqlChatRepository(db.ConnectToDB()),
+		userRep: userRepository.NewSqlUserRepository(db.ConnectToDB()),
+	}
 }
 
 type Client struct {
@@ -36,7 +47,10 @@ func (h *Handler) Notify(message *forms.Message) {
 			if item == message.ChatID {
 				err := client.Conn.WriteJSON(message)
 				if err != nil {
-					client.Conn.Close()
+					err = client.Conn.Close()
+					if err != nil {
+						log.Println(err)
+					}
 					broken = append(broken, client.Id)
 				}
 			}
@@ -52,40 +66,17 @@ var MainHandler Handler
 
 func (cc *Client) Run() {
 	uc := GetUseCase()
-	//msg := forms.UserMsg{}
-	//err := cc.Conn.ReadJSON(&msg)
-	//if err != nil {
-	//	log.Println("Error with JSON unpack from SW", err)
-	//	return
-	//}
-	//for _, room := range cc.ChatID {
-	//	lastMsgs, err := uc.GetMessagesForChat(&models.MessageRequest{
-	//		ChatID: room,
-	//		Uid:    cc.Uid,
-	//		Limit:  10,
-	//		Page:   0,
-	//	})
-	//	fmt.Println("uc.GetMessagesForChat(&models.MessageRequest{", lastMsgs)
-	//	if err != nil {
-	//		cc.Conn.Close()
-	//		log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
-	//		return
-	//	}
-	//	err = cc.Conn.WriteJSON(lastMsgs)
-	//	if err != nil {
-	//		cc.Conn.Close()
-	//		log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
-	//		return
-	//	}
-	//}
 
 	for {
 		message := forms.Message{}
 		err := cc.Conn.ReadJSON(&message)
-		fmt.Println("cc.Conn.ReadJSON(&message)", message)
+		//fmt.Println("cc.Conn.ReadJSON(&message)", message)
 
 		if err != nil {
-			cc.Conn.Close()
+			err = cc.Conn.Close()
+			if err != nil {
+				log.Println(err)
+			}
 			log.Printf("Connection %s refused: %s\n", cc.Id, err.Error())
 			return
 		}
@@ -95,7 +86,7 @@ func (cc *Client) Run() {
 		//	message.Uid = int64(user.Uid)
 		//}
 		message.Date = time.Now()
-		fmt.Println("Before uc.AddNewMessage(&message)", message)
+		//fmt.Println("Before uc.AddNewMessage(&message)", message)
 		code, err := uc.AddNewMessage(&message)
 		if err != nil {
 			log.Println(err.Error())
@@ -104,7 +95,10 @@ func (cc *Client) Run() {
 					Message: err.Error(),
 					Status:  code})
 			if err != nil {
-				cc.Conn.Close()
+				err = cc.Conn.Close()
+				if err != nil {
+					log.Println(err)
+				}
 				log.Println(err.Error())
 				return
 			}
@@ -113,21 +107,15 @@ func (cc *Client) Run() {
 	}
 }
 
-func GetUseCase() chat.UseCase {
-	return &chatUseCase{
-		Rep: repository.NewSqlChatRepository(db.ConnectToDB()),
-	}
-}
-
 func (cc *chatUseCase) CreateDialogue(id1, id2 int) (int, error) {
-	chatId, err := cc.CreateDialogue(id1, id2)
+	chatId, err := cc.Rep.InsertDialogue(id1, id2, 2, "")
 
 	if err != nil {
 		log.Println(err)
-		return -1, nil
+		return -1, err
 	}
 
-	return chatId, nil
+	return int(chatId), nil
 }
 
 func (cc *chatUseCase) IsUserHasRoom(uid int64, cid int64) (bool, error) {
@@ -152,9 +140,6 @@ func (cc *chatUseCase) Subscribe(conn *websocket.Conn, uid int64) {
 	cs := &Client{conn, id, roomsIDs, uid}
 	MainHandler.Clients[id] = cs
 	cs.Run()
-}
-
-func (cc *chatUseCase) Notify(message *forms.Message) {
 }
 
 func (cc *chatUseCase) AddNewMessage(message *forms.Message) (int, error) {
@@ -191,4 +176,8 @@ func (cc *chatUseCase) GetMessagesForChat(msgRequest *models.MessageRequest) (fo
 
 func (cc *chatUseCase) GetUserRooms(msgRequest *models.ChatRequest) (models.ChatList, error) {
 	return cc.Rep.GetUserTopMessages(msgRequest.Uid, msgRequest.Page, msgRequest.Limit)
+}
+
+func (cc *chatUseCase) GetUsersForChat(cid int64, users *models.UserGeneralList) models.WorkMessage {
+	return cc.userRep.GetUsersForChat(cid, users)
 }

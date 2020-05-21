@@ -1,46 +1,56 @@
 package repository
 
 import (
-	//"failless/internal/pkg/db"
-	//"github.com/DATA-DOG/go-sqlmock"
-	//"github.com/jackc/pgx/stdlib"
+	"errors"
+	"failless/internal/pkg/db/mocks"
+	"failless/internal/pkg/models"
+	"failless/internal/pkg/security"
+	"failless/internal/pkg/vote"
+	"github.com/golang/mock/gomock"
+	"github.com/jackc/pgx"
+	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
-func TestSqlVoteRepository_AddEventVote(t *testing.T) {
-	//testDB, mock, err := sqlmock.New()
-	//if err != nil {
-	//	t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	//}
-	//defer testDB.Close()
-	//
-	//conn, err := stdlib.AcquireConn(testDB)
-	//if err != nil {
-	//	t.Errorf("error was not expected durin acquiring connection: %v", err)
-	//}
-	//defer stdlib.ReleaseConn(testDB, conn)
-	//
-	//var vr = NewSqlVoteRepository(db.CastPoolToConnPool(conn))
-	//
-	//mock.ExpectBegin()
-	//mock.ExpectExec("INSERT INTO event_vote (uid, eid, value)").WithArgs(1, 2, 1).WillReturnResult(sqlmock.NewResult(1, 1))
-	//mock.ExpectCommit()
-	//
-	//// now we execute our method
-	//if err = vr.AddEventVote(1, 2, 1); err != nil {
-	//	t.Errorf("error was not expected while updating stats: %s", err)
-	//}
-	//
-	//// we make sure that all expectations were met
-	//if err := mock.ExpectationsWereMet(); err != nil {
-	//	t.Errorf("there were unfulfilled expectations: %s", err)
-	//}
+var (
+	testDBError = errors.New("db error")
+	testUserVote = models.Vote{
+		Uid:   security.TestUser.Uid,
+		Id:    security.TestUser.Uid + 1,
+		Value: 1,
+		Date:  time.Time{},
+	}
+)
+
+func getTestRep(mockDB *mocks.MockMyDBInterface) vote.Repository {
+	return &sqlVoteRepository{
+		db: mockDB,
+	}
 }
 
-func TestSqlVoteRepository_FindFollowers(t *testing.T) {
+func TestSqlVoteRepository_AddUserVote_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockDB := mocks.NewMockMyDBInterface(mockCtrl)
+	vr := getTestRep(mockDB)
 
+	mockDB.EXPECT().Exec(QueryInsertUserVote, testUserVote.Uid, testUserVote.Id, testUserVote.Value).Return(pgx.CommandTag(""), testDBError)
+	err := vr.AddUserVote(testUserVote.Uid, testUserVote.Id, testUserVote.Value)
+
+	assert.Equal(t, testDBError, err)
 }
 
-func TestSqlVoteRepository_FindFollowers2(t *testing.T) {
+func TestSqlVoteRepository_AddUserVote_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockDB := mocks.NewMockMyDBInterface(mockCtrl)
+	vr := getTestRep(mockDB)
 
+	mockDB.EXPECT().Exec(QueryInsertUserVote, testUserVote.Uid, testUserVote.Id, testUserVote.Value).Return(pgx.CommandTag(""), nil)
+	err := vr.AddUserVote(testUserVote.Uid, testUserVote.Id, testUserVote.Value)
+
+	assert.Equal(t, nil, err)
 }

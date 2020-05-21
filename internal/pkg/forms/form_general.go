@@ -8,15 +8,14 @@ import (
 
 type GeneralForm struct {
 	SignForm
-	Events   []models.Event       `json:"events"`
-	Tags     []models.Tag         `json:"tags"`
-	Avatar   EImage               `json:"avatar"`
-	Photos   []EImage             `json:"photos, omitempty"`
-	Gender   int                  `json:"gender"`
-	About    string               `json:"about"`
-	Rating   float32              `json:"rating, omitempty"`
-	Location models.LocationPoint `json:"location, omitempty"`
-	Birthday time.Time            `json:"birthday, omitempty"`
+	Tags     []int32         		`json:"tags,omitempty"`
+	Avatar   EImage               	`json:"avatar"`
+	Photos   []EImage             	`json:"photos,omitempty"`
+	Gender   int                  	`json:"gender"`
+	About    string               	`json:"about"`
+	Rating   float32              	`json:"rating,omitempty"`
+	Location models.LocationPoint 	`json:"location,omitempty"`
+	Birthday time.Time            	`json:"birthday,omitempty"`
 }
 
 func (p *GeneralForm) ValidateGender() bool {
@@ -55,7 +54,7 @@ func (p *GeneralForm) GetDBFormat(info *models.JsonInfo, user *models.User) erro
 	return nil
 }
 
-func (p *GeneralForm) FillProfile(row models.JsonInfo) error {
+func (p *GeneralForm) FillProfile(row models.JsonInfo) {
 	ava := ""
 	if len(row.Photos) < 1 {
 		ava = "default.png"
@@ -71,8 +70,8 @@ func (p *GeneralForm) FillProfile(row models.JsonInfo) error {
 	p.Gender = row.Gender
 	p.Birthday = row.Birthday
 	p.Rating = row.Rating
+	p.Tags = row.Tags
 	for _, photo := range row.Photos {
 		p.Photos = append(p.Photos, EImage{ImgName: photo})
 	}
-	return nil
 }

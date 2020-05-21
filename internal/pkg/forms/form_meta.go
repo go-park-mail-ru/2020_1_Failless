@@ -5,4 +5,5 @@ type MetaForm struct {
 	Tags   []int    `json:"tags"`
 	About  string   `json:"about"`
 	Social []string `json:"social"`
+	Photos []EImage `json:"photos"`
 }

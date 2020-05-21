@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"failless/internal/pkg/chat/usecase"
 	"failless/internal/pkg/network"
 	"github.com/gorilla/websocket"
 	"log"
@@ -20,10 +19,11 @@ type msgWithId struct {
 	Uid 	int64
 }
 
-func HandlerWS(w http.ResponseWriter, r *http.Request, m map[string]string) {
+func (cd *chatDelivery) HandlerWS(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
+		log.Println(err.Error())
+		network.GenErrorCode(w, r, network.MessageErrorWhileUpgrading, http.StatusInternalServerError)
 		return
 	}
 
@@ -34,6 +34,5 @@ func HandlerWS(w http.ResponseWriter, r *http.Request, m map[string]string) {
 		return
 	}
 
-	uc := usecase.GetUseCase()
-	uc.Subscribe(conn, uid.Uid)
+	cd.UseCase.Subscribe(conn, uid.Uid)
 }

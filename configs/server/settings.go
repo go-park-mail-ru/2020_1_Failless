@@ -5,6 +5,7 @@ import (
 	"failless/internal/pkg/metrics/delivery"
 	"failless/internal/pkg/router"
 	"failless/internal/pkg/settings"
+	tagDelivery "failless/internal/pkg/tag/delivery"
 	"fmt"
 	"github.com/dimfeld/httptreemux"
 	"google.golang.org/grpc"
@@ -13,7 +14,6 @@ import (
 
 	pb "failless/api/proto/auth"
 	eventDelivery "failless/internal/pkg/event/delivery"
-	tagDelivery "failless/internal/pkg/tag/delivery"
 	userDelivery "failless/internal/pkg/user/delivery"
 	voteDelivery "failless/internal/pkg/vote/delivery"
 )
@@ -34,158 +34,306 @@ func ConnectToAuthMS(addr string) *grpc.ClientConn {
 }
 
 var routesMap = map[string][]settings.MapHandler{
+
+	/***********************************************
+						 Authorization
+	     ***********************************************/
 	"/api/srv/getuser": {{
 		Type:         "GET",
-		Handler:      userDelivery.GetUserInfo,
+		Handler:      userDelivery.GetDelivery().GetUserInfo,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         false,
+		WS:           false,
 	}},
 	"/api/srv/logout": {{
 		Type:         "GET",
-		Handler:      userDelivery.Logout,
+		Handler:      userDelivery.GetDelivery().Logout,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         false,
+		WS:           false,
 	}},
 	"/api/srv/signin": {{
 		Type:         "POST",
-		Handler:      userDelivery.SignIn,
+		Handler:      userDelivery.GetDelivery().SignIn,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
+		WS:           false,
 	}},
 	"/api/srv/signup": {{
 		Type:         "POST",
-		Handler:      userDelivery.SignUp,
+		Handler:      userDelivery.GetDelivery().SignUp,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
+		WS:           false,
 	}},
-	"/api/srv/events/feed": {
-		{
-			Type:         "GET",
-			Handler:      eventDelivery.FeedEvents,
-			CORS:         true,
-			AuthRequired: false,
-			CSRF:         false,
-		},
-		{
-			Type:         "POST",
-			Handler:      eventDelivery.GetEventsFeed,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         false,
-		},
-	},
+
+	/***********************************************
+	            		 Events
+	***********************************************/
 	"/api/srv/events/search": {{
 		Type:         "POST",
-		Handler:      eventDelivery.GetSearchEvents,
+		Handler:      eventDelivery.GetDelivery().GetSearchEvents,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
+		WS:           false,
 	}},
-	"/api/srv/event/new": {{
-		Type:         "POST",
-		Handler:      eventDelivery.CreateNewEvent,
-		CORS:         true,
-		AuthRequired: true,
-		CSRF:         true,
-	}},
-	"/api/srv/event/:id/like": {{
-		Type:         "POST",
-		Handler:      voteDelivery.VoteEvent,
-		CORS:         true,
-		AuthRequired: true,
-		CSRF:         true,
-	}},
-	"/api/srv/event/:id/dislike": {{
-		Type:         "POST",
-		Handler:      voteDelivery.VoteEvent,
-		CORS:         true,
-		AuthRequired: true,
-		CSRF:         true,
-	}},
-	"/api/srv/event/:id/follow": {
+	"/api/srv/events/small": {
 		{
 			Type:         "POST",
-			Handler:      eventDelivery.FollowEvent,
+			Handler:      eventDelivery.GetDelivery().CreateSmallEvent,
 			CORS:         true,
 			AuthRequired: true,
 			CSRF:         true,
+			WS:           false,
 		},
 		{
 			Type:         "GET",
-			Handler:      voteDelivery.EventFollowers,
+			Handler:      eventDelivery.GetDelivery().GetSmallEvents,
 			CORS:         true,
 			AuthRequired: true,
-			CSRF:         false,
+			CSRF:         true,
+			WS:           false,
 		},
 	},
-	"/api/srv/tags/feed": {{
+	"/api/srv/events/small/:eid": {
+		{
+			Type:         "PUT",
+			Handler:      eventDelivery.GetDelivery().UpdateSmallEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "DELETE",
+			Handler:      eventDelivery.GetDelivery().DeleteSmallEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+	"/api/srv/events/mid": {{
+		Type:         "POST",
+		Handler:      eventDelivery.GetDelivery().CreateMiddleEvent,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
+	"/api/srv/events/mid/:eid": {
+		{
+			Type:         "GET",
+			Handler:      eventDelivery.GetDelivery().GetMiddleEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "PUT",
+			Handler:      eventDelivery.GetDelivery().UpdateMiddleEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "DELETE",
+			Handler:      eventDelivery.GetDelivery().DeleteMiddleEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+	"/api/srv/events/mid/:eid/member": {
+		{
+			Type:         "POST",
+			Handler:      eventDelivery.GetDelivery().JoinMiddleEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "DELETE",
+			Handler:      eventDelivery.GetDelivery().LeaveMiddleEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+	"/api/srv/events/big": {{
+		Type:         "POST",
+		Handler:      eventDelivery.GetDelivery().CreateBigEvent,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
+	"/api/srv/events/big/:eid": {
+		{
+			Type:         "GET",
+			Handler:      eventDelivery.GetDelivery().GetBigEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "PUT",
+			Handler:      eventDelivery.GetDelivery().UpdateBigEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "DELETE",
+			Handler:      eventDelivery.GetDelivery().DeleteBigEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+	"/api/srv/events/big/:eid/visitor": {
+		{
+			Type:         "POST",
+			Handler:      eventDelivery.GetDelivery().AddVisitorForBigEvent,
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+		{
+			Type:         "DELETE",
+			Handler:      eventDelivery.GetDelivery().RemoveVisitorForBigEvent, // TODO: create a better name
+			CORS:         true,
+			AuthRequired: true,
+			CSRF:         true,
+			WS:           false,
+		},
+	},
+	"/ws/match": {{
 		Type:         "GET",
-		Handler:      tagDelivery.FeedTags,
+		Handler:      voteDelivery.GetDelivery().MatchPush,
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
+		WS:           true,
 	}},
-	"/api/srv/profile/:id/upload": {{
+
+
+	/***********************************************
+                 		Profile
+   ***********************************************/
+	"/api/srv/profile/:id/meta/about": {{
 		Type:         "PUT",
-		Handler:      userDelivery.UploadNewImage,
+		Handler:      userDelivery.GetDelivery().UpdUserAbout,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
-	"/api/srv/profile/:id/meta": {{
+	"/api/srv/profile/:id/meta/tags": {{
 		Type:         "PUT",
-		Handler:      userDelivery.UpdUserMetaData,
+		Handler:      userDelivery.GetDelivery().UpdUserTags,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
+	}},
+	"/api/srv/profile/:id/meta/photos": {{
+		Type:         "PUT",
+		Handler:      userDelivery.GetDelivery().UpdUserPhotos,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
 	}},
 	"/api/srv/profile/:id/general": {{
 		Type:         "PUT",
-		Handler:      userDelivery.UpdProfileGeneral,
+		Handler:      userDelivery.GetDelivery().UpdProfileGeneral,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
 	"/api/srv/profile/:id/subscriptions": {{
 		Type:         "GET",
-		Handler:      userDelivery.GetProfileSubscriptions,
+		Handler:      userDelivery.GetDelivery().GetProfileSubscriptions,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
-	"/api/srv/profile/:id": {
-		{
-			Type:         "PUT",
-			Handler:      userDelivery.UpdProfilePage,
-			CORS:         true,
-			AuthRequired: true,
-			CSRF:         true,
-		},
-		{
-			Type:         "GET",
-			Handler:      userDelivery.GetProfilePage,
-			CORS:         true,
-			AuthRequired: false,
-			CSRF:         false,
-		},
-	},
+	"/api/srv/profile/:id": {{
+		Type:         "GET",
+		Handler:      userDelivery.GetDelivery().GetProfilePage,
+		CORS:         true,
+		AuthRequired: false,
+		CSRF:         false,
+		WS:           false,
+	}},
 	"/api/srv/users/:vote": {{
 		Type:         "PUT",
-		Handler:      voteDelivery.VoteUser,
+		Handler:      voteDelivery.GetDelivery().VoteUser,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
 	}},
 	"/api/srv/users/feed": {{
 		Type:         "POST",
-		Handler:      userDelivery.GetUsersFeed,
+		Handler:      userDelivery.GetDelivery().GetUsersFeed,
 		CORS:         true,
 		AuthRequired: true,
 		CSRF:         true,
+		WS:           false,
+	}},
+	"/api/srv/profile/:id/own-events": {{
+		Type:         "GET",
+		Handler:      userDelivery.GetDelivery().GetSmallAndMidEventsForUser,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
+	"/api/srv/profile/:id/small-events": {{
+		Type:         "GET",
+		Handler:      userDelivery.GetDelivery().GetSmallEventsForUser,
+		CORS:         true,
+		AuthRequired: true,
+		CSRF:         true,
+		WS:           false,
+	}},
+	//"/api/srv/profile/:id/mid-events": {{
+	//	Type:         "GET",
+	//	Handler:      userDelivery.GetDelivery().GetOwnMidEvents,
+	//	CORS:         true,
+	//	AuthRequired: true,
+	//	CSRF:         true,
+	//	WS:           false,
+	//}},
+
+	/***********************************************
+	            		 Utils
+	***********************************************/
+	"/api/srv/tags/feed": {{
+		Type:         "GET",
+		Handler:      tagDelivery.GetDelivery().FeedTags,
+		CORS:         true,
+		AuthRequired: false,
+		CSRF:         false,
+		WS:           false,
 	}},
 	"/metrics": {{
 		Type:         "GET",
@@ -193,6 +341,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
+		WS:           false,
 	}},
 	"/api": {{
 		Type:         "OPTIONS",
@@ -200,6 +349,7 @@ var routesMap = map[string][]settings.MapHandler{
 		CORS:         true,
 		AuthRequired: false,
 		CSRF:         false,
+		WS:           false,
 	}},
 }
 

@@ -6,10 +6,12 @@ import (
 )
 
 type UseCase interface {
-	CreateEvent(event forms.EventForm) (models.Event, error)
-	InitEventsByTime(events *models.EventList) (int, error)
-	InitEventsByKeyWords(events *models.EventList, keys string, page int) (int, error)
-	InitEventsByUserPreferences(events *models.EventList, request *models.EventRequest) (int, error)
-	FollowEvent(subscription *models.EventFollow) models.WorkMessage
-	SearchEventsByUserPreferences(events *models.EventResponseList, request *models.EventRequest) (int, error)
+	SearchEventsByUserPreferences(events *models.MidAndBigEventList, request *models.EventRequest) (int, error)
+	CreateSmallEvent(smallEventForm *forms.SmallEventForm) (models.SmallEvent, error)
+	UpdateSmallEvent(event *models.SmallEvent) (int, error)
+	DeleteSmallEvent(uid int, eid int64) models.WorkMessage
+	CreateMidEvent(midEventForm *forms.MidEventForm) (models.MidEvent, models.WorkMessage)
+	JoinMidEvent(eventVote *models.EventFollow) models.WorkMessage
+	LeaveMidEvent(eventVote *models.EventFollow) models.WorkMessage
+	GetSmallEventsByUID(uid int64) (models.SmallEventList, error)
 }

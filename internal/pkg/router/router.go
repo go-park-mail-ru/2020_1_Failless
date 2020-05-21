@@ -35,7 +35,9 @@ func InitRouter(s *settings.ServerSettings, router *httptreemux.TreeMux) {
 				handler = middleware.CORS(handler)
 			}
 
-			handler = middleware.Metrics(handler)
+			if !pack.WS {
+				handler = middleware.Metrics(handler)
+			}
 
 			switch pack.Type {
 			case "GET":
@@ -54,12 +56,12 @@ func InitRouter(s *settings.ServerSettings, router *httptreemux.TreeMux) {
 	}
 
 	if optionsHandler != nil {
-		for key, _ := range s.Routes {
+		for key := range s.Routes {
 			(*router).OPTIONS(key, httptreemux.HandlerFunc(optionsHandler))
 		}
 	}
 	// generate "GET, POST, OPTIONS, HEAD, PUT" string
-	for key, _ := range s.Secure.CORSMap {
+	for key := range s.Secure.CORSMap {
 		s.Secure.CORSMethods += key + ", "
 	}
 
@@ -115,12 +117,12 @@ func InitWSRoter(s *settings.ServerSettings, router *httptreemux.TreeMux) {
 	}
 
 	if optionsHandler != nil {
-		for key, _ := range s.Routes {
+		for key := range s.Routes {
 			(*router).OPTIONS(key, httptreemux.HandlerFunc(optionsHandler))
 		}
 	}
 	// generate "GET, POST, OPTIONS, HEAD, PUT" string
-	for key, _ := range s.Secure.CORSMap {
+	for key := range s.Secure.CORSMap {
 		s.Secure.CORSMethods += key + ", "
 	}
 

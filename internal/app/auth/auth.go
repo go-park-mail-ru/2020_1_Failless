@@ -17,8 +17,13 @@ import (
 
 func Start() {
 	file := logger.OpenLogFile("auth")
-	defer file.Close()
-
+	//defer file.Close()
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	if ok := settings.CheckSecretes(conf.Secrets); !ok {
 		log.Println("Can't find variables ", conf.Secrets)
 		log.Fatal("Environment variables don't set")

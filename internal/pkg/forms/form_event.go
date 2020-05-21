@@ -1,9 +1,7 @@
 package forms
 
 import (
-	"failless/internal/pkg/models"
 	"log"
-	"time"
 )
 
 const (
@@ -13,21 +11,16 @@ const (
 	MessageLenLimit  = 512
 )
 
-const (
-	layoutISO = "2006-01-02"
-	layoutUS  = "January 1, 2020"
-)
-
 type EventForm struct {
 	UId     int      `json:"uid"`
 	Title   string   `json:"title"`
 	Message string   `json:"description"`
-	Type    int      `json:"type, omitempty"`
-	Private bool     `json:"private, omitempty"`
-	TagId   int      `json:"tag_id, omitempty"`
+	Type    int      `json:"type,omitempty"`
+	Private bool     `json:"private,omitempty"`
+	TagId   int      `json:"tag_id,omitempty"`
 	Limit   int      `json:"limit"`
 	Date    string   `json:"date"`
-	Photos  []EImage `json:"photos, omitempty"`
+	Photos  []EImage `json:"photos,omitempty"`
 }
 
 func (ef *EventForm) ValidationLimits() bool {
@@ -75,37 +68,4 @@ func (ef *EventForm) CheckTextFields() bool {
 func (ef *EventForm) Validate() bool {
 	return ef.ValidationIDs() && ef.ValidationLimits() &&
 		ef.CheckTextFields() && ef.ValidationType() // && ef.ValidationImages()
-}
-
-func (ef *EventForm) GetDBFormat(info *models.Event) {
-
-	for _, photo := range ef.Photos {
-		info.Photos = append(info.Photos, photo.ImgName)
-	}
-
-	*info = models.Event{
-		AuthorId: ef.UId,
-		Title:    ef.Title,
-		Message:  ef.Message,
-		Type:     ef.TagId,
-		Limit:    ef.Limit,
-	}
-	if ef.Limit < 3 {
-		(*info).Public = false
-	} else {
-		(*info).Public = true
-	}
-
-	var err error
-	if ef.Date == "-" || ef.Date == "" {
-		(*info).EDate = time.Now().Add(time.Hour * 8)
-	} else {
-		(*info).EDate, err = time.Parse(layoutISO, ef.Date)
-		if err != nil {
-			log.Println(ef.Date)
-			log.Println(err.Error())
-			return
-		}
-	}
-	log.Println((*info).EDate)
 }

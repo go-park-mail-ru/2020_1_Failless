@@ -4,7 +4,6 @@ import (
 	"failless/configs/chat"
 	"failless/internal/pkg/logger"
 	"failless/internal/pkg/settings"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -13,7 +12,13 @@ import (
 
 func Start() {
 	file := logger.OpenLogFile("chat")
-	defer file.Close()
+	//defer file.Close()
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	if ok := settings.CheckSecretes(chat.Secrets); !ok {
 		log.Println("Can't find variables ", chat.Secrets)
@@ -33,6 +38,6 @@ func Start() {
 	log.Println("chat server is running on " + strconv.Itoa(serverSettings.Port))
 	err := serve.ListenAndServe()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }

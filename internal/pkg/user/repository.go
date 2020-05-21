@@ -8,23 +8,20 @@ import (
 // It can be in-memory realization or database realization
 type Repository interface {
 	GetUserByUID(uid int) (models.User, error)
-	UpdateUserTags(uid int, tagId int) error
-	UpdateUserSimple(uid int, social []string, about *string) error
+	UpdateUserTags(uid int, tagIDs []int) models.WorkMessage
 	UpdateUserRating(uid int, rating float32) error
-	UpdateUserPhotos(uid int, name string) error
+	UpdateUserPhotos(uid int, newImages *[]string) models.WorkMessage
+	UpdateUserAbout(uid int, about string) models.WorkMessage
 	SetUserLocation(uid int, point models.LocationPoint) error
 	UpdUserGeneral(info models.JsonInfo, user models.User) error
 
-	// Deprecated: use UpdateUserTags, UpdateUserSimple,
+	// "Deprecated" (no): use UpdateUserTags, UpdateUserSimple,
 	// UpdateUserPhotos, UpdateUserRating instead
-	AddUserInfo(user models.User, info models.JsonInfo) error
 	AddNewUser(user *models.User) error
 	GetUserByPhoneOrEmail(phone string, email string) (models.User, error)
 	GetProfileInfo(uid int) (models.JsonInfo, error)
-	GetUserEvents(uid int) ([]models.Event, error)
-	GetUserTags(uid int) ([]models.Tag, error)
-	GetUserSubscriptions(uid int) ([]models.Event, error)
 	DeleteUser(mail string) error
 	GetValidTags() ([]models.Tag, error)
 	GetRandomFeedUsers(uid int, limit int, page int) ([]models.UserGeneral, error)
+	GetUsersForChat(cid int64, users *models.UserGeneralList) models.WorkMessage
 }

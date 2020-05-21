@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS profile_info
     location   GEOGRAPHY                            DEFAULT NULL, -- ST_POINT(latitude, longitude)
     birthday   DATE                                 DEFAULT NULL,
     gender     SEX_T,
+    tags       INTEGER[]                            DEFAULT NULL,
     social     VARCHAR(144)[]                       DEFAULT NULL,
     login_date TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
 );
@@ -108,6 +109,46 @@ CREATE TABLE IF NOT EXISTS event_vote
     CONSTRAINT unique_event_vote UNIQUE (uid, eid)
 );
 
+CREATE TABLE IF NOT EXISTS small_event
+(
+    eid             SERIAL PRIMARY KEY,
+    uid             INTEGER                     NOT NULL REFERENCES profile (uid),  -- author id
+    title           VARCHAR(128)                NOT NULL CHECK ( title <> '' ),     -- title, actually is checked on the front-end
+    description     VARCHAR(1024)               DEFAULT NULL,
+    date            TIMESTAMP(0) WITH TIME ZONE DEFAULT NULL,                       -- time of event, not the creation
+    tags            INTEGER[]                   DEFAULT NULL,                       -- tags from table 'tag'
+    photos          VARCHAR(64)[]               DEFAULT NULL,
+    is_edited       BOOLEAN                     DEFAULT FALSE,
+
+    time_created    TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp  -- for sorting
+);
+
+CREATE TABLE IF NOT EXISTS mid_events
+(
+    eid             SERIAL PRIMARY KEY,
+    admin_id        INTEGER REFERENCES profile (uid),
+    title           VARCHAR(128)                NOT NULL CHECK ( title <> '' ),
+    description     VARCHAR(1024)               NOT NULL,
+    date            TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NULL,
+    tags            INTEGER[]                            DEFAULT NULL,                       -- tags from table 'tag'
+    photos          VARCHAR(64)[]                        DEFAULT NULL,
+    member_limit    SMALLINT                             DEFAULT 3,
+    members         SMALLINT                             DEFAULT 1,
+    is_public       BOOLEAN                              DEFAULT TRUE, -- if admin don't wanna show himself and members in search
+    is_edited       BOOLEAN                              DEFAULT FALSE,
+    title_tsv       TSVECTOR,
+    chat_id         INTEGER DEFAULT NULL,           -- REFERENCES chat_user (chat_id)
+
+    time_created    TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp
+);
+
+CREATE TABLE IF NOT EXISTS mid_event_members
+(
+    eid     INTEGER REFERENCES mid_events (eid),
+    uid     INTEGER REFERENCES profile (uid),
+    CONSTRAINT unique_member UNIQUE (uid, eid)
+);
+
 --------------------------------------------------------
 -------------------- CHAT PART -------------------------
 --------------------------------------------------------
@@ -119,7 +160,7 @@ CREATE TABLE IF NOT EXISTS chat_user
     date       TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     user_count INTEGER                              DEFAULT 2,
     title      VARCHAR(128)                NOT NULL CHECK ( title <> '' ),
-    eid        INTEGER REFERENCES events (eid),
+    eid        INTEGER,     -- references mid_events (eid) or big_events (eid)
     avatar     VARCHAR(64)
 );
 
@@ -127,7 +168,7 @@ CREATE TABLE IF NOT EXISTS user_chat
 (
     user_local_id SERIAL PRIMARY KEY,
     chat_local_id INTEGER REFERENCES chat_user (chat_id),
-    uid           INTEGER REFERENCES profile (uid), -- user id
+    uid           INTEGER REFERENCES profile (uid), -- creator/admin id
     date          TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT current_timestamp,
     avatar        VARCHAR(64),
     title         VARCHAR(128)

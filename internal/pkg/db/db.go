@@ -10,16 +10,16 @@ import (
 
 var (
 	// TODO: add it as environment variable
-	host     = "eventumdb"
-	port     = uint16(5432)
+	host     = "pgbouncer"
+	port     = uint16(6432)
 	user     = os.Getenv("POSTGRES_USER")
 	password = os.Getenv("POSTGRES_PASSWORD")
 	dbname   = os.Getenv("POSTGRES_DB")
 )
 
-
 var db *pgx.ConnPool = nil
 var syncOnce = sync.Once{}
+
 func init() {
 	pgxConfig := pgx.ConnConfig{
 		Host:     host,

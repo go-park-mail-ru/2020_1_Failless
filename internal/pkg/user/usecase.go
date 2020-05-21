@@ -6,16 +6,18 @@ import (
 )
 
 type UseCase interface {
-	UpdateUserMeta(form *forms.MetaForm) (int, error)
-	UpdateUserInfo(form *forms.GeneralForm) (int, error)
+	UpdateUserAbout(uid int, about string) models.WorkMessage
+	UpdateUserTags(uid int, tagIDs []int) models.WorkMessage
+	UpdateUserPhotos(uid int, newImages *forms.EImageList) models.WorkMessage
 	GetUserInfo(profile *forms.GeneralForm) (int, error)
 	FillFormIfExist(cred *models.User) (int, error)
 	RegisterNewUser(user *forms.SignForm) error
-	AddImageToProfile(uid int, name string) error
 	UpdateUserBase(form *forms.SignForm) (int, error)
 	InitUsersByUserPreferences(users *[]models.UserGeneral, request *models.UserRequest) (int, error)
-	GetUserSubscriptions(events *models.EventList, uid int) (int, error)
-	GetFeedResults(users *[]models.UserGeneral, form *[]forms.GeneralForm) (models.FeedResults, error)
+	GetUserSubscriptions(subscriptions *models.MidAndBigEventList, uid int) models.WorkMessage
+	GetFeedResultsFor(uid int, users *[]models.UserGeneral) (models.FeedResults, models.WorkMessage)
+	GetUserOwnEvents(ownEvents *models.OwnEventsList, uid int) models.WorkMessage
+	GetSmallEventsForUser(smallEvents *models.SmallEventList, uid int) models.WorkMessage
 }
 
 // Get gender string by int id
