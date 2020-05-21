@@ -60,17 +60,14 @@ func (qg *queryGenerator) remove3PSymbols(keys string) bool {
 
 	keys = qg.exp.ReplaceAllString(keys, " ")
 	qg.vector = strings.FieldsFunc(keys, func(r rune) bool {
-		if r == ' ' {
-			return true
-		}
-		return false
+		return r == ' '
 	})
 	return true
 }
 
-func (qg *queryGenerator) getVector() []string {
-	return qg.vector
-}
+//func (qg *queryGenerator) getVector() []string {
+//	return qg.vector
+//}
 
 func (qg *queryGenerator) generateArgsSql(itemNum int, operator string, option string, offset int) string {
 	sql := ``
@@ -169,16 +166,16 @@ func (er *sqlEventsRepository) GetValidTags() ([]models.Tag, error) {
 	return tags, nil
 }
 
-func (er *sqlEventsRepository) generateORStatement(fieldName string, length int) string {
-	sql := ``
-	for i := 1; i <= length; i++ {
-		sql += fieldName + " = $" + strconv.Itoa(i)
-		if i != length {
-			sql += " OR "
-		}
-	}
-	return sql
-}
+//func (er *sqlEventsRepository) generateORStatement(fieldName string, length int) string {
+//	sql := ``
+//	for i := 1; i <= length; i++ {
+//		sql += fieldName + " = $" + strconv.Itoa(i)
+//		if i != length {
+//			sql += " OR "
+//		}
+//	}
+//	return sql
+//}
 
 func (er *sqlEventsRepository) FollowBigEvent(uid, eid int) error {
 	sqlStatement := `
@@ -324,8 +321,13 @@ func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
 		log.Println("CreateMidEvent: Failed to start transaction", err)
 		return err
 	}
-	defer tx.Rollback()
-
+	//defer tx.Rollback()
+	defer func() {
+		err = tx.Rollback()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	// Create global chat
 	var chatID int64
 	row := tx.QueryRow(chatRepository.QueryInsertGlobalChat, event.AdminId, event.Limit, event.Title)
@@ -351,10 +353,10 @@ func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
 	}
 
 	//Insert first message
-	if row, err := tx.Exec(chatRepository.QueryInsertFirstMessage, event.AdminId, chatID, userLocalID, true); err != nil {
-		log.Println("CreateMidEvent: ", err)
+	if row, err_QueryInsertFirstMessage := tx.Exec(chatRepository.QueryInsertFirstMessage, event.AdminId, chatID, userLocalID, true); err != nil {
+		log.Println("CreateMidEvent: ", err_QueryInsertFirstMessage)
 		log.Println(row)
-		return err
+		return err_QueryInsertFirstMessage
 	}
 
 	// Create event
@@ -384,15 +386,15 @@ func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
 	}
 
 	// Add first member
-	if cTag, err := tx.Exec(QueryInsertMidEventMember, event.AdminId, event.EId); err != nil || cTag.RowsAffected() == 0 {
-		log.Println("CreateMidEvent: ", err)
-		return err
+	if cTag, err_QueryInsertMidEventMember := tx.Exec(QueryInsertMidEventMember, event.AdminId, event.EId); err != nil || cTag.RowsAffected() == 0 {
+		log.Println("CreateMidEvent: ", err_QueryInsertMidEventMember)
+		return err_QueryInsertMidEventMember
 	}
 
 	// Update eid in global chats
-	if cTag, err := tx.Exec(chatRepository.QueryUpdateEidAvatarInChatUser, event.EId, photo, chatID); err != nil || cTag.RowsAffected() == 0 {
-		log.Println("CreateMidEvent: ", err)
-		return err
+	if cTag, err_QueryUpdateEidAvatarInChatUser := tx.Exec(chatRepository.QueryUpdateEidAvatarInChatUser, event.EId, photo, chatID); err != nil || cTag.RowsAffected() == 0 {
+		log.Println("CreateMidEvent: ", err_QueryUpdateEidAvatarInChatUser)
+		return err_QueryUpdateEidAvatarInChatUser
 	}
 
 	// Close transaction
@@ -550,8 +552,13 @@ func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
 		log.Println("JoinMidEvent: Failed to start transaction", err)
 		return http.StatusInternalServerError, err
 	}
-	defer tx.Rollback()
-
+	//defer tx.Rollback()
+	defer func() {
+		err = tx.Rollback()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	cTag, err := tx.Exec(QueryInsertMidEventMember, uid, eid)
 	if err != nil {
 		log.Println(err)
@@ -579,10 +586,10 @@ func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
 		}
 
 		//Insert first message
-		if row, err := tx.Exec(chatRepository.QueryInsertFirstMessage, uid, chatID, userLocalID, true); err != nil {
-			log.Println("JoinMidEvent: ", err)
+		if row, err_QueryInsertFirstMessage := tx.Exec(chatRepository.QueryInsertFirstMessage, uid, chatID, userLocalID, true); err != nil {
+			log.Println("JoinMidEvent: ", err_QueryInsertFirstMessage)
 			log.Println(row)
-			return http.StatusInternalServerError, err
+			return http.StatusInternalServerError, err_QueryInsertFirstMessage
 		}
 	}
 

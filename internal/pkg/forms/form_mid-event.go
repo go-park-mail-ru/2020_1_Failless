@@ -72,7 +72,8 @@ func (mef *MidEventForm) GetDBFormat(event *models.MidEvent) {
 		event.Photos = append(event.Photos, imgName)
 	}
 
-	for _, tag := range mef.TagsId {
-		event.TagsId = append(event.TagsId, tag)
-	}
+	//for _, tag := range mef.TagsId {
+	//	event.TagsId = append(event.TagsId, tag)
+	//}
+	event.TagsId = append(event.TagsId, mef.TagsId...)
 }

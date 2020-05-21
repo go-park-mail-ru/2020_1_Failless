@@ -51,11 +51,17 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 		log.Println(err)
 		return -1, err
 	}
-	defer tx.Rollback()
+	//defer tx.Rollback()
+	defer func() {
+		err = tx.Rollback()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	// Create global chat
 	var chatId int64
-	if err := tx.QueryRow(QueryInsertGlobalChat, uid1, userCount, title).Scan(&chatId); err != nil {
+	if err = tx.QueryRow(QueryInsertGlobalChat, uid1, userCount, title).Scan(&chatId); err != nil {
 		log.Println(err)
 		return -1, err
 	}
@@ -69,12 +75,12 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 		JOIN 			profile p ON p.uid = pi.pid
 		WHERE 			pi.pid = $3
 		RETURNING 		user_local_id;`
-	if err := tx.QueryRow(sqlStatement, chatId, uid1, uid2).Scan(
+	if err = tx.QueryRow(sqlStatement, chatId, uid1, uid2).Scan(
 		&userLocalIDs[0]); err != nil {
 		log.Println(err)
 		return -1, err
 	}
-	if err := tx.QueryRow(sqlStatement, chatId, uid2, uid1).Scan(
+	if err = tx.QueryRow(sqlStatement, chatId, uid2, uid1).Scan(
 		&userLocalIDs[1]); err != nil {
 		log.Println(err)
 		return -1, err
@@ -86,19 +92,19 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 		SET 	chat_id = $1
 		WHERE 	(uid = $2 AND user_id = $3)
 		OR 		(uid = $3 AND user_id = $2);`
-	if row, err := tx.Exec(sqlStatement2, chatId, uid1, uid2); err != nil {
-		log.Println(err)
+	if row, err_sqlStatement2 := tx.Exec(sqlStatement2, chatId, uid1, uid2); err != nil {
+		log.Println(err_sqlStatement2)
 		log.Println(sqlStatement2, chatId, uid1, uid2)
 		log.Println(row)
-		return -1, err
+		return -1, err_sqlStatement2
 	}
 
 	//Insert first message
 	for _, userLocalID := range userLocalIDs {
-		if row, err := tx.Exec(QueryInsertFirstMessage, uid1, chatId, userLocalID, false); err != nil {
-			log.Println(err)
+		if row, err_QueryInsertFirstMessage := tx.Exec(QueryInsertFirstMessage, uid1, chatId, userLocalID, false); err != nil {
+			log.Println(err_QueryInsertFirstMessage)
 			log.Println(row)
-			return -1, err
+			return -1, err_QueryInsertFirstMessage
 		}
 	}
 
@@ -191,8 +197,13 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 	}
 	// Rollback is safe to call even if the tx is already closed, so if
 	// the tx commits successfully, this is a no-op
-	defer tx.Rollback()
-
+	//defer tx.Rollback()
+	defer func() {
+		err = tx.Rollback()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	sqlStatement := `INSERT INTO message (uid, chat_id, user_local_id, message, is_shown)
 						SELECT $1, chat_local_id, user_local_id, $3, $4 FROM 
 							(SELECT * FROM user_chat uc WHERE $2 = uc.chat_local_id) AS s1
@@ -319,6 +330,6 @@ func (cr *sqlChatRepository) GetRoomMessages(uid, cid int64, page, limit int) ([
 			$3
 		OFFSET
 			$4;`
-	page = 0
-	return cr.getMessages(sqlStatement, cid, uid, limit, page)
+	//page = 0
+	return cr.getMessages(sqlStatement, cid, uid, limit, 0)
 }
