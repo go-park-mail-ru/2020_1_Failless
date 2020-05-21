@@ -15,6 +15,7 @@ services:
     command: bin/server
     links:
       - eventumdb
+      - pgbouncer
       - eventum_auth
     working_dir: /home/eventum
     networks:
@@ -35,6 +36,7 @@ services:
     command: bin/auth
     links:
       - eventumdb
+      - pgbouncer
     working_dir: /home/eventum
     networks:
       - backend
@@ -57,6 +59,7 @@ services:
     command: bin/chat
     links:
       - eventumdb
+      - pgbouncer
       - eventum_auth
     working_dir: /home/eventum
     networks:
@@ -64,6 +67,26 @@ services:
     build:
       context: ../.
       dockerfile: ./build/chat.dockerfile
+
+  pgbouncer:
+    container_name: pgbouncer
+    restart: always
+    build:
+      context: ..
+      dockerfile: ./build/pgbouncer.dockerfile
+      args:
+        dbuser: ${POSTGRES_USER}
+        dbname: ${POSTGRES_DB}
+        dbpasswd: ${POSTGRES_PASSWORD}
+    links:
+      - eventumdb
+    networks:
+      - backend
+#    volumes:
+#      - ../configs/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+#      - ../configs/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+    ports:
+      - '6432:6432'
 
   eventumdb:
     container_name: eventumdb

@@ -24,9 +24,9 @@ help: Makefile
 	@echo
 
 
-all: generate compile
+all: install generate compile
 
-## Start: Run development mode.
+## start: Run development mode.
 start: start-auth start-server start-chat
 ## stop: Stop development mode.
 stop: stop-server stop-auth stop-chat
@@ -87,7 +87,7 @@ easyjson:
 
 protoc:
 	@echo "  >  Generating proto files..."
-	protoc -I $(GOFILES)/api/proto/ $(GOFILES)/api/proto/auth.proto --go_out=plugins=grpc:../api
+	protoc -I $(GOFILES)/api/proto/ $(GOFILES)/api/proto/auth.proto --go_out=plugins=grpc:$(GOFILES)/api
 
 go-get:
 	@echo "  >  Checking if there is any missing dependencies..."
@@ -101,6 +101,20 @@ clean-log:
 	@echo "  >  Cleaning app logs"
 	rm $(GOFILES)/deployments/*.log
 	rm $(GOFILES)/*.log
+
+install:
+	@echo "  >  Installing dependencies..."
+	#unzip protoc-3.12.0-linux-x86_64.zip -d /tmp
+	#sudo cp /tmp/bin/protoc /usr/local/bin/protoc
+	go install google.golang.org/protobuf/cmd/protoc-gen-go
+	go get google.golang.org/grpc
+	go get -u github.com/golang/protobuf/protoc-gen-go
+	go get github.com/prometheus/client_golang/prometheus
+	go get github.com/prometheus/client_golang/prometheus/promauto
+	go get github.com/prometheus/client_golang/prometheus/promhttp
+	go get github.com/prometheus/client_golang/prometheus/promhttp
+	go get -u github.com/mailru/easyjson/...
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.27.0
 
 clean-json:
 	rm $(GOFILES)/internal/pkg/forms/*_easyjson.go
