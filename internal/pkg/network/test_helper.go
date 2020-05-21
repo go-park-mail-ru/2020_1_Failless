@@ -15,6 +15,7 @@ const (
 	MessageValidationFailed = "Validation failed"
 	MessageSuccessfulLogout = "Successful logout"
 	MessageErrorWhileUpgrading = "Failed to upgrade a protocol"
+	MessageErrorIncorrectTokenUid = "token uid is incorrect"
 )
 
 func DecodeToMsg(body *bytes.Buffer) (models.WorkMessage, error) {

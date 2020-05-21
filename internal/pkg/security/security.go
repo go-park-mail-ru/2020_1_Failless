@@ -2,7 +2,6 @@ package security
 
 import (
 	"crypto/rand"
-	"errors"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/settings"
 	"golang.org/x/crypto/bcrypt"
@@ -50,7 +49,7 @@ func CheckCredentials(w http.ResponseWriter, r *http.Request) int {
 
 	cred := data.(UserClaims)
 	if cred.Uid < 0 {
-		network.GenErrorCode(w, r, "token uid is incorrect", http.StatusBadRequest)
+		network.GenErrorCode(w, r, network.MessageErrorIncorrectTokenUid, http.StatusBadRequest)
 		return -1
 	}
 
@@ -60,12 +59,12 @@ func CheckCredentials(w http.ResponseWriter, r *http.Request) int {
 func GetUserFromCtx(r *http.Request) (UserClaims, error) {
 	data := r.Context().Value(CtxUserKey)
 	if data == nil {
-		return UserClaims{}, errors.New("Claims not found\n")
+		return UserClaims{}, claimsNotFoundError
 	}
 
 	cred := data.(UserClaims)
 	if cred.Uid < 0 {
-		return UserClaims{}, errors.New("token uid is incorrect")
+		return UserClaims{}, incorrectTokenUidError
 	}
 
 	return cred, nil
