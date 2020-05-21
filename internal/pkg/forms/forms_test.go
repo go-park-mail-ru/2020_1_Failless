@@ -113,19 +113,6 @@ func TestEImage_GetImage(t *testing.T) {
 	assert.Equal(t, eimage.Img, img)
 }
 
-
-func TestEImage_SaveImage(t *testing.T) {
-	eimage := EImage{}
-	if err := eimage.GetImage(fileName); err != nil {
-		t.Fail()
-		return
-	}
-	err := eimage.SaveImage("test")
-	if err != nil {
-		t.Fail()
-	}
-}
-
 func TestEImage_ImageToBuffer(t *testing.T) {
 	eimage := EImage{}
 	if err := eimage.GetImage(fileName); err != nil {
