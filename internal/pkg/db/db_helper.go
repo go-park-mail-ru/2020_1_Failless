@@ -17,6 +17,14 @@ func (dtbs *MyDB) Exec(sql string, arguments ...interface{}) (commandTag pgx.Com
 	return dtbs.pgPool.Exec(sql, arguments...)
 }
 
+func (dtbs *MyDB) QueryRow(sql string, args ...interface{}) *pgx.Row {
+	return dtbs.pgPool.QueryRow(sql, args...)
+}
+
+func (dtbs *MyDB) Query(sql string, args ...interface{}) (*pgx.Rows, error) {
+	return dtbs.pgPool.Query(sql, args...)
+}
+
 var testConfig = pgx.ConnConfig {
 	Host: "localhost",
 	Port: uint16(5432),
