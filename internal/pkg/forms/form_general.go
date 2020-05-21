@@ -8,7 +8,6 @@ import (
 
 type GeneralForm struct {
 	SignForm
-	Events   []models.Event       	`json:"events"`
 	Tags     []int32         		`json:"tags,omitempty"`
 	Avatar   EImage               	`json:"avatar"`
 	Photos   []EImage             	`json:"photos,omitempty"`
@@ -55,7 +54,7 @@ func (p *GeneralForm) GetDBFormat(info *models.JsonInfo, user *models.User) erro
 	return nil
 }
 
-func (p *GeneralForm) FillProfile(row models.JsonInfo) error {
+func (p *GeneralForm) FillProfile(row models.JsonInfo) {
 	ava := ""
 	if len(row.Photos) < 1 {
 		ava = "default.png"
@@ -75,5 +74,4 @@ func (p *GeneralForm) FillProfile(row models.JsonInfo) error {
 	for _, photo := range row.Photos {
 		p.Photos = append(p.Photos, EImage{ImgName: photo})
 	}
-	return nil
 }

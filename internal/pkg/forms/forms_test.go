@@ -38,20 +38,6 @@ func (f *Faker) GetSignForm() SignForm {
 	}
 }
 
-func (f *Faker) GetEventForm() EventForm {
-	return EventForm{
-		UId:     rand.Int(),
-		Title:   fake.Title(),
-		Message: fake.Paragraph(),
-		Type:    rand.Int() % 16,
-		Private: false,
-		TagId:   rand.Int() % 16,
-		Limit:   rand.Int()%15 + 2,
-		Date:    "2020-10-10",
-		Photos:  []EImage{f.GetImage()},
-	}
-}
-
 func (f *Faker) GetLocation() models.LocationPoint {
 	return models.LocationPoint{
 		Latitude:  fake.Latitute(),
@@ -63,11 +49,7 @@ func (f *Faker) GetLocation() models.LocationPoint {
 func (f *Faker) GetGeneral() GeneralForm {
 	return GeneralForm{
 		SignForm: SignForm{},
-		Events: []models.Event{
-		},
-		Tags: []models.Tag{
-
-		},
+		Tags: 	  []int32{1,2},
 		Avatar:   f.GetImage(),
 		Photos:   []EImage{f.GetImage()},
 		Gender:   rand.Int() % 3,
@@ -75,39 +57,6 @@ func (f *Faker) GetGeneral() GeneralForm {
 		Rating:   float32(rand.Int() % 5),
 		Location: f.GetLocation(),
 		Birthday: time.Now().Add(-time.Hour * 24 * 30 * 365 * time.Duration(rand.Int()%20)),
-	}
-}
-
-//testing all profile forms
-func TestGeneralForm_FillProfile(t *testing.T) {
-	faker := Faker{}
-	form := faker.GetGeneral()
-	profile := models.JsonInfo{
-		About:     fake.Paragraph(),
-		Photos:    []string{fake.DomainName()},
-		Rating:    float32(rand.Int() % 5),
-		Birthday:  form.Birthday,
-		Gender:    models.Male,
-		LoginDate: form.Birthday,
-		Location:  faker.GetLocation(),
-	}
-	if err := form.FillProfile(profile); err != nil {
-		t.Fail()
-		return
-	}
-
-	assert.Equal(t, form.Birthday, profile.Birthday)
-	assert.Equal(t, form.Location, profile.Location)
-	assert.Equal(t, form.Gender, profile.Gender)
-	assert.Equal(t, form.Rating, profile.Rating)
-	assert.Equal(t, form.About, profile.About)
-	if len(profile.Photos) > 0 {
-		assert.Equal(t, form.Avatar.ImgName, profile.Photos[0])
-	} else {
-		assert.Equal(t, form.Avatar.ImgName, "default.png")
-	}
-	for i, photo := range profile.Photos {
-		assert.Equal(t, form.Photos[i].ImgName, photo)
 	}
 }
 
@@ -128,9 +77,6 @@ func TestGeneralForm_GetDBFormat(t *testing.T) {
 	if len(form.Photos) != len(info.Photos) {
 		t.Fail()
 		return
-	}
-	for i, photo := range form.Photos {
-		assert.Equal(t, info.Photos[i], photo.ImgName)
 	}
 
 	assert.Equal(t, form.Name, user.Name)
@@ -288,10 +234,6 @@ func TestEventForm_CheckTextFields(t *testing.T) {
 	assert.Equal(t, false, form.CheckTextFields())
 	form.Message = "Ok message"
 	assert.Equal(t, true, form.CheckTextFields())
-
-	faker := Faker{}
-	form = faker.GetEventForm()
-	assert.Equal(t, true, form.CheckTextFields())
 }
 
 func TestEventForm_ValidationType(t *testing.T) {
@@ -327,70 +269,4 @@ func TestEventForm_ValidationIDs(t *testing.T) {
 	assert.Equal(t, true, form.ValidationIDs())
 	form.UId = -1
 	assert.Equal(t, false, form.ValidationIDs())
-}
-
-func TestEventForm_GetDBFormat(t *testing.T) {
-	faker := Faker{}
-	form := faker.GetEventForm()
-	copyForm := form
-	model := models.Event{}
-	form.GetDBFormat(&model)
-	assert.Equal(t, true, model.AuthorId == copyForm.UId)
-	assert.Equal(t, true, model.Title == copyForm.Title)
-	assert.Equal(t, true, model.Message == copyForm.Message)
-	assert.Equal(t, true, model.Type == copyForm.TagId)
-	assert.Equal(t, true, model.Limit == copyForm.Limit)
-	if copyForm.Limit < 3 {
-		assert.Equal(t, false, model.Public)
-	} else {
-		assert.Equal(t, true, model.Public)
-	}
-
-	if copyForm.Date != "-" && copyForm.Date != "" {
-		checkDate, err := time.Parse(layoutISO, copyForm.Date)
-		if err != nil {
-			t.Fail()
-			return
-		}
-		assert.Equal(t, true, model.EDate == checkDate)
-	}
-
-	for i, photo := range copyForm.Photos {
-		log.Println(model.Photos)
-		log.Println(i)
-		if len(model.Photos) == 0 || len(model.Photos) < i+1 {
-			t.Fail()
-			return
-		}
-		assert.Equal(t, true, model.Photos[i] == photo.ImgName)
-	}
-
-	form.Limit = 2
-	form.GetDBFormat(&model)
-	assert.Equal(t, false, model.Public)
-
-}
-
-func TestEventForm_Validate(t *testing.T) {
-	faker := Faker{}
-	form := faker.GetEventForm()
-	assert.Equal(t, true, form.Validate())
-	form.Limit = 100
-	assert.Equal(t, false, form.Validate())
-	form.TagId = -1
-	form.Limit = 10
-	assert.Equal(t, false, form.Validate())
-	form.TagId = 2
-	assert.Equal(t, true, form.Validate())
-	form.Type = 2
-	form.Title = ""
-	assert.Equal(t, false, form.Validate())
-	form.Title = "Ok title"
-	form.Message = fake.CharactersN(MessageLenLimit + 1)
-	assert.Equal(t, false, form.Validate())
-	form.Message = "Ok message"
-	form.UId = -1
-	assert.Equal(t, false, form.Validate())
-	form.UId = 10
-	assert.Equal(t, true, form.Validate())
 }
