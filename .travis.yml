@@ -13,21 +13,20 @@ before_install:
   - cp deployments/deploy_rsa ~/.ssh/deploy_rsa
   - chmod 600 ~/.ssh/deploy_rsa
   - ssh-add ~/.ssh/deploy_rsa
-#  - go version
-#  - sudo apt install -y wget unzip
-#  - pushd /home/travis
-#  - wget https://github.com/protocolbuffers/protobuf/releases/download/v3.12.0/protoc-3.12.0-linux-x86_64.zip
-#  - unzip protoc-3.12.0-linux-x86_64.zip
-#  - bin/protoc --version
-#  - popd
-#  - cd $TRAVIS_BUILD_DIR/deployments && make all
+  - sudo apt install -y wget unzip
+  - pushd /home/travis
+  - wget https://github.com/protocolbuffers/protobuf/releases/download/v3.12.0/protoc-3.12.0-linux-x86_64.zip
+  - unzip protoc-3.12.0-linux-x86_64.zip
+  - bin/protoc --version
+  - popd
+  - cd $TRAVIS_BUILD_DIR/deployments && make all
 install:
   - echo "Installed"
 after_success:
   - echo "OK"
-#  - go build -o bin/auth $TRAVIS_BUILD_DIR/cmd/auth/main.go
-#  - go build -o bin/chat $TRAVIS_BUILD_DIR/cmd/chat/main.go
-#  - go build -o bin/server $TRAVIS_BUILD_DIR/cmd/server/main.go
+  - go build -o bin/auth $TRAVIS_BUILD_DIR/cmd/auth/main.go
+  - go build -o bin/chat $TRAVIS_BUILD_DIR/cmd/chat/main.go
+  - go build -o bin/server $TRAVIS_BUILD_DIR/cmd/server/main.go
 script:
   - cd $TRAVIS_BUILD_DIR
 #  - golangci-lint run  ./...     # run a bunch of code checkers/linters in parallel
@@ -39,12 +38,11 @@ deploy:
     skip_cleanup: true
     script: deployments/deploy.sh
     on:
-      branch: bugfix/connection-limit
+      branch: master
 branches:
   only:
     - master
     - develop
-    - bugfix/connection-limit
 env:
   global:
     - secure: bMbaC1P9X3XI7xk8PEzqXnMU8+Du9UbHeYFNl2T8ba2yWetenH/VsRzfp+Nx0R98OR+ao20byRCMB7MF8w5HaTC6eSxbQQYsnUdp1qn3/KQ88b3W9ctcTWfoRA77BtzmDo9BL3a28gPenYOlMzHt4X5FUfZTzfdGwxKRvZZI1XMLX5s421gkTp4ZoZUQyu3aaxO2gsqSrLf9W7yOqAwsApTr5TUzafSkunyYksejAQ3QFJCK1f4K3nqRN+9T/diAkjVF24ttfbUNVavd2f8CwKVesIDNmiewrIL5sA5nKkjW7z1bc20zM3er6w8h6G2hAU/6bI/OnIZJkyd/KDJturxvJaxxUGqVYa7YJ8rlteldpEwOP5+tnsbaOesc2VHD+7LJdtF+DZyUohCneeZZCtlMFfoIVh7uFhQGiXxAVd2MrabvYeaWh+rHTamvoWVTA72uLKWf2aoJxCX8o87EzpfeTTHkfStfIHB9a10ELwPUkLLZ18wT1OxCjdxEMhYBGgb8KiwP+YwMIKjDb+NYcg4I1dOKqkTO4+QAgpqHgehYmoGGw15g3sGC3xb+aISHyACW/WUgj62ZdNDPh7Jh3g9dEGEuyKtLqLXbdjLrHIDHDzJ4YEwOGAaA+jfgFqFf1lKBP0iSQkeuaaZy/wn1LQLlz2RECORr7VBjmpuBW1o=

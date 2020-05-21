@@ -7,9 +7,4 @@ echo "ssh a.prokopenko@163.172.133.90 -v exit"
 ssh a.prokopenko@163.172.133.90 'cd /home/a.prokopenko/eventum/deploy/2020_1_Failless/deployments;
   cp /home/a.prokopenko/eventum/back/deployments/.env . ;
   sudo docker-compose build ;
-  sudo docker-compose up ; '
-
-#echo "docker-compose up -d"
-#docker-compose up -d
-#echo "cd /home/a.prokopenko/eventum/deploy/2020_1_Failless/deployments"
-#cd /home/a.prokopenko/eventum/deploy/2020_1_Failless/deployments
+  sudo docker-compose up -d ; '
