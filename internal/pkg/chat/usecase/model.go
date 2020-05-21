@@ -129,14 +129,15 @@ func GetUseCase() chat.UseCase {
 }
 
 func (cc *chatUseCase) CreateDialogue(id1, id2 int) (int, error) {
-	chatId, err := cc.CreateDialogue(id1, id2)
-
-	if err != nil {
-		log.Println(err)
-		return -1, nil
-	}
-
-	return chatId, nil
+	//chatId, err := cc.CreateDialogue(id1, id2)
+	//
+	//if err != nil {
+	//	log.Println(err)
+	//	return -1, nil
+	//}
+	//
+	//return chatId, nil
+	return -1, nil
 }
 
 func (cc *chatUseCase) IsUserHasRoom(uid int64, cid int64) (bool, error) {
