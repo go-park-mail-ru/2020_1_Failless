@@ -24,9 +24,9 @@ help: Makefile
 	@echo
 
 
-all: generate compile
+all: install generate compile
 
-## Start: Run development mode.
+## start: Run development mode.
 start: start-auth start-server start-chat
 ## stop: Stop development mode.
 stop: stop-server stop-auth stop-chat
@@ -101,6 +101,21 @@ clean-log:
 	@echo "  >  Cleaning app logs"
 	rm $(GOFILES)/deployments/*.log
 	rm $(GOFILES)/*.log
+
+install:
+	@echo "  >  Installing dependencies..."
+	apt install -y wget unzip
+	wget https://github.com/protocolbuffers/protobuf/releases/download/v3.12.0/protoc-3.12.0-linux-x86_64.zip
+	unzip protoc-3.12.0-linux-x86_64.zip -d /tmp
+	cp /tmp/protoc /usr/bin/protoc
+	go install google.golang.org/protobuf/cmd/protoc-gen-go
+	go get google.golang.org/grpc
+	go get -u github.com/golang/protobuf/protoc-gen-go
+	go get github.com/prometheus/client_golang/prometheus
+	go get github.com/prometheus/client_golang/prometheus/promauto
+	go get github.com/prometheus/client_golang/prometheus/promhttp
+	go get github.com/prometheus/client_golang/prometheus/promhttp
+	go get -u github.com/mailru/easyjson/...
 
 clean-json:
 	rm $(GOFILES)/internal/pkg/forms/*_easyjson.go

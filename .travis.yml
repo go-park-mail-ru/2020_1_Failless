@@ -13,22 +13,7 @@ before_install:
 - cp deployments/deploy_rsa ~/.ssh/deploy_rsa
 - chmod 600 ~/.ssh/deploy_rsa
 - ssh-add ~/.ssh/deploy_rsa
-- sudo apt install -y wget unzip
-- wget https://github.com/protocolbuffers/protobuf/releases/download/v3.12.0/protoc-3.12.0-linux-x86_64.zip
-- sudo unzip protoc-3.12.0-linux-x86_64.zip -d /usr/local/bin
-- sudo cp /usr/local/bin/bin/protoc /usr/bin/protoc
-- go install google.golang.org/protobuf/cmd/protoc-gen-go
-- go get google.golang.org/grpc
-- go get -u github.com/golang/protobuf/protoc-gen-go
-- go get github.com/prometheus/client_golang/prometheus
-- go get github.com/prometheus/client_golang/prometheus/promauto
-- go get github.com/prometheus/client_golang/prometheus/promhttp
-- go get github.com/prometheus/client_golang/prometheus/promhttp
-- go get -u github.com/mailru/easyjson/...
-- protoc -I $TRAVIS_BUILD_DIR/api/proto/ $TRAVIS_BUILD_DIR/api/proto/auth.proto --go_out=plugins=grpc:$TRAVIS_BUILD_DIR/api
-- easyjson -all $TRAVIS_BUILD_DIR/internal/pkg/models/models.go
-- easyjson -all $TRAVIS_BUILD_DIR/internal/pkg/forms/form_*.go
-- easyjson $TRAVIS_BUILD_DIR/internal/pkg/security/security.go
+- cd $TRAVIS_BUILD_DIR/deployments && sudo make all
 after_success:
 - go build -o bin/auth $TRAVIS_BUILD_DIR/cmd/auth/main.go
 - go build -o bin/chat $TRAVIS_BUILD_DIR/cmd/chat/main.go
