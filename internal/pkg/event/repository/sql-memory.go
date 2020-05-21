@@ -67,9 +67,9 @@ func (qg *queryGenerator) remove3PSymbols(keys string) bool {
 	return true
 }
 
-func (qg *queryGenerator) getVector() []string {
-	return qg.vector
-}
+//func (qg *queryGenerator) getVector() []string {
+//	return qg.vector
+//}
 
 func (qg *queryGenerator) generateArgsSql(itemNum int, operator string, option string, offset int) string {
 	sql := ``
@@ -237,16 +237,16 @@ func (er *sqlEventsRepository) GetValidTags() ([]models.Tag, error) {
 	return tags, nil
 }
 
-func (er *sqlEventsRepository) generateORStatement(fieldName string, length int) string {
-	sql := ``
-	for i := 1; i <= length; i++ {
-		sql += fieldName + " = $" + strconv.Itoa(i)
-		if i != length {
-			sql += " OR "
-		}
-	}
-	return sql
-}
+//func (er *sqlEventsRepository) generateORStatement(fieldName string, length int) string {
+//	sql := ``
+//	for i := 1; i <= length; i++ {
+//		sql += fieldName + " = $" + strconv.Itoa(i)
+//		if i != length {
+//			sql += " OR "
+//		}
+//	}
+//	return sql
+//}
 
 func (er *sqlEventsRepository) GetNewEventsByTags(tags []int, uid int, limit int, page int) (models.EventList, error) {
 	var generator queryGenerator

@@ -23,14 +23,14 @@ func (ur *userRepository) GetUserByPhoneOrEmail(phone string, email string) (mod
 }
 
 // Private method
-func (ur *userRepository) getUser(sqlStatement string, args ...interface{}) (user models.User, err error) {
-	return models.User{}, nil
-}
+//func (ur *userRepository) getUser(sqlStatement string, args ...interface{}) (user models.User, err error) {
+//	return models.User{}, nil
+//}
 
 // Private method
-func (ur *userRepository) getEvents(sqlStatement string, args ...interface{}) ([]models.Event, error) {
-	return nil, nil
-}
+//func (ur *userRepository) getEvents(sqlStatement string, args ...interface{}) ([]models.Event, error) {
+//	return nil, nil
+//}
 
 func (ur *userRepository) AddNewUser(user *models.User) error {
 	return nil
