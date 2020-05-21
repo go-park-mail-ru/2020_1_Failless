@@ -92,6 +92,9 @@ func (uc *UserUseCase) UpdateUserBase(form *forms.SignForm) (int, error) {
 	usr.Email = form.Email
 	usr.Phone = form.Phone
 	usr.Password, err = security.EncryptPassword(form.Password)
+	if err != nil {
+		log.Println("security.EncryptPassword error")
+	}
 
 	var inf = models.JsonInfo{}
 	//inf.Birthday = form.Birthday

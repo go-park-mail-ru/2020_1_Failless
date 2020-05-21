@@ -274,6 +274,9 @@ func SignIn(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		Email:    form.Email,
 		Password: form.Password,
 	})
+	if err != nil {
+		log.Println("settings.AuthClient.GetToken error")
+	}
 	if token != nil {
 		network.CreateAuthMS(&w, token.Token)
 	}
