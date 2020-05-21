@@ -11,11 +11,6 @@ const (
 	MessageLenLimit  = 512
 )
 
-const (
-	layoutISO = "2006-01-02"
-	//layoutUS  = "January 1, 2020"
-)
-
 type EventForm struct {
 	UId     int      `json:"uid"`
 	Title   string   `json:"title"`

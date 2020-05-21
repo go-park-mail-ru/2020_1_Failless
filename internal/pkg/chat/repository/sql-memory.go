@@ -321,6 +321,6 @@ func (cr *sqlChatRepository) GetUserTopMessages(uid int64, page, limit int) ([]m
 }
 
 func (cr *sqlChatRepository) GetRoomMessages(uid, cid int64, page, limit int) ([]forms.Message, error) {
-	page = 0
-	return cr.getMessages(QuerySelectMessageHistory, cid, uid, limit, page)
+	//page = 0
+	return cr.getMessages(QuerySelectMessageHistory, cid, uid, limit, 0)
 }

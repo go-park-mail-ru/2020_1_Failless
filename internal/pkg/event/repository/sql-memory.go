@@ -69,25 +69,25 @@ func (qg *queryGenerator) remove3PSymbols(keys string) bool {
 //	return qg.vector
 //}
 
-func (qg *queryGenerator) generateArgsSql(itemNum int, operator string, option string, offset int) string {
-	sql := ``
-	for i := 1 + offset; i <= itemNum; i++ {
-		sql += option + `$` + strconv.Itoa(i) + ` `
-		if i != itemNum {
-			sql += operator + ` `
-		}
-	}
-	return sql
-}
+//func (qg *queryGenerator) generateArgsSql(itemNum int, operator string, option string, offset int) string {
+//	sql := ``
+//	for i := 1 + offset; i <= itemNum; i++ {
+//		sql += option + `$` + strconv.Itoa(i) + ` `
+//		if i != itemNum {
+//			sql += operator + ` `
+//		}
+//	}
+//	return sql
+//}
 
 // Getting AND condition for time of event and sorting by date with pagination
-func (qg *queryGenerator) getConstantCondition(itemNum int) string {
-	return `
-		AND 		e.edate >= current_timestamp
-		ORDER BY 	e.edate ASC
-		LIMIT 		$` + strconv.Itoa(itemNum+1) + ` 
-		OFFSET 		$` + strconv.Itoa(itemNum+2) + ` ;`
-}
+//func (qg *queryGenerator) getConstantCondition(itemNum int) string {
+//	return `
+//		AND 		e.edate >= current_timestamp
+//		ORDER BY 	e.edate ASC
+//		LIMIT 		$` + strconv.Itoa(itemNum+1) + `
+//		OFFSET 		$` + strconv.Itoa(itemNum+2) + ` ;`
+//}
 
 // Generate args slice from words vector, using limit and page number,
 // for reusing getEvents method from sqlEventsRepository struct
