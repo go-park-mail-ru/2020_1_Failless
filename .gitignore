@@ -11,3 +11,4 @@ data
 *_easyjson.go
 easyjson-*
 mock_*
+*.out
