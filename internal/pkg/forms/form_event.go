@@ -22,12 +22,12 @@ type EventForm struct {
 	UId     int      `json:"uid"`
 	Title   string   `json:"title"`
 	Message string   `json:"description"`
-	Type    int      `json:"type, omitempty"`
-	Private bool     `json:"private, omitempty"`
-	TagId   int      `json:"tag_id, omitempty"`
+	Type    int      `json:"type,omitempty"`
+	Private bool     `json:"private,omitempty"`
+	TagId   int      `json:"tag_id,omitempty"`
 	Limit   int      `json:"limit"`
 	Date    string   `json:"date"`
-	Photos  []EImage `json:"photos, omitempty"`
+	Photos  []EImage `json:"photos,omitempty"`
 }
 
 func (ef *EventForm) ValidationLimits() bool {
