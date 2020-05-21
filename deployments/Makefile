@@ -107,7 +107,7 @@ install:
 	apt install -y wget unzip
 	wget https://github.com/protocolbuffers/protobuf/releases/download/v3.12.0/protoc-3.12.0-linux-x86_64.zip
 	unzip protoc-3.12.0-linux-x86_64.zip -d /tmp
-	cp /tmp/protoc /usr/bin/protoc
+	cp /tmp/bin/protoc /usr/bin/protoc
 	go install google.golang.org/protobuf/cmd/protoc-gen-go
 	go get google.golang.org/grpc
 	go get -u github.com/golang/protobuf/protoc-gen-go
