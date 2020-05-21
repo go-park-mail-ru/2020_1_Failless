@@ -10,12 +10,12 @@ type GeneralForm struct {
 	SignForm
 	Tags     []int32         		`json:"tags,omitempty"`
 	Avatar   EImage               	`json:"avatar"`
-	Photos   []EImage             	`json:"photos, omitempty"`
+	Photos   []EImage             	`json:"photos,omitempty"`
 	Gender   int                  	`json:"gender"`
 	About    string               	`json:"about"`
-	Rating   float32              	`json:"rating, omitempty"`
-	Location models.LocationPoint 	`json:"location, omitempty"`
-	Birthday time.Time            	`json:"birthday, omitempty"`
+	Rating   float32              	`json:"rating,omitempty"`
+	Location models.LocationPoint 	`json:"location,omitempty"`
+	Birthday time.Time            	`json:"birthday,omitempty"`
 }
 
 func (p *GeneralForm) ValidateGender() bool {

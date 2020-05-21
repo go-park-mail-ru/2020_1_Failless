@@ -225,8 +225,13 @@ func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.Use
 	}
 	// Rollback is safe to call even if the tx is already closed, so if
 	// the tx commits successfully, this is a no-op
-	defer tx.Rollback()
-
+	//defer tx.Rollback()
+	defer func() {
+		err = tx.Rollback()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	// TODO: add name
 	sqlStatement := `
 		UPDATE 	profile

@@ -244,6 +244,9 @@ func (ud *userDelivery) SignIn(w http.ResponseWriter, r *http.Request, _ map[str
 		Email:    form.Email,
 		Password: form.Password,
 	})
+	if err != nil {
+		log.Println("settings.AuthClient.GetToken error")
+	}
 	if token != nil {
 		network.CreateAuthMS(&w, token.Token)
 	}

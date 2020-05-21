@@ -12,17 +12,17 @@ import (
 )
 
 // Structure for describe an error
-type authError struct {
-
-	// Error message
-	msg string
-
-	// 1 - cookie not found
-	// 2 - parse error
-	// 3 - signature invalid
-	// 4 - token invalid
-	code int
-}
+//type authError struct {
+//
+//	// Error message
+//	msg string
+//
+//	// 1 - cookie not found
+//	// 2 - parse error
+//	// 3 - signature invalid
+//	// 4 - token invalid
+//	code int
+//}
 
 //type UserClaims struct {
 //	Uid   int
@@ -53,7 +53,7 @@ func Auth(next settings.HandlerFunc) settings.HandlerFunc {
 		} else {
 			authReply, err := settings.AuthClient.CheckAuthorize(ctx, &pb.Token{Token: c.Value})
 			if err != nil {
-				ctx = context.WithValue(ctx, security.CtxUserKey, nil)
+				ctx = context.WithValue(ctx, security.CtxUserKey, nil) //nolint
 				w.WriteHeader(http.StatusInternalServerError)
 				network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)
 				return

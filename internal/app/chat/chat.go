@@ -12,7 +12,13 @@ import (
 
 func Start() {
 	file := logger.OpenLogFile("chat")
-	defer file.Close()
+	//defer file.Close()
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	if ok := settings.CheckSecretes(chat.Secrets); !ok {
 		log.Println("Can't find variables ", chat.Secrets)
