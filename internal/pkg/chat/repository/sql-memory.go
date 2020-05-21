@@ -90,19 +90,19 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 		SET 	chat_id = $1
 		WHERE 	(uid = $2 AND user_id = $3)
 		OR 		(uid = $3 AND user_id = $2);`
-	if row, err := tx.Exec(sqlStatement2, chatId, uid1, uid2); err != nil {
-		log.Println(err)
+	if row, err_sqlStatement2 := tx.Exec(sqlStatement2, chatId, uid1, uid2); err != nil {
+		log.Println(err_sqlStatement2)
 		log.Println(sqlStatement2, chatId, uid1, uid2)
 		log.Println(row)
-		return -1, err
+		return -1, err_sqlStatement2
 	}
 
 	//Insert first message
 	for _, userLocalID := range userLocalIDs {
-		if row, err := tx.Exec(QueryInsertFirstMessage, uid1, chatId, userLocalID, false); err != nil {
-			log.Println(err)
+		if row, err_QueryInsertFirstMessage := tx.Exec(QueryInsertFirstMessage, uid1, chatId, userLocalID, false); err != nil {
+			log.Println(err_QueryInsertFirstMessage)
 			log.Println(row)
-			return -1, err
+			return -1, err_QueryInsertFirstMessage
 		}
 	}
 
@@ -197,7 +197,7 @@ func (cr *sqlChatRepository) AddMessageToChat(msg *forms.Message, relatedChats [
 	// the tx commits successfully, this is a no-op
 	//defer tx.Rollback()
 	defer func() {
-		err := tx.Rollback()
+		err = tx.Rollback()
 		if err != nil {
 			log.Println(err)
 		}
