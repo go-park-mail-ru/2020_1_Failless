@@ -4,390 +4,1431 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"failless/internal/pkg/forms"
+	"failless/internal/pkg/images"
+	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/security"
+	"failless/internal/pkg/user"
+	"failless/internal/pkg/user/mocks"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 )
 
-func signFormCheck(t *testing.T, body *bytes.Buffer, name interface{}) {
-	var respForm forms.SignForm
-	decoder := json.NewDecoder(body)
-	err := decoder.Decode(&respForm)
+var (
+	testSignForm = forms.SignForm{
+		Uid:      security.TestUser.Uid,
+		Name:     security.TestUser.Name,
+		Phone:    security.TestUser.Phone,
+		Email:    security.TestUser.Email,
+		Password: "qwerty1234",
+	}
+	testInvalidUidType = map[string]interface{}{
+		"uid": strconv.Itoa(1),			// Invalid type
+	}
+	useCaseError = errors.New("error in usecase")
+	testMessageUseCaseError = models.WorkMessage{
+		Request: nil,
+		Message: useCaseError.Error(),
+		Status:  http.StatusInternalServerError,
+	}
+	testAbout = models.UserAbout{About:"about"}
+	testUserTags = models.UserTags{Tags:[]int{1,2}}
+	testUserPhotos = forms.EImageList{{ImgBase64:""}}
+	testUserPhotosInvalid = forms.EImageList{{ImgBase64:"kek", ImgName:""}}
+	testUserRequest = models.UserRequest{
+		Uid:      security.TestUser.Uid,
+		Page:     1,
+		Limit:    10,
+		Query:    "kek",
+		Tags:     nil,
+		Location: models.LocationPoint{},
+		MinAge:   18,
+		MaxAge:   100,
+		Men:      true,
+		Women:    true,
+	}
+)
+
+func getTestDelivery(mockUC *mocks.MockUseCase) user.Delivery {
+	return &userDelivery{UseCase:mockUC}
+}
+
+func TestUpdProfileGeneral_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("PUT", "/api/profile/:id/general", nil)
 	if err != nil {
 		t.Fail()
 		return
 	}
-	assert.Equal(t, name, respForm.Name)
-	assert.Equal(t, true, respForm.Uid > 0)
-}
+	rr := httptest.NewRecorder()
 
-func decodeToMsg(body *bytes.Buffer) (network.Message, error) {
-	var msg network.Message
-	decoder := json.NewDecoder(body)
-	err := decoder.Decode(&msg)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": "kek"}
+
+	ud.UpdProfileGeneral(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
-		return network.Message{}, err
+		t.Fail()
+		return
 	}
-	return msg, nil
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageInvalidID, msg.Message)
 }
 
-func TestGetUserInfo(t *testing.T) {
-	req, err := http.NewRequest("GET", "/api/getuser", nil)
+func TestUserDelivery_UpdProfileGeneral_IncorrectBody(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testInvalidUidType)
+	req, err := http.NewRequest("PUT", "/api/profile/:id/general", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ud.UpdProfileGeneral(rr, req.WithContext(ctx), map[string]string{"id": strconv.Itoa(testSignForm.Uid)})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
+}
+
+func TestUserDelivery_UpdProfileGeneral_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testSignForm)
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/general", bytes.NewReader(body))
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
-
 	rr := httptest.NewRecorder()
-
-	var ps map[string]string
-	GetUserInfo(rr, req, ps)
-	// Check the status code is what we expect.
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusOK)
-		return
-	}
-	msg, err := decodeToMsg(rr.Body)
-	if err != nil {
-		t.Fail()
-		return
-	}
-	assert.Equal(t, msg.Status, http.StatusUnauthorized)
-	assert.Equal(t, msg.Message, "User is not authorised")
-}
-
-func TestSignUp(t *testing.T) {
-	mcPostBody := map[string]interface{}{
-		"uid":      0,
-		"name":     "mrTester",
-		"phone":    "88005553535",
-		"email":    "mrtester@test.com",
-		"password": "qwerty12345",
-	}
-	body, _ := json.Marshal(mcPostBody)
-	req, err := http.NewRequest("POST", "/api/signup", bytes.NewReader(body))
-	if err != nil {
-		t.Fail()
-		return
-	}
-
-	rr := httptest.NewRecorder()
-
-	var ps map[string]string
-	user := security.UserClaims{
-		Uid:   1,
-		Phone: "88005553535",
-		Email: "mail@mail.ru",
-		Name:  "mrTester",
-	}
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, security.CtxUserKey, user)
-	SignUp(rr, req.WithContext(ctx), ps)
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusOK)
-		return
-	}
-	var msg network.Claims
-	decoder := json.NewDecoder(rr.Body)
-	err = decoder.Decode(&msg)
-	if err != nil {
-		t.Fail()
-		return
-	}
-	assert.Equal(t, msg.Uid, user.Uid)
-	assert.Equal(t, msg.Phone, user.Phone)
-	assert.Equal(t, msg.Email, user.Email)
+	mockUC.EXPECT().UpdateUserBase(&testSignForm).Return(testMessageUseCaseError.Status, useCaseError)
+	ud.UpdProfileGeneral(rr, req.WithContext(ctx), ps)
 
-	SignUp(rr, req, ps)
-
-	signFormCheck(t, rr.Body, mcPostBody["name"])
-}
-
-func TestSignIn(t *testing.T) {
-	mcPostBody := map[string]interface{}{
-		"uid":      0,
-		"name":     "mrTester",
-		"phone":    "88005553535",
-		"email":    "mrtester@test.com",
-		"password": "qwerty12345",
-	}
-	body, _ := json.Marshal(mcPostBody)
-	req, err := http.NewRequest("POST", "/api/signin", bytes.NewReader(body))
+	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
 		t.Fail()
 		return
 	}
 
-	rr := httptest.NewRecorder()
-	var ps map[string]string
-	SignIn(rr, req, ps)
-	signFormCheck(t, rr.Body, mcPostBody["name"])
+	assert.Equal(t, testMessageUseCaseError.Status, msg.Status)
+	assert.Equal(t, testMessageUseCaseError.Message, msg.Message)
 }
 
-func TestLogout(t *testing.T) {
-	req, err := http.NewRequest("GET", "/api/logout", nil)
+func TestUserDelivery_UpdProfileGeneral_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testSignForm)
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/general", bytes.NewReader(body))
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
-
 	rr := httptest.NewRecorder()
-	var ps map[string]string
-	Logout(rr, req, ps)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusOK)
+	mockUC.EXPECT().UpdateUserBase(&testSignForm)
+	ud.UpdProfileGeneral(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
 		return
 	}
 
-	msg, err := decodeToMsg(rr.Body)
-	//if err != nil {
-	//	t.Fail()
-	//	return
-	//}
-	assert.Equal(t, msg.Status, http.StatusOK)
-	assert.Equal(t, msg.Message, "Successfully logout")
+	assert.Equal(t, 0, msg.Status)
 }
 
-func TestGetProfilePage(t *testing.T) {
-	mcPostBody := map[string]interface{}{
-		"uid":      1,
-		"name":     "mrTester",
-		"phone":    "88005553535",
-		"email":    "mrtester@test.com",
-		"password": "qwerty12345",
-	}
-	body, _ := json.Marshal(mcPostBody)
-	req, err := http.NewRequest("POST", "/api/profile/1", bytes.NewReader(body))
+func TestUserDelivery_UpdUserAbout_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/about", nil)
 	if err != nil {
 		t.Fail()
 		return
 	}
-
-	user := security.UserClaims{
-		Uid:   1,
-		Phone: "88005553535",
-		Email: "mrtester@test.com",
-		Name:  "mrTester",
-	}
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, security.CtxUserKey, user)
-
 	rr := httptest.NewRecorder()
-	ps := map[string]string{}
-	GetProfilePage(rr, req.WithContext(ctx), ps)
-	msg, err := decodeToMsg(rr.Body)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": "kek"}
+
+	ud.UpdUserAbout(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
 		t.Fail()
 		return
 	}
+
 	assert.Equal(t, http.StatusBadRequest, msg.Status)
-	assert.Equal(t, "Incorrect id", msg.Message)
-
-	ps = map[string]string{"id": "1"}
-	GetProfilePage(rr, req.WithContext(ctx), ps)
-	decoder := json.NewDecoder(rr.Body)
-	var profile forms.GeneralForm
-	err = decoder.Decode(&profile)
-	if err != nil {
-		t.Fail()
-		return
-	}
-
-	assert.Equal(t, profile.Uid, user.Uid)
-	assert.Equal(t, profile.Phone, user.Phone)
-	assert.Equal(t, profile.Email, user.Email)
+	assert.Equal(t, network.MessageInvalidID, msg.Message)
 }
 
-func TestUploadNewImage(t *testing.T) {
-	mcPostBody := map[string]interface{}{
-		"uid":      1,
-		"uploaded": "",
+func TestUserDelivery_UpdUserAbout_IncorrectBody(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	testInvalidAboutType := map[string]interface{}{
+		"about": 1,			// Invalid type
 	}
-	body, _ := json.Marshal(mcPostBody)
-	req, err := http.NewRequest("PUT", "/api/profile/1/upload", bytes.NewReader(body))
+	body, _ := json.Marshal(testInvalidAboutType)
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/about", bytes.NewReader(body))
 	if err != nil {
 		t.Fail()
 		return
 	}
-
-	user := security.UserClaims{
-		Uid:   1,
-		Phone: "88005553535",
-		Email: "mrtester@test.com",
-		Name:  "mrTester",
-	}
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, security.CtxUserKey, user)
-
 	rr := httptest.NewRecorder()
-	ps := map[string]string{"id": "1"}
-	UploadNewImage(rr, req.WithContext(ctx), ps)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
 
-	msg, err := decodeToMsg(rr.Body)
+	ud.UpdUserAbout(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
 		t.Fail()
 		return
 	}
+
 	assert.Equal(t, http.StatusBadRequest, msg.Status)
-	assert.Equal(t, "Error within parse json", msg.Message)
+	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
 }
 
-func TestUploadNewImage2(t *testing.T) {
-	eimage := map[string]interface{}{
-		"img":  "long long base64 string",
-		"path": "default.png",
-	}
-	mcPostBody := map[string]interface{}{
-		"uid":      1,
-		"uploaded": eimage,
-	}
-	body, _ := json.Marshal(mcPostBody)
-	req, err := http.NewRequest("PUT", "/api/profile/1/upload", bytes.NewReader(body))
+func TestUserDelivery_UpdUserAbout_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testAbout)
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/about", bytes.NewReader(body))
 	if err != nil {
-		t.Fail()
+		t.Fatal(err)
 		return
 	}
-
-	user := security.UserClaims{
-		Uid:   1,
-		Phone: "88005553535",
-		Email: "mrtester@test.com",
-		Name:  "mrTester",
-	}
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, security.CtxUserKey, user)
-
 	rr := httptest.NewRecorder()
-	ps := map[string]string{"id": "1"}
-	UploadNewImage(rr, req.WithContext(ctx), ps)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
 
-	msg, err := decodeToMsg(rr.Body)
+	mockUC.EXPECT().UpdateUserAbout(security.TestUser.Uid, testAbout.About).Return(testMessageUseCaseError)
+	ud.UpdUserAbout(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
 		t.Fail()
 		return
 	}
+
+	assert.Equal(t, testMessageUseCaseError.Status, msg.Status)
+	assert.Equal(t, testMessageUseCaseError.Message, msg.Message)
+}
+
+func TestUserDelivery_UpdUserAbout_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testAbout)
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/about", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	mockUC.EXPECT().UpdateUserAbout(security.TestUser.Uid, testAbout.About)
+	ud.UpdUserAbout(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
+func TestUserDelivery_UpdUserTags_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/about", nil)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": "kek"}
+
+	ud.UpdUserTags(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageInvalidID, msg.Message)
+}
+
+func TestUserDelivery_UpdUserTags_IncorrectBody(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	testInvalidUserTagsType := map[string]interface{}{
+		"tags": 1,			// Invalid type
+	}
+	body, _ := json.Marshal(testInvalidUserTagsType)
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/about", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	ud.UpdUserTags(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
+}
+
+func TestUserDelivery_UpdUserTags_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testUserTags)
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/about", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	mockUC.EXPECT().UpdateUserTags(security.TestUser.Uid, testUserTags.Tags).Return(testMessageUseCaseError)
+	ud.UpdUserTags(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, testMessageUseCaseError.Status, msg.Status)
+	assert.Equal(t, testMessageUseCaseError.Message, msg.Message)
+}
+
+func TestUserDelivery_UpdUserTags_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testUserTags)
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/about", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	mockUC.EXPECT().UpdateUserTags(security.TestUser.Uid, testUserTags.Tags)
+	ud.UpdUserTags(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
+func TestUserDelivery_UpdUserPhotos_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/photos", nil)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": "kek"}
+
+	ud.UpdUserPhotos(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageInvalidID, msg.Message)
+}
+
+func TestUserDelivery_UpdUserPhotos_IncorrectBody(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	testInvalidUserPhotosType := map[string]interface{}{
+		"photos": 1,			// Invalid type
+	}
+	body, _ := json.Marshal(testInvalidUserPhotosType)
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/photos", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	ud.UpdUserPhotos(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
+}
+
+func TestUserDelivery_UpdUserPhotos_IncorrectPhotos(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testUserPhotosInvalid)
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/photos", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	ud.UpdUserPhotos(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
 	assert.Equal(t, http.StatusNotFound, msg.Status)
-	assert.Equal(t, "image validation failed", msg.Message)
+	assert.Equal(t, images.MessageImageValidationFailed, msg.Message)
 }
 
-func TestUpdUserMetaData(t *testing.T) {
-	mcPostBody := map[string]interface{}{
-		"uid":    1,
-		"tags":   []int{1, 2, 3},
-		"about":  "hello world",
-		"social": []string{"vk.com/id1"},
-	}
-	body, _ := json.Marshal(mcPostBody)
-	req, err := http.NewRequest("PUT", "/api/profile/1/meta", bytes.NewReader(body))
+func TestUserDelivery_UpdUserPhotos_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testUserPhotos)
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/photos", bytes.NewReader(body))
 	if err != nil {
-		t.Fail()
+		t.Fatal(err)
 		return
 	}
-
-	user := security.UserClaims{
-		Uid:   1,
-		Phone: "88005553535",
-		Email: "mrtester@test.com",
-		Name:  "mrTester",
-	}
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, security.CtxUserKey, user)
-
 	rr := httptest.NewRecorder()
-	ps := map[string]string{"id": "1"}
-	UpdUserMetaData(rr, req.WithContext(ctx), ps)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
 
-	decoder := json.NewDecoder(rr.Body)
-	var metaForm forms.MetaForm
-	err = decoder.Decode(&metaForm)
+	mockUC.EXPECT().UpdateUserPhotos(security.TestUser.Uid, &testUserPhotos).Return(testMessageUseCaseError)
+	ud.UpdUserPhotos(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
 		t.Fail()
 		return
 	}
 
-	assert.Equal(t, metaForm.Uid, user.Uid)
-	assert.Equal(t, metaForm.Tags, mcPostBody["tags"])
-	assert.Equal(t, metaForm.About, mcPostBody["about"])
-	assert.Equal(t, metaForm.Social, mcPostBody["social"])
+	assert.Equal(t, testMessageUseCaseError.Status, msg.Status)
+	assert.Equal(t, testMessageUseCaseError.Message, msg.Message)
 }
 
-func TestUpdProfileGeneral(t *testing.T) {
-	mcPostBody := map[string]interface{}{
-		"uid":      1,
-		"name":     "mrTester",
-		"phone":    "88005553535",
-		"email":    "mrtester@test.com",
-		"password": "qwerty12345",
-	}
+func TestUserDelivery_UpdUserPhotos_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
 
-	body, _ := json.Marshal(mcPostBody)
-	req, err := http.NewRequest("PUT", "/api/profile/1/general", bytes.NewReader(body))
+	body, _ := json.Marshal(testUserPhotos)
+	req, err := http.NewRequest("PUT", "/api/srv/profile/:id/meta/photos", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	mockUC.EXPECT().UpdateUserPhotos(security.TestUser.Uid, &testUserPhotos)
+	ud.UpdUserPhotos(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
 		t.Fail()
 		return
 	}
 
-	user := security.UserClaims{
-		Uid:   1,
-		Phone: "88005553535",
-		Email: "mrtester@test.com",
-		Name:  "mrTester",
-	}
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, security.CtxUserKey, user)
-
-	rr := httptest.NewRecorder()
-	ps := map[string]string{"id": "1"}
-	UpdProfileGeneral(rr, req.WithContext(ctx), ps)
-	signFormCheck(t, rr.Body, user.Name)
+	assert.Equal(t, 0, msg.Status)
 }
 
-func TestUpdProfilePage(t *testing.T) {
-	mcPostBody := map[string]interface{}{
-		"uid":      1,
-		"name":     "mrTester",
-		"phone":    "88005553535",
-		"email":    "mrtester@test.com",
-		"password": "qwerty12345",
-	}
+func TestUserDelivery_GetProfilePage_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
 
-	body, _ := json.Marshal(mcPostBody)
-	req, err := http.NewRequest("PUT", "/api/profile/1", bytes.NewReader(body))
+	req, err := http.NewRequest("GET", "/api/srv/profile/:id", nil)
 	if err != nil {
 		t.Fail()
 		return
 	}
-
-	user := security.UserClaims{
-		Uid:   1,
-		Phone: "88005553535",
-		Email: "mrtester@test.com",
-		Name:  "mrTester",
-	}
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, security.CtxUserKey, user)
-
 	rr := httptest.NewRecorder()
-	ps := map[string]string{"id": "1"}
-	UpdProfilePage(rr, req.WithContext(ctx), ps)
 
-	decoder := json.NewDecoder(rr.Body)
-	var generalForm forms.GeneralForm
-	err = decoder.Decode(&generalForm)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": "kek"}
+
+	ud.GetProfilePage(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
 	if err != nil {
 		t.Fail()
 		return
 	}
 
-	assert.Equal(t, generalForm.Uid, user.Uid)
-	assert.Equal(t, generalForm.Email, mcPostBody["email"])
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageInvalidID, msg.Message)
+}
+
+func TestUserDelivery_GetProfilePage_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testUserPhotos)
+	req, err := http.NewRequest("GET", "/api/srv/profile/:id", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	testForm := forms.GeneralForm{}
+	testForm.Uid = testSignForm.Uid
+	mockUC.EXPECT().GetUserInfo(&testForm).Return(testMessageUseCaseError.Status, useCaseError)
+	ud.GetProfilePage(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, testMessageUseCaseError.Status, msg.Status)
+	assert.Equal(t, testMessageUseCaseError.Message, msg.Message)
+}
+
+func TestUserDelivery_GetProfilePage_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testUserPhotos)
+	req, err := http.NewRequest("GET", "/api/srv/profile/:id", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	testForm := forms.GeneralForm{}
+	testForm.Uid = testSignForm.Uid
+	mockUC.EXPECT().GetUserInfo(&testForm)
+	ud.GetProfilePage(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
+func TestUserDelivery_GetSmallEventsForUser_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("GET", "/api/srv/profile/:id/small-events", nil)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": "kek"}
+
+	ud.GetSmallEventsForUser(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageInvalidID, msg.Message)
+}
+
+func TestUserDelivery_GetSmallEventsForUser_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("GET", "/api/srv/profile/:id/small-events", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	mockUC.EXPECT().GetSmallEventsForUser(new(models.SmallEventList), testSignForm.Uid).Return(testMessageUseCaseError)
+	ud.GetSmallEventsForUser(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, testMessageUseCaseError.Status, msg.Status)
+	assert.Equal(t, testMessageUseCaseError.Message, msg.Message)
+}
+
+func TestUserDelivery_GetSmallEventsForUser_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testUserPhotos)
+	req, err := http.NewRequest("GET", "/api/srv/profile/:id/small-events", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	mockUC.EXPECT().GetSmallEventsForUser(new(models.SmallEventList), testSignForm.Uid)
+	ud.GetSmallEventsForUser(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
+func TestUserDelivery_GetSmallAndMidEventsForUser_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("GET", "/api/srv/profile/:id/own-events", nil)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": "kek"}
+
+	ud.GetSmallAndMidEventsForUser(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageInvalidID, msg.Message)
+}
+
+func TestUserDelivery_GetSmallAndMidEventsForUser_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("GET", "/api/srv/profile/:id/own-events", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	mockUC.EXPECT().GetUserOwnEvents(new(models.OwnEventsList), testSignForm.Uid).Return(testMessageUseCaseError)
+	ud.GetSmallAndMidEventsForUser(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, testMessageUseCaseError.Status, msg.Status)
+	assert.Equal(t, testMessageUseCaseError.Message, msg.Message)
+}
+
+func TestUserDelivery_GetSmallAndMidEventsForUser_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testUserPhotos)
+	req, err := http.NewRequest("GET", "/api/srv/profile/:id/own-events", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	mockUC.EXPECT().GetUserOwnEvents(new(models.OwnEventsList), testSignForm.Uid)
+	ud.GetSmallAndMidEventsForUser(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
+func TestUserDelivery_GetProfileSubscriptions_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("GET", "/api/srv/profile/:id/subscriptions", nil)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": "kek"}
+
+	ud.GetProfileSubscriptions(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageInvalidID, msg.Message)
+}
+
+func TestUserDelivery_GetProfileSubscriptions_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("GET", "/api/srv/profile/:id/subscriptions", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	mockUC.EXPECT().GetUserSubscriptions(new(models.MidAndBigEventList), testSignForm.Uid).Return(testMessageUseCaseError)
+	ud.GetProfileSubscriptions(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, testMessageUseCaseError.Status, msg.Status)
+	assert.Equal(t, testMessageUseCaseError.Message, msg.Message)
+}
+
+func TestUserDelivery_GetProfileSubscriptions_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testUserPhotos)
+	req, err := http.NewRequest("GET", "/api/srv/profile/:id/subscriptions", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+	ps := map[string]string{"id": strconv.Itoa(testSignForm.Uid)}
+
+	mockUC.EXPECT().GetUserSubscriptions(new(models.MidAndBigEventList), testSignForm.Uid)
+	ud.GetProfileSubscriptions(rr, req.WithContext(ctx), ps)
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
+func TestUserDelivery_GetUserInfo_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUC)
+
+	req, err := http.NewRequest("GET", "/api/srv/getuser", nil)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ud.GetUserInfo(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusUnauthorized, msg.Status)
+	assert.Equal(t, network.MessageErrorAuthRequired, msg.Message)
+}
+
+func TestUserDelivery_GetUserInfo_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	ud := getTestDelivery(mocks.NewMockUseCase(mockCtrl))
+
+	body, _ := json.Marshal(testUserPhotos)
+	req, err := http.NewRequest("GET", "/api/srv/getuser", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ud.GetUserInfo(rr, req.WithContext(ctx), map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
+func TestUserDelivery_SignIn_IncorrectBody(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	ud := getTestDelivery(mocks.NewMockUseCase(mockCtrl))
+
+	body, _ := json.Marshal(testInvalidUidType)
+	req, err := http.NewRequest("POST", "/api/srv/signin", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ud.SignIn(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
+}
+
+func TestUserDelivery_SignIn_InvalidForm(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	ud := getTestDelivery(mocks.NewMockUseCase(mockCtrl))
+
+	invForm := testSignForm
+	invForm.Phone = "0000000000000000"
+	invForm.Email = ""
+	body, _ := json.Marshal(invForm)
+	req, err := http.NewRequest("POST", "/api/srv/signin", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ud.SignIn(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageValidationFailed, msg.Message)
+}
+
+func TestUserDelivery_Logout_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	ud := getTestDelivery(mocks.NewMockUseCase(mockCtrl))
+
+	req, err := http.NewRequest("GET", "/api/srv/logout", nil)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ud.Logout(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusOK, msg.Status)
+	assert.Equal(t, network.MessageSuccessfulLogout, msg.Message)
+}
+
+func TestUserDelivery_SignUp_CorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	ed := getTestDelivery(mocks.NewMockUseCase(mockCtrl))
+
+	req, err := http.NewRequest("POST", "/api/srv/signup", nil)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.SignUp(rr, req.WithContext(ctx), map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
+func TestUserDelivery_SignUp_IncorrectBody(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	ed := getTestDelivery(mocks.NewMockUseCase(mockCtrl))
+
+	body, _ := json.Marshal(testInvalidUidType)
+	req, err := http.NewRequest("POST", "/api/srv/signup", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ed.SignUp(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
+}
+
+func TestUserDelivery_SignUp_InvalidForm(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	ud := getTestDelivery(mocks.NewMockUseCase(mockCtrl))
+
+	invForm := testSignForm
+	invForm.Phone = "0000000000000000"
+	body, _ := json.Marshal(invForm)
+	req, err := http.NewRequest("POST", "/api/srv/signup", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ud.SignUp(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageValidationFailed, msg.Message)
+}
+
+func TestUserDelivery_SignUp_Incorrect1(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUc := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUc)
+
+	body, _ := json.Marshal(testSignForm)
+	req, err := http.NewRequest("POST", "/api/srv/signup", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	usr := models.User{
+		Uid:      -1,
+		Phone:    testSignForm.Phone,
+		Email:    testSignForm.Email,
+	}
+	mockUc.EXPECT().FillFormIfExist(&usr).Return(testMessageUseCaseError.Status, useCaseError)
+	ud.SignUp(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, testMessageUseCaseError.Status, msg.Status)
+	assert.Equal(t, testMessageUseCaseError.Message, msg.Message)
+}
+
+func TestUserDelivery_SignUp_Incorrect2(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUc := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUc)
+
+	body, _ := json.Marshal(testSignForm)
+	req, err := http.NewRequest("POST", "/api/srv/signup", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	usr := models.User{
+		Uid:      -1,
+		Phone:    testSignForm.Phone,
+		Email:    testSignForm.Email,
+	}
+	mockUc.EXPECT().FillFormIfExist(&usr).Return(http.StatusOK, nil)
+	mockUc.EXPECT().RegisterNewUser(&testSignForm).Return(useCaseError)
+	ud.SignUp(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusInternalServerError, msg.Status)
+}
+
+func TestUserDelivery_SignUp_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUc := mocks.NewMockUseCase(mockCtrl)
+	ud := getTestDelivery(mockUc)
+
+	body, _ := json.Marshal(testSignForm)
+	req, err := http.NewRequest("POST", "/api/srv/signup", bytes.NewReader(body))
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	usr := models.User{
+		Uid:      -1,
+		Phone:    testSignForm.Phone,
+		Email:    testSignForm.Email,
+	}
+	mockUc.EXPECT().FillFormIfExist(&usr).Return(http.StatusOK, nil)
+	mockUc.EXPECT().RegisterNewUser(&testSignForm).Return(nil)
+	ud.SignUp(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
+func TestUserDelivery_GetUsersFeed_IncorrectUid(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	ud := getTestDelivery(mocks.NewMockUseCase(mockCtrl))
+
+	req, err := http.NewRequest("POST", "/api/srv/users/feed", nil)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	rr := httptest.NewRecorder()
+
+	ud.GetUsersFeed(rr, req, map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusUnauthorized, msg.Status)
+	assert.Equal(t, network.MessageErrorAuthRequired, msg.Message)
+}
+
+func TestUserDelivery_GetUsersFeed_IncorrectBody(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	ed := getTestDelivery(mocks.NewMockUseCase(mockCtrl))
+
+	body, _ := json.Marshal(testInvalidUidType)
+	req, err := http.NewRequest("POST", "/api/srv/users/feed", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	ed.GetUsersFeed(rr, req.WithContext(ctx), map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, http.StatusBadRequest, msg.Status)
+	assert.Equal(t, network.MessageErrorParseJSON, msg.Message)
+}
+
+func TestUserDelivery_GetUsersFeed_IncorrectPage(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	searchReq := testUserRequest
+	searchReq.Page = 0
+	body, _ := json.Marshal(searchReq)
+	req, err := http.NewRequest("POST", "/api/srv/users/feed", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().InitUsersByUserPreferences(new([]models.UserGeneral), &testUserRequest)
+	mockUC.EXPECT().GetFeedResultsFor(security.TestUser.Uid, new([]models.UserGeneral))
+	ed.GetUsersFeed(rr, req.WithContext(ctx), map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
+}
+
+func TestUserDelivery_GetUsersFeed_Incorrect1(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testUserRequest)
+	req, err := http.NewRequest("POST", "/api/srv/users/feed", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().InitUsersByUserPreferences(new([]models.UserGeneral), &testUserRequest).Return(testMessageUseCaseError.Status, useCaseError)
+	ed.GetUsersFeed(rr, req.WithContext(ctx), map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, testMessageUseCaseError.Status, msg.Status)
+	assert.Equal(t, testMessageUseCaseError.Message, msg.Message)
+}
+
+func TestUserDelivery_GetUsersFeed_Incorrect2(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testUserRequest)
+	req, err := http.NewRequest("POST", "/api/srv/users/feed", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().InitUsersByUserPreferences(new([]models.UserGeneral), &testUserRequest)
+	mockUC.EXPECT().GetFeedResultsFor(security.TestUser.Uid, new([]models.UserGeneral)).Return(nil, testMessageUseCaseError)
+	ed.GetUsersFeed(rr, req.WithContext(ctx), map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, testMessageUseCaseError, msg)
+}
+
+func TestUserDelivery_GetUsersFeed_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUC := mocks.NewMockUseCase(mockCtrl)
+	ed := getTestDelivery(mockUC)
+
+	body, _ := json.Marshal(testUserRequest)
+	req, err := http.NewRequest("POST", "/api/srv/users/feed", bytes.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	rr := httptest.NewRecorder()
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, security.CtxUserKey, security.TestUser)
+
+	mockUC.EXPECT().InitUsersByUserPreferences(new([]models.UserGeneral), &testUserRequest)
+	mockUC.EXPECT().GetFeedResultsFor(security.TestUser.Uid, new([]models.UserGeneral))
+	ed.GetUsersFeed(rr, req.WithContext(ctx), map[string]string{})
+
+	msg, err := network.DecodeToMsg(rr.Body)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	assert.Equal(t, 0, msg.Status)
 }

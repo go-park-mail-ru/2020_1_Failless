@@ -8,7 +8,7 @@ import (
 func GetIdFromRequest(w http.ResponseWriter, r *http.Request, ps map[string]string) int64 {
 	uid, err := strconv.ParseInt(ps["id"], 10, 64)
 	if err != nil {
-		GenErrorCode(w, r, "Incorrect id", http.StatusBadRequest)
+		GenErrorCode(w, r, MessageInvalidID, http.StatusBadRequest)
 		return -1
 	}
 	return uid
@@ -17,7 +17,7 @@ func GetIdFromRequest(w http.ResponseWriter, r *http.Request, ps map[string]stri
 func GetEIdFromRequest(w http.ResponseWriter, r *http.Request, ps map[string]string) int64 {
 	uid, err := strconv.ParseInt(ps["eid"], 10, 64)
 	if err != nil {
-		GenErrorCode(w, r, "Incorrect id", http.StatusBadRequest)
+		GenErrorCode(w, r, MessageErrorRetrievingEidFromUrl, http.StatusBadRequest)
 		return -1
 	}
 	return uid

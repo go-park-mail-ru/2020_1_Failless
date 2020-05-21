@@ -1,19 +1,72 @@
 package usecase
 
 import (
-	"bytes"
-	"encoding/json"
 	"failless/internal/pkg/event"
 	"failless/internal/pkg/event/mocks"
 	"failless/internal/pkg/forms"
 	"failless/internal/pkg/models"
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+	"net/http"
 	"testing"
+	"time"
 )
 
-type TestCaseEvents struct {
-	Request    string
-}
+var (
+	TestUId = 1
+	testEventRequest = models.EventRequest{
+		Uid:       1,
+		Page:      1,
+		Limit:     10,
+		UserLimit: 15,
+		Query:     "kek",
+		Tags:      nil,
+		Location:  models.LocationPoint{},
+		MinAge:    18,
+		MaxAge:    100,
+		Men:       true,
+		Women:     true,
+	}
+	testSmallEvent = models.SmallEvent{
+		EId:    1,
+		UId:    1,
+		Title:  "title",
+		Descr:  "about",
+		TagsId: nil,
+		Date:   time.Time{},
+		Photos: nil,
+	}
+	testSmallEventForm = forms.SmallEventForm{
+		Uid:    testSmallEvent.EId,
+		Title:  testSmallEvent.Title,
+		Descr:  testSmallEvent.Descr,
+		TagsId: testSmallEvent.TagsId,
+		Date:   testSmallEvent.Date,
+		Photos: nil,
+	}
+	testMidEventForm = forms.MidEventForm{
+		AdminId: 1,
+		Title:   "title",
+		Descr:   "about",
+		TagsId:  nil,
+		Date:    time.Time{},
+		Photos:  nil,
+		Limit:   10,
+		Public:  false,
+	}
+	testEventFollow = models.EventFollow{
+		Uid: 1,
+		Eid: 1,
+	}
+	repoErrorBody = errors.New("Repo error")
+	repoErrorStatus = http.StatusBadRequest
+	incorrectMessage = models.WorkMessage{
+		Request: nil,
+		Message: repoErrorBody.Error(),
+		Status:  repoErrorStatus,
+	}
+)
 
 func getTestUseCase(mockRep *mocks.MockRepository) event.UseCase {
 	return &eventUseCase{
@@ -21,171 +74,245 @@ func getTestUseCase(mockRep *mocks.MockRepository) event.UseCase {
 	}
 }
 
-func TestGetUseCase(t *testing.T) {
-
-}
-
-
-func TestEventUseCase_InitEventsByTime(t *testing.T) {
+func TestEventUseCase_GetSmallEventsByUID(t *testing.T) {
+	// Create mock
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
 
-	mockRepository := mocks.NewMockRepository(mockCtrl)
-	uc := getTestUseCase(mockRepository)
-	//
-	//var testEvent = models.Event{
-	//	EId: 1,
-	//	AuthorId: 1,
-	//	Title: "qqq",
-	//	WorkMessage: "qqq",
-	//	EDate:  time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
-	//}
-	var testEvent []models.Event
+	_, err := eUC.GetSmallEventsByUID(int64(TestUId))
 
-	mockRepository.EXPECT().GetAllEvents().Return(testEvent, nil).Times(1)
-
-	var events []models.Event
-
-	//uc := GetUseCase()
-	_, err := uc.InitEventsByTime(&events)
-
-	if err != nil {
-		t.Errorf("There are error in Response from repository")
-	}
+	assert.Equal(t, nil, err)
 }
 
-func TestEventUseCase_InitEventsByKeyWords(t *testing.T) {
-	cases := []TestCaseEvents{
-		TestCaseEvents{
-			Request: `{
-			  "uid": 1,
-			  "page": 1,
-			  "limit": 5,
-			  "query": "I wanna go to pub",
-			  "tags": [
-				1
-			  ],
-			  "ageLimit": "20",
-			  "type": 1,
-			  "location": {
-				"lat": 3000.2221,
-				"lng": 3000.2221,
-				"accurancy": 10
-			  }
-			}`,
-		},
-		TestCaseEvents{
-			Request: `{}`,
-		},
-	}
+func TestEventUseCase_CreateSmallEvent(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
 
-	for caseNum, item := range cases {
-		var searchRequest models.EventRequest
-		decoder := json.NewDecoder(bytes.NewBuffer([]byte(item.Request)))
-		_ = decoder.Decode(&searchRequest)
+	YtestSmallEvent := models.SmallEvent{}
+	testSmallEventForm.GetDBFormat(&YtestSmallEvent)
+	testForm := testSmallEventForm
+	mockRep.EXPECT().CreateSmallEvent(&YtestSmallEvent).Return(nil)
+	_, err := eUC.CreateSmallEvent(&testForm)
 
-		var events []models.Event
-
-		uc := GetUseCase()
-		_, err := uc.InitEventsByKeyWords(&events, searchRequest.Query, searchRequest.Page)
-
-		if caseNum == 0 && err != nil {
-			t.Errorf("[%d] There are error in Response from repository",
-				caseNum)
-		}
-		if caseNum == 1 && err == nil {
-			t.Errorf("[%d] There are no error in Response from repository",
-				caseNum)
-		}
-	}
+	assert.Equal(t, nil, err)
 }
 
-func TestEventUseCase_CreateEvent(t *testing.T) {
-	cases := []TestCaseEvents{
-		TestCaseEvents{
-			Request: `{
-			  "uid": 1,
-			  "title": "I wanna go to pub",
-			  "date": "2020-07-07",
-			  "description": "I know really nice place for go out and I like to find a company for that",
-			  "type": 1,
-			  "tag_id": 1,
-			  "private": true,
-			  "limit": 2,
-			  "photos": [
-				{
-				  "img": "KJKJBKAKjJBKJBkjbKJBKBKJbkjbkBKbkjbbJKBKJBKb",
-				  "path": "/img/defalut.png"
-				}
-			  ]
-			}`,
-		},
-		TestCaseEvents{
-			Request: `{}`,
-		},
-	}
+func TestEventUseCase_CreateMidEvent_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
 
-	for caseNum, item := range cases {
-		decoder := json.NewDecoder(bytes.NewBuffer([]byte(item.Request)))
-		var form forms.EventForm
-		_ = decoder.Decode(&form)
+	YtestMidEvent := models.MidEvent{}
+	testMidEventForm.GetDBFormat(&YtestMidEvent)
+	testForm := testMidEventForm
 
-		uc := GetUseCase()
-		_, err := uc.CreateEvent(form)
+	mockRep.EXPECT().CreateMidEvent(&YtestMidEvent).Return(repoErrorBody)
+	midEvent, msg := eUC.CreateMidEvent(&testForm)
 
-		if caseNum == 0 && err != nil {
-			t.Errorf("[%d] There are error in Response from repository",
-				caseNum)
-		}
-		if caseNum == 1 && err == nil {
-			t.Errorf("[%d] There are no error in Response from repository",
-				caseNum)
-		}
-	}
+	assert.Equal(t, YtestMidEvent, midEvent)
+	assert.Equal(t, incorrectMessage, msg)
 }
 
-func TestEventUseCase_InitEventsByUserPreferences(t *testing.T) {
-	cases := []TestCaseEvents{
-		TestCaseEvents{
-			Request: `{
-			  "page": 1,
-			  "limit": 5,
-			  "query": "I wanna go to pub",
-			  "tags": [
-				1
-			  ],
-			  "minage": 18,
-			  "maxage": 22,
-			  "men": true,
-			  "women": false
-			}`,
-		},
-		TestCaseEvents{
-			Request: `{}`,
-		},
-	}
+func TestEventUseCase_CreateMidEvent_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
 
-	for caseNum, item := range cases {
-		var searchRequest models.EventRequest
-		decoder := json.NewDecoder(bytes.NewBuffer([]byte(item.Request)))
-		_ = decoder.Decode(&searchRequest)
+	YtestMidEvent := models.MidEvent{}
+	testMidEventForm.GetDBFormat(&YtestMidEvent)
+	testForm := testMidEventForm
 
-		var events []models.Event
+	mockRep.EXPECT().CreateMidEvent(&YtestMidEvent).Return(nil)
+	midEvent, msg := eUC.CreateMidEvent(&testForm)
 
-		uc := GetUseCase()
-		_, err := uc.InitEventsByUserPreferences(&events, &searchRequest)
-
-		if caseNum == 0 && err != nil {
-			t.Errorf("[%d] There are error in Response from repository",
-				caseNum)
-		}
-		if caseNum == 1 && err == nil {
-			t.Errorf("[%d] There are no error in Response from repository",
-				caseNum)
-		}
-	}
+	assert.Equal(t, YtestMidEvent, midEvent)
+	assert.Equal(t, CorrectMessage, msg)
 }
 
-func TestEventUseCase_TakeValidTagsOnly(t *testing.T) {
+func TestEventUseCase_SearchEventsByUserPreferences__ZeroUid_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
 
+	events := models.MidAndBigEventList{}
+	testReq := testEventRequest
+	testReq.Uid = 0
+	mockRep.EXPECT().GetAllMidEvents(&events.MidEvents, &testReq).Return(repoErrorStatus, repoErrorBody)
+
+	code, err := eUC.SearchEventsByUserPreferences(&events, &testReq)
+
+	if err == nil {
+		t.Fatal()
+		return
+	}
+
+	assert.Equal(t, repoErrorStatus, code)
+	assert.Equal(t, repoErrorBody, err)
+}
+
+func TestEventUseCase_SearchEventsByUserPreferences_NonZeroUid_Error(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
+
+	events := models.MidAndBigEventList{}
+	testReq := testEventRequest
+	mockRep.EXPECT().GetMidEventsWithFollowed(&events.MidEvents, &testReq).Return(repoErrorStatus, repoErrorBody)
+
+	code, err := eUC.SearchEventsByUserPreferences(&events, &testReq)
+
+	if err == nil {
+		t.Fatal()
+		return
+	}
+
+	assert.Equal(t, repoErrorStatus, code)
+	assert.Equal(t, repoErrorBody, err)
+}
+
+func TestEventUseCase_SearchEventsByUserPreferences_ZeroUid_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
+
+	events := models.MidAndBigEventList{}
+	testReq := testEventRequest
+	testReq.Uid = 0
+	mockRep.EXPECT().GetAllMidEvents(&events.MidEvents, &testReq).Return(CorrectMessage.Status, nil)
+
+	code, err := eUC.SearchEventsByUserPreferences(&events, &testReq)
+
+	assert.Equal(t, CorrectMessage.Status, code)
+	assert.Equal(t, nil, err)
+}
+
+func TestEventUseCase_SearchEventsByUserPreferences_NonZeroUid_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
+
+	events := models.MidAndBigEventList{}
+	testReq := testEventRequest
+	mockRep.EXPECT().GetMidEventsWithFollowed(&events.MidEvents, &testReq).Return(CorrectMessage.Status, nil)
+
+	code, err := eUC.SearchEventsByUserPreferences(&events, &testReq)
+
+	assert.Equal(t, CorrectMessage.Status, code)
+	assert.Equal(t, nil, err)
+}
+
+func TestEventUseCase_UpdateSmallEvent(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
+
+	mockRep.EXPECT().UpdateSmallEvent(&testSmallEvent).Return(CorrectMessage.Status, nil)
+
+	code, err := eUC.UpdateSmallEvent(&testSmallEvent)
+
+	assert.Equal(t, CorrectMessage.Status, code)
+	assert.Equal(t, nil, err)
+}
+
+func TestEventUseCase_DeleteSmallEvent_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
+
+	mockRep.EXPECT().DeleteSmallEvent(testSmallEvent.UId, int64(testSmallEvent.EId)).Return(repoErrorBody)
+
+	msg := eUC.DeleteSmallEvent(testSmallEvent.UId, int64(testSmallEvent.EId))
+
+	assert.Equal(t, incorrectMessage, msg)
+}
+
+func TestEventUseCase_DeleteSmallEvent_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
+
+	mockRep.EXPECT().DeleteSmallEvent(testSmallEvent.UId, int64(testSmallEvent.EId)).Return(nil)
+
+	msg := eUC.DeleteSmallEvent(testSmallEvent.UId, int64(testSmallEvent.EId))
+
+	assert.Equal(t, CorrectMessage, msg)
+}
+
+func TestEventUseCase_JoinMidEvent_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
+
+	mockRep.EXPECT().JoinMidEvent(testEventFollow.Uid, testEventFollow.Eid).Return(repoErrorStatus, repoErrorBody)
+
+	msg := eUC.JoinMidEvent(&testEventFollow)
+
+	assert.Equal(t, incorrectMessage, msg)
+}
+
+func TestEventUseCase_JoinMidEvent_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
+
+	mockRep.EXPECT().JoinMidEvent(testEventFollow.Uid, testEventFollow.Eid).Return(CorrectMessage.Status, nil)
+
+	msg := eUC.JoinMidEvent(&testEventFollow)
+
+	assert.Equal(t, CorrectMessage, msg)
+}
+
+func TestEventUseCase_LeaveMidEvent_Incorrect(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
+
+	mockRep.EXPECT().LeaveMidEvent(testEventFollow.Uid, testEventFollow.Eid).Return(repoErrorStatus, repoErrorBody)
+
+	msg := eUC.LeaveMidEvent(&testEventFollow)
+
+	assert.Equal(t, incorrectMessage, msg)
+}
+
+func TestEventUseCase_LeaveMidEvent_Correct(t *testing.T) {
+	// Create mock
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockRep := mocks.NewMockRepository(mockCtrl)
+	eUC := getTestUseCase(mockRep)
+
+	mockRep.EXPECT().LeaveMidEvent(testEventFollow.Uid, testEventFollow.Eid).Return(CorrectMessage.Status, nil)
+
+	msg := eUC.LeaveMidEvent(&testEventFollow)
+
+	assert.Equal(t, CorrectMessage, msg)
 }

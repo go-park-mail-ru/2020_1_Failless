@@ -17,13 +17,9 @@ type Repository interface {
 
 	// Deprecated: use UpdateUserTags, UpdateUserSimple,
 	// UpdateUserPhotos, UpdateUserRating instead
-	AddUserInfo(user models.User, info models.JsonInfo) error
 	AddNewUser(user *models.User) error
 	GetUserByPhoneOrEmail(phone string, email string) (models.User, error)
 	GetProfileInfo(uid int) (models.JsonInfo, error)
-	GetUserEvents(uid int) ([]models.Event, error)
-	GetUserTags(uid int) ([]models.Tag, error)
-	GetUserSubscriptions(uid int) ([]models.Event, error)
 	DeleteUser(mail string) error
 	GetValidTags() ([]models.Tag, error)
 	GetRandomFeedUsers(uid int, limit int, page int) ([]models.UserGeneral, error)

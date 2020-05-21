@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"failless/internal/pkg/chat"
 	"failless/internal/pkg/chat/usecase"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/network"
@@ -11,43 +12,17 @@ import (
 	json "github.com/mailru/easyjson"
 )
 
-//func SendMessage(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-//	uid := security.CheckCredentials(w, r)
-//	if uid < 0 {
-//		return
-//	}
-//	cid := int64(0)
-//	if cid = network.GetIdFromRequest(w, r, ps); cid < 0 {
-//		network.GenErrorCode(w, r, "url cid is incorrect", http.StatusBadRequest)
-//		return
-//	}
-//
-//	decoder := json.NewDecoder(r.Body)
-//	var message forms.Message
-//	err := decoder.Decode(&message)
-//	if err != nil {
-//		network.Jsonify(w, "Error within parse json", http.StatusBadRequest)
-//		return
-//	}
-//	if int64(uid) != message.Uid {
-//		message.Uid = int64(uid)
-//		log.Println("SendMessage: warn - uid from token is not equal message.Uid")
-//	}
-//	message.ChatID = cid
-//	uc := usecase.GetUseCase()
-//
-//	if code, err := uc.AddNewMessage(&message); err != nil {
-//		network.GenErrorCode(w, r, err.Error(), code)
-//		return
-//	}
-//	network.Jsonify(w, models.WorkMessage{
-//		Request: nil,
-//		Message: "OK",
-//		Status:  http.StatusOK,
-//	}, http.StatusOK)
-//}
+type chatDelivery struct {
+	UseCase chat.UseCase
+}
 
-func GetMessages(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func GetDelivery() chat.Delivery {
+	return &chatDelivery{
+		UseCase:usecase.GetUseCase(),
+	}
+}
+
+func (cd *chatDelivery) GetMessages(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Print("GetMessages: ")
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
@@ -55,20 +30,19 @@ func GetMessages(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 	cid := int64(0)
 	if cid = network.GetIdFromRequest(w, r, ps); cid < 0 {
-		network.GenErrorCode(w, r, "url cid is incorrect", http.StatusBadRequest)
+		network.GenErrorCode(w, r, network.MessageInvalidCID, http.StatusBadRequest)
 		return
 	}
 
 	var request models.MessageRequest
 	err := json.UnmarshalFromReader(r.Body, &request)
 	if err != nil {
-		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
+		network.GenErrorCode(w, r, network.MessageErrorParseJSON, http.StatusBadRequest)
 		return
 	}
 
 	request.ChatID = cid
-	uc := usecase.GetUseCase()
-	messages, err := uc.GetMessagesForChat(&request)
+	messages, err := cd.UseCase.GetMessagesForChat(&request)
 	if err != nil {
 		network.GenErrorCode(w, r, err.Error(), http.StatusForbidden)
 		return
@@ -77,7 +51,7 @@ func GetMessages(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	network.Jsonify(w, messages, http.StatusOK)
 }
 
-func GetUsersForChat(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func (cd *chatDelivery) GetUsersForChat(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	log.Print("GetMessages: ")
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
@@ -85,13 +59,12 @@ func GetUsersForChat(w http.ResponseWriter, r *http.Request, ps map[string]strin
 	}
 	cid := int64(0)
 	if cid = network.GetIdFromRequest(w, r, ps); cid < 0 {
-		network.GenErrorCode(w, r, "url cid is incorrect", http.StatusBadRequest)
+		network.GenErrorCode(w, r, network.MessageInvalidCID, http.StatusBadRequest)
 		return
 	}
 
 	var users models.UserGeneralList
-	uc := usecase.GetUseCase()
-	message := uc.GetUsersForChat(cid, &users)
+	message := cd.UseCase.GetUsersForChat(cid, &users)
 	if message.Message != "" {
 		network.GenErrorCode(w, r, message.Message, message.Status)
 		return
@@ -100,7 +73,7 @@ func GetUsersForChat(w http.ResponseWriter, r *http.Request, ps map[string]strin
 	network.Jsonify(w, users, message.Status)
 }
 
-func GetChatList(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func (cd *chatDelivery) GetChatList(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	log.Print("GetChatList: ")
 	uid := security.CheckCredentials(w, r)
 	if uid < 0 {
@@ -110,8 +83,8 @@ func GetChatList(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	var request models.ChatRequest
 	err := json.UnmarshalFromReader(r.Body, &request)
 	if err != nil {
-		log.Println("error within parse json - ", err.Error())
-		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
+		log.Println(err)
+		network.GenErrorCode(w, r, network.MessageErrorParseJSON, http.StatusBadRequest)
 		return
 	}
 
@@ -120,8 +93,7 @@ func GetChatList(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		log.Println("warn - uid from token is not equal request.Uid")
 	}
 
-	uc := usecase.GetUseCase()
-	chatList, err := uc.GetUserRooms(&request)
+	chatList, err := cd.UseCase.GetUserRooms(&request)
 	if err != nil {
 		log.Println("error while GetUserRooms - ", err.Error())
 		network.GenErrorCode(w, r, err.Error(), http.StatusInternalServerError)

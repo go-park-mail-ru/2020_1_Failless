@@ -1,36 +1,29 @@
 package usecase
 
+//go:generate mockgen -destination=../mocks/mock_usecase.go -package=mocks failless/internal/pkg/tag UseCase
+
 import (
 	"failless/internal/pkg/db"
 	"failless/internal/pkg/models"
-	"failless/internal/pkg/settings"
 	"failless/internal/pkg/tag"
 	"failless/internal/pkg/tag/repository"
-	"log"
 	"net/http"
 )
 
 type tagUseCase struct {
-	rep tag.Repository
+	Rep tag.Repository
 }
 
 func GetUseCase() tag.UseCase {
-	if settings.UseCaseConf.InHDD {
-		return &tagUseCase{
-			rep: repository.NewSqlTagRepository(db.ConnectToDB()),
-		}
-	} else {
-		return &tagUseCase{
-			rep: repository.NewTagRepository(),
-		}
+	return &tagUseCase{
+		Rep: repository.NewSqlTagRepository(db.ConnectToDB()),
 	}
 }
 
 func (uc *tagUseCase) InitEventsByTime(tags *models.TagList) (status int, err error) {
-	*tags, err = uc.rep.GetAllTags()
+	*tags, err = uc.Rep.GetAllTags()
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	log.Println(tags)
 	return http.StatusOK, nil
 }

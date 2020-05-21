@@ -1,5 +1,7 @@
 package repository
 
+//go:generate mockgen -destination=../mocks/mock_repository.go -package=mocks failless/internal/pkg/auth Repository
+
 import (
 	"failless/internal/pkg/auth"
 	"failless/internal/pkg/models"

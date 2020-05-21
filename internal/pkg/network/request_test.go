@@ -20,10 +20,10 @@ func TestGetIdFromRequest(t *testing.T) {
 
 	// Correct
 	ps["id"] = "15"
-	assert.Equal(t, 15, GetIdFromRequest(rr, req, ps))
+	assert.Equal(t, int64(15), GetIdFromRequest(rr, req, ps))
 	// Incorrect
 	ps["id"] = "kek"
-	assert.Equal(t, -1, GetIdFromRequest(rr, req, ps))
+	assert.Equal(t, int64(-1), GetIdFromRequest(rr, req, ps))
 }
 
 func TestGetPageFromRequest(t *testing.T) {
