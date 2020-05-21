@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+const (
+	MessageEventValidationFailed = "Event validation failed. Check server logs"
+)
+
 type SmallEventForm struct {
 	Uid	    	int      	`json:"uid"`
 	Title   	string   	`json:"title"`
@@ -59,7 +63,8 @@ func (sef *SmallEventForm) GetDBFormat(event *models.SmallEvent) {
 		event.Photos = append(event.Photos, imgName)
 	}
 
-	for _, tag := range sef.TagsId {
-		event.TagsId = append(event.TagsId, tag)
-	}
+	//for _, tag := range sef.TagsId {
+	//	event.TagsId = append(event.TagsId, tag)
+	//}
+	event.TagsId = append(event.TagsId, sef.TagsId...)
 }

@@ -22,33 +22,33 @@ type WorkMessage struct {
 // It has a difference with the User struct into delivery package
 // which contains in password filed.
 type User struct {
-	Uid      int    `json:"uid, omitempty"`
-	Name     string `json:"name, omitempty"`
-	Phone    string `json:"phone, omitempty"`
-	Email    string `json:"email, omitempty"`
+	Uid      int    `json:"uid,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Phone    string `json:"phone,omitempty"`
+	Email    string `json:"email,omitempty"`
 	Password []byte `json:"-"`
 }
 
 type UserGeneral struct {
-	Uid     	int       	`json:"uid, omitempty"`
-	Name     	string    	`json:"name, omitempty"`
-	Photos   	[]string  	`json:"photos, omitempty"`
-	About    	string    	`json:"about, omitempty"`
-	Birthday 	time.Time 	`json:"birthday, omitempty"`
-	Gender   	int       	`json:"gender, omitempty"`
-	TagsId	 	[]int32	   	`json:"tags,omitempty"`
+	Uid      int       `json:"uid,omitempty"`
+	Name     string    `json:"name,omitempty"`
+	Photos   []string  `json:"photos,omitempty"`
+	About    string    `json:"about,omitempty"`
+	Birthday time.Time `json:"birthday,omitempty"`
+	Gender   int       `json:"gender,omitempty"`
+	TagsId   []int32   `json:"tags,omitempty"`
 }
 
 //easyjson:json
 type UserGeneralList []UserGeneral
 
 type DBUserGeneral struct {
-	Uid      *int       `json:"uid, omitempty"`
-	Name     *string    `json:"name, omitempty"`
-	Photos   []string   `json:"photos, omitempty"`
-	About    *string    `json:"about, omitempty"`
-	Birthday *time.Time `json:"birthday, omitempty"`
-	Gender   *int       `json:"gender, omitempty"`
+	Uid      *int       `json:"uid,omitempty"`
+	Name     *string    `json:"name,omitempty"`
+	Photos   []string   `json:"photos,omitempty"`
+	About    *string    `json:"about,omitempty"`
+	Birthday *time.Time `json:"birthday,omitempty"`
+	Gender   *int       `json:"gender,omitempty"`
 }
 
 func (ug *DBUserGeneral) GetUserGeneral() UserGeneral {
@@ -68,11 +68,19 @@ func (ug *DBUserGeneral) GetUserGeneral() UserGeneral {
 	return user
 }
 
+type UserAbout struct {
+	About	string	`json:"about,omitempty"`
+}
+
+type UserTags struct {
+	Tags	[]int	`json:"tags,omitempty"`
+}
+
 // Struct describes location point of user
 type LocationPoint struct {
 	Latitude  float32 `json:"lat"`
 	Longitude float32 `json:"lng"`
-	Accuracy  int     `json:"accuracy, omitempty"`
+	Accuracy  int     `json:"accuracy,omitempty"`
 }
 
 // Base profile info structure that can be used in delivery
@@ -85,16 +93,17 @@ type JsonInfo struct {
 	Gender    int           `json:"gender"`
 	LoginDate time.Time     `json:"login_date"`
 	Location  LocationPoint `json:"location"`
+	Tags	  []int32		`json:"tags"`
 }
 
 // For feed users
 type UserRequest struct {
-	Uid      int           `json:"uid, omitempty"`
+	Uid      int           `json:"uid,omitempty"`
 	Page     int           `json:"page"`
 	Limit    int           `json:"limit"`
-	Query    string        `json:"query, omitempty"`
-	Tags     []int         `json:"tags, omitempty"`
-	Location LocationPoint `json:"location, omitempty"`
+	Query    string        `json:"query,omitempty"`
+	Tags     []int         `json:"tags,omitempty"`
+	Location LocationPoint `json:"location,omitempty"`
 	MinAge   int           `json:"minAge"`
 	MaxAge   int           `json:"maxAge"`
 	Men      bool          `json:"men"`
@@ -104,22 +113,22 @@ type UserRequest struct {
 type ChatRoom struct {
 	ChatID     int64     `json:"chat_id"`
 	AdminID    int64     `json:"admin_id"`
-	Created    time.Time `json:"created, omitempty"`
+	Created    time.Time `json:"created,omitempty"`
 	UsersCount int       `json:"users_count"`
-	Title      string    `json:"title, omitempty"`
-	EventID    int64     `json:"event_id, omitempty"`
+	Title      string    `json:"title,omitempty"`
+	EventID    int64     `json:"event_id,omitempty"`
 }
 
 type ChatMeta struct {
-	ChatID   int64     `json:"chat_id"`
-	Name     string    `json:"name"`
-	Photos   []string  `json:"photos"`
-	Title    string    `json:"title, omitempty"`
-	Unseen   int       `json:"unseen"`
-	LastDate time.Time `json:"last_date"`
-	LastMsg  string    `json:"last_msg"`
-	Limit    int       `json:"limit"`
-	Page     int       `json:"page"`
+	ChatID    	int64     	`json:"chat_id"`
+	Name      	string    	`json:"name"`
+	Avatar    	string  	`json:"avatar,omitempty"`
+	Title     	string    	`json:"title,omitempty"`
+	Unseen    	int       	`json:"unseen"`
+	LastDate  	time.Time 	`json:"last_date"`
+	LastMsg   	string    	`json:"last_msg"`
+	UserCount 	int       	`json:"user_count"`
+	Page      	int       	`json:"page"`
 }
 
 //easyjson:json
@@ -140,32 +149,14 @@ type ChatRequest struct {
 
 type EType int
 
-type Event struct {
-	EId      int       `json:"eid"`
-	AuthorId int       `json:"author_id"`
-	Title    string    `json:"title"`
-	EDate    time.Time `json:"date"`
-	Message  string    `json:"description"`
-	Edited   bool      `json:"edited, omitempty"`
-	Author   string    `json:"author, omitempty"`
-	Type     int       `json:"type, omitempty"`
-	Limit    int       `json:"limit, omitempty"`
-	Photos   []string  `json:"photos, omitempty"`
-	Public   bool      `json:"public, omitempty"`
-	Tag      Tag       `json:"tag, omitempty"`
-}
-
-//easyjson:json
-type EventList []Event
-
 type EventRequest struct {
-	Uid       int           `json:"uid, omitempty"`
+	Uid       int           `json:"uid,omitempty"`
 	Page      int           `json:"page"`
 	Limit     int           `json:"limit"`
-	UserLimit int           `json:"user_limit, omitempty"`
+	UserLimit int           `json:"user_limit,omitempty"`
 	Query     string        `json:"query"`
-	Tags      []int         `json:"tags, omitempty"`
-	Location  LocationPoint `json:"location, omitempty"`
+	Tags      []int         `json:"tags,omitempty"`
+	Location  LocationPoint `json:"location,omitempty"`
 	MinAge    int           `json:"minAge"`
 	MaxAge    int           `json:"maxAge"`
 	Men       bool          `json:"men"`
@@ -173,31 +164,31 @@ type EventRequest struct {
 }
 
 type SmallEvent struct {
-	EId 	int		 	`json:"eid,omitempty"`
-	UId     int      	`json:"uid"`
-	Title   string   	`json:"title"`
-	Descr   string   	`json:"description,omitempty"`
-	TagsId  []int32    	`json:"tags,omitempty"`
-	Date    time.Time	`json:"date,omitempty"`
-	Photos  []string 	`json:"photos,omitempty"`
+	EId    int       `json:"eid,omitempty"`
+	UId    int       `json:"uid"`
+	Title  string    `json:"title"`
+	Descr  string    `json:"description,omitempty"`
+	TagsId []int32   `json:"tags,omitempty"`
+	Date   time.Time `json:"date,omitempty"`
+	Photos []string  `json:"photos,omitempty"`
 }
 
 //easyjson:json
 type SmallEventList []SmallEvent
 
 type MidEvent struct {
-	EId 			int		 	`json:"eid,omitempty"`
-	AdminId    		int      	`json:"uid"`
-	Title   		string   	`json:"title"`
-	Descr   		string   	`json:"description,omitempty"`
-	TagsId  		[]int32    	`json:"tags,omitempty"`
-	Date    		time.Time	`json:"date,omitempty"`
-	Photos  		[]string 	`json:"photos,omitempty"`
-	Limit			int			`json:"limit"`
-	MemberAmount	int			`json:"member_amount, omitempty"`
-	ChatId			int			`json:"chat_id, omitempty"`
-	Public			bool		`json:"public"`
-	Followed		bool		`json:"followed,omitempty"`
+	EId          int       `json:"eid,omitempty"`
+	AdminId      int       `json:"uid"`
+	Title        string    `json:"title"`
+	Descr        string    `json:"description,omitempty"`
+	TagsId       []int32   `json:"tags,omitempty"`
+	Date         time.Time `json:"date,omitempty"`
+	Photos       []string  `json:"photos,omitempty"`
+	Limit        int       `json:"limit"`
+	MemberAmount int       `json:"member_amount,omitempty"`
+	ChatId       int       `json:"chat_id,omitempty"`
+	Public       bool      `json:"public"`
+	Followed     bool      `json:"followed,omitempty"`
 }
 
 //easyjson:json
@@ -205,18 +196,18 @@ type MidEventList []MidEvent
 
 //easyjson:json
 type OwnEventsList struct {
-	SmallEvents 	SmallEventList	`json:"small_events, omitempty"`
-	MidEvents 		MidEventList	`json:"mid_events, omitempty"`
+	SmallEvents SmallEventList `json:"small_events,omitempty"`
+	MidEvents   MidEventList   `json:"mid_events,omitempty"`
 }
 
 type EventFollow struct {
-	Uid  int    `json:"uid"`
-	Eid  int    `json:"eid"`
+	Uid int `json:"uid"`
+	Eid int `json:"eid"`
 }
 
 //easyjson:json
 type MidAndBigEventList struct {
-	MidEvents	MidEventList		`json:"mid_events,omitempty"`
+	MidEvents MidEventList `json:"mid_events"`
 	//BigEvent 	BigEventList
 }
 
@@ -238,9 +229,15 @@ type TagList []Tag
 //Mix up of UserGeneral, GeneralForm and Subs
 type FeedPost struct {
 	UserGeneral
-	OnwEvents		OwnEventsList	 	`json:"own_events,omitempty"`
-	Subscriptions	MidAndBigEventList	`json:"subscriptions,omitempty"`
+	OnwEvents     OwnEventsList      `json:"own_events,omitempty"`
+	Subscriptions MidAndBigEventList `json:"subscriptions,omitempty"`
 }
 
 //easyjson:json
 type FeedResults []FeedPost
+
+type Match struct {
+	Uid     int64  `json:"uid"`
+	MatchID int64  `json:"match_id"`
+	Message string `json:"message"`
+}

@@ -20,7 +20,7 @@ type MidEventForm struct {
 func (mef *MidEventForm) ValidationLimits() bool {
 	res := 3 <= mef.Limit && mef.Limit <= MiddleEventLimit
 	if !res {
-		log.Println("MIDEVENT: Limit validation failed")
+		log.Println("MIDEVENT: UserCount validation failed")
 	}
 	return res
 }
@@ -72,7 +72,8 @@ func (mef *MidEventForm) GetDBFormat(event *models.MidEvent) {
 		event.Photos = append(event.Photos, imgName)
 	}
 
-	for _, tag := range mef.TagsId {
-		event.TagsId = append(event.TagsId, tag)
-	}
+	//for _, tag := range mef.TagsId {
+	//	event.TagsId = append(event.TagsId, tag)
+	//}
+	event.TagsId = append(event.TagsId, mef.TagsId...)
 }

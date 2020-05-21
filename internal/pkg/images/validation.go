@@ -13,6 +13,7 @@ const (
 	Users = "users"
 	App = "app"
 	Events = "events"
+	MessageImageValidationFailed = "Image validation failed. Check server logs"
 )
 
 // For some reason validation also uploads

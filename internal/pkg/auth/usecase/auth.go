@@ -110,7 +110,7 @@ func (*AuthService) CheckAuthorize(ctx context.Context, in *pb.Token) (*pb.Autho
 	}
 	// success. user is authorized
 	log.Println("OK")
-	ctx = context.WithValue(ctx, security.CtxUserKey, claims)
+	ctx = context.WithValue(ctx, security.CtxUserKey, claims) //nolint
 
 	return &pb.AuthorizeReply{
 		Ok: true,

@@ -2,7 +2,6 @@ package security
 
 import (
 	"crypto/rand"
-	"errors"
 	"failless/internal/pkg/network"
 	"failless/internal/pkg/settings"
 	"golang.org/x/crypto/bcrypt"
@@ -44,13 +43,13 @@ func EncryptPassword(password string) ([]byte, error) {
 func CheckCredentials(w http.ResponseWriter, r *http.Request) int {
 	data := r.Context().Value(CtxUserKey)
 	if data == nil {
-		network.GenErrorCode(w, r, "auth required", http.StatusUnauthorized)
+		network.GenErrorCode(w, r, network.MessageErrorAuthRequired, http.StatusUnauthorized)
 		return -1
 	}
 
 	cred := data.(UserClaims)
 	if cred.Uid < 0 {
-		network.GenErrorCode(w, r, "token uid is incorrect", http.StatusBadRequest)
+		network.GenErrorCode(w, r, network.MessageErrorIncorrectTokenUid, http.StatusBadRequest)
 		return -1
 	}
 
@@ -60,12 +59,12 @@ func CheckCredentials(w http.ResponseWriter, r *http.Request) int {
 func GetUserFromCtx(r *http.Request) (UserClaims, error) {
 	data := r.Context().Value(CtxUserKey)
 	if data == nil {
-		return UserClaims{}, errors.New("Claims not found\n")
+		return UserClaims{}, claimsNotFoundError
 	}
 
 	cred := data.(UserClaims)
 	if cred.Uid < 0 {
-		return UserClaims{}, errors.New("token uid is incorrect")
+		return UserClaims{}, incorrectTokenUidError
 	}
 
 	return cred, nil
@@ -76,7 +75,6 @@ func CompareUidsFromURLAndToken(w http.ResponseWriter, r *http.Request, ps map[s
 
 	uid := int64(0)
 	if uid = network.GetIdFromRequest(w, r, ps); uid < 0 {
-		network.GenErrorCode(w, r, "url uid is incorrect", http.StatusBadRequest)
 		return -1
 	}
 
