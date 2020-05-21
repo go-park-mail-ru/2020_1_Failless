@@ -15,3 +15,5 @@ deploy_rsa.pub
 deploy_rsa
 mocks/
 *.tmp
+mock_*
+*.out
