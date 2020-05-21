@@ -10,14 +10,13 @@ require (
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.4.0
+	github.com/golangci/golangci-lint v1.27.0 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.2
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733
 	github.com/jackc/pgx v3.6.2+incompatible
-	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.4.0 // indirect
 	github.com/mailru/easyjson v0.7.1
-	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/prometheus/client_golang v1.6.0
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/stretchr/testify v1.5.1
@@ -28,6 +27,4 @@ require (
 	google.golang.org/genproto v0.0.0-20200429120912-1f37eeb960b2 // indirect
 	google.golang.org/grpc v1.29.1
 	google.golang.org/protobuf v1.21.0
-	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
-	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
