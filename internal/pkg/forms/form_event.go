@@ -15,7 +15,7 @@ const (
 
 const (
 	layoutISO = "2006-01-02"
-	layoutUS  = "January 1, 2020"
+	//layoutUS  = "January 1, 2020"
 )
 
 type EventForm struct {

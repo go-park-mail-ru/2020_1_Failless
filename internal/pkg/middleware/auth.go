@@ -12,17 +12,17 @@ import (
 )
 
 // Structure for describe an error
-type authError struct {
-
-	// Error message
-	msg string
-
-	// 1 - cookie not found
-	// 2 - parse error
-	// 3 - signature invalid
-	// 4 - token invalid
-	code int
-}
+//type authError struct {
+//
+//	// Error message
+//	msg string
+//
+//	// 1 - cookie not found
+//	// 2 - parse error
+//	// 3 - signature invalid
+//	// 4 - token invalid
+//	code int
+//}
 
 //type UserClaims struct {
 //	Uid   int
