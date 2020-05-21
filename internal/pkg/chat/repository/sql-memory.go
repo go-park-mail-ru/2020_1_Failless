@@ -51,7 +51,7 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 	}
 	//defer tx.Rollback()
 	defer func() {
-		err := tx.Rollback()
+		err = tx.Rollback()
 		if err != nil {
 			log.Println(err)
 		}
@@ -59,7 +59,7 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 
 	// Create global chat
 	var chatId int64
-	if err := tx.QueryRow(QueryInsertGlobalChat, uid1, userCount, title).Scan(&chatId); err != nil {
+	if err = tx.QueryRow(QueryInsertGlobalChat, uid1, userCount, title).Scan(&chatId); err != nil {
 		log.Println(err)
 		return -1, err
 	}
@@ -73,12 +73,12 @@ func (cr *sqlChatRepository) InsertDialogue(uid1, uid2, userCount int, title str
 		JOIN 			profile p ON p.uid = pi.pid
 		WHERE 			pi.pid = $3
 		RETURNING 		user_local_id;`
-	if err := tx.QueryRow(sqlStatement, chatId, uid1, uid2).Scan(
+	if err = tx.QueryRow(sqlStatement, chatId, uid1, uid2).Scan(
 		&userLocalIDs[0]); err != nil {
 		log.Println(err)
 		return -1, err
 	}
-	if err := tx.QueryRow(sqlStatement, chatId, uid2, uid1).Scan(
+	if err = tx.QueryRow(sqlStatement, chatId, uid2, uid1).Scan(
 		&userLocalIDs[1]); err != nil {
 		log.Println(err)
 		return -1, err

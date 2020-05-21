@@ -300,7 +300,7 @@ func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.Use
 	// the tx commits successfully, this is a no-op
 	//defer tx.Rollback()
 	defer func() {
-		err := tx.Rollback()
+		err = tx.Rollback()
 		if err != nil {
 			log.Println(err)
 		}

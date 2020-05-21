@@ -422,7 +422,7 @@ func (er *sqlEventsRepository) CreateMidEvent(event *models.MidEvent) error {
 	}
 	//defer tx.Rollback()
 	defer func() {
-		err := tx.Rollback()
+		err = tx.Rollback()
 		if err != nil {
 			log.Println(err)
 		}
@@ -680,7 +680,7 @@ func (er *sqlEventsRepository) JoinMidEvent(uid, eid int) (int, error) {
 	}
 	//defer tx.Rollback()
 	defer func() {
-		err := tx.Rollback()
+		err = tx.Rollback()
 		if err != nil {
 			log.Println(err)
 		}
