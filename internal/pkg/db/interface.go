@@ -1,5 +1,7 @@
 package db
 
+//go:generate mockgen -destination=mocks/mock_db.go -package=mocks failless/internal/pkg/db MyDBInterface
+
 import "github.com/jackc/pgx"
 
 type MyDBInterface interface {

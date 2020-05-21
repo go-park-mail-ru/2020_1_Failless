@@ -10,3 +10,4 @@ data
 *.pb.go
 *_easyjson.go
 easyjson-*
+mock_*

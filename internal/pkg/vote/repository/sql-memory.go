@@ -1,11 +1,15 @@
 package repository
 
-//go:generate mockgen -destination=../mocks/mock_repository.go -package=mocks failless/internal/pkg/vote Repository
-
 import (
 	mydb "failless/internal/pkg/db"
 	"failless/internal/pkg/vote"
 	"log"
+)
+
+const (
+	QueryInsertUserVote = `
+		INSERT INTO user_vote (uid, user_id, value)
+		VALUES 		( $1 , $2 , $3 );`
 )
 
 type sqlVoteRepository struct {
@@ -17,13 +21,10 @@ func NewSqlVoteRepository() vote.Repository {
 }
 
 func (vr *sqlVoteRepository) AddUserVote(uid int, id int, value int8) error {
-	sqlStatement := `
-		INSERT INTO user_vote (uid, user_id, value)
-		VALUES 		( $1 , $2 , $3 );`
-	_, err := vr.db.Exec(sqlStatement, uid, id, value)
+	_, err := vr.db.Exec(QueryInsertUserVote, uid, id, value)
 	if err != nil {
 		log.Println(err)
-		log.Println(sqlStatement, uid, id, value)
+		log.Println(QueryInsertUserVote, uid, id, value)
 		return err
 	}
 
