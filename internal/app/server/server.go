@@ -12,7 +12,13 @@ import (
 
 func Start() {
 	file := logger.OpenLogFile("server")
-	defer file.Close()
+	//defer file.Close()
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	if ok := settings.CheckSecretes(server.Secrets); !ok {
 		log.Println("Can't find variables ", server.Secrets)
