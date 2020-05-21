@@ -4,6 +4,7 @@ package repository
 
 import (
 	"errors"
+	mydb "failless/internal/pkg/db"
 	"failless/internal/pkg/models"
 	"failless/internal/pkg/user"
 	"github.com/jackc/pgx"
@@ -26,31 +27,85 @@ const (
 		UPDATE 	profile_info
 		SET 	photos = $1
 		WHERE 	pid = $2;`
-)
-
-type sqlUserRepository struct {
-	db *pgx.ConnPool
-}
-
-func NewSqlUserRepository(db *pgx.ConnPool) user.Repository {
-	return &sqlUserRepository{db: db}
-}
-
-func (ur *sqlUserRepository) GetUserByUID(uid int) (models.User, error) {
-	sqlStatement := `
+	QuerySelectUserByID = `
 		SELECT 	uid, name, phone, email, password
 		FROM 	profile
 		WHERE 	uid = $1;`
-	return ur.getUser(sqlStatement, uid)
-}
-
-func (ur *sqlUserRepository) GetUserByPhoneOrEmail(phone string, email string) (models.User, error) {
-	sqlStatement := `
+	QuerySelectUserByPhoneOrEmail = `
 		SELECT 	uid, name, phone, email, password
 		FROM 	profile
 		WHERE 	phone = $1
 		OR 		email = LOWER($2);`
-	return ur.getUser(sqlStatement, phone, email)
+	QueryUpdateUserLocation = `
+		UPDATE 	profile_info
+		SET 	location = ST_POINT($1, $2)
+		WHERE 	pid = $3;`
+	QueryUpdateUserRating = `
+		UPDATE 	profile_info
+		SET 	rating = $1
+		WHERE 	pid = $2;`
+	QueryDeleteUserByEmail = `
+		DELETE FROM 	profile
+		WHERE 			email=$1;`
+	QuerySelectTags = `
+		SELECT 		tag_id, name
+		FROM 		tag
+		ORDER BY 	tag_id;`
+	QuerySelectUserInfoIncomplete = `
+		SELECT	p.pid, u.name, p.photos, p.about, p.birthday, p.gender, p.tags
+		FROM	profile_info as p
+		JOIN	profile as u
+		ON		p.pid = u.uid `
+	QueryWithVotedUsersIncomplete = `
+		WITH	voted_users AS (SELECT user_id FROM user_vote WHERE uid = $1 ) `
+	QueryConditionFeedIncomplete = ` 
+		LEFT JOIN	voted_users AS v
+		ON			p.pid = v.user_id
+		WHERE		v.user_id IS NULL
+		AND			p.pid != $1
+		AND			p.photos IS NOT NULL	-- we don't show users without full profile info
+		AND			p.about IS NOT NULL
+		AND			p.about <> ''
+		LIMIT		$2;`
+	QueryWithChatMembersIncomplete = `
+		WITH members_id AS (
+			SELECT  mem.uid
+			FROM    mid_events
+			JOIN    mid_event_members mem
+			ON      mid_events.eid = mem.eid
+			WHERE   chat_id = $1
+		)`
+	QueryConditionChatMembersIncomplete = `
+		JOIN		members_id AS mi
+		ON			p.pid = mi.uid;`
+)
+
+var (
+	CorrectMessage = models.WorkMessage{
+		Request: nil,
+		Message: "",
+		Status:  http.StatusOK,
+	}
+)
+
+type sqlUserRepository struct {
+	pgxdb *pgx.ConnPool
+	db mydb.MyDBInterface
+}
+
+func NewSqlUserRepository(db *pgx.ConnPool) user.Repository {
+	return &sqlUserRepository{
+		pgxdb: db,
+		db: mydb.NewDBInterface(),
+	}
+}
+
+func (ur *sqlUserRepository) GetUserByUID(uid int) (models.User, error) {
+	return ur.getUser(QuerySelectUserByID, uid)
+}
+
+func (ur *sqlUserRepository) GetUserByPhoneOrEmail(phone string, email string) (models.User, error) {
+	return ur.getUser(QuerySelectUserByPhoneOrEmail, phone, email)
 }
 
 // Private method
@@ -97,20 +152,12 @@ func (ur *sqlUserRepository) AddNewUser(user *models.User) error {
 }
 
 func (ur *sqlUserRepository) SetUserLocation(uid int, point models.LocationPoint) error {
-	sqlStatement := `
-		UPDATE 	profile_info
-		SET 	location = ST_POINT($1, $2)
-		WHERE 	pid = $3;`
-	_, err := ur.db.Exec(sqlStatement, point.Latitude, point.Longitude, uid)
+	_, err := ur.db.Exec(QueryUpdateUserLocation, point.Latitude, point.Longitude, uid)
 	return err
 }
 
 func (ur *sqlUserRepository) UpdateUserRating(uid int, rating float32) error {
-	sqlStatement := `
-		UPDATE 	profile_info
-		SET 	rating = $1
-		WHERE 	pid = $2;`
-	_, err := ur.db.Exec(sqlStatement, rating, uid)
+	_, err := ur.db.Exec(QueryUpdateUserRating, rating, uid)
 	return err
 }
 
@@ -124,11 +171,7 @@ func (ur *sqlUserRepository) UpdateUserTags(uid int, tagIDs []int) models.WorkMe
 			Status:  http.StatusInternalServerError,
 		}
 	} else {
-		return models.WorkMessage{
-			Request: nil,
-			Message: "",
-			Status:  http.StatusOK,
-		}
+		return CorrectMessage
 	}
 }
 
@@ -142,11 +185,7 @@ func (ur *sqlUserRepository) UpdateUserAbout(uid int, about string) models.WorkM
 			Status:  http.StatusInternalServerError,
 		}
 	} else {
-		return models.WorkMessage{
-			Request: nil,
-			Message: "",
-			Status:  http.StatusOK,
-		}
+		return CorrectMessage
 	}
 }
 
@@ -193,10 +232,7 @@ func (ur *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err 
 
 // func for testing
 func (ur *sqlUserRepository) DeleteUser(mail string) error {
-	sqlStatement := `
-		DELETE FROM 	profile
-		WHERE 			email=$1;`
-	_, err := ur.db.Exec(sqlStatement, mail)
+	_, err := ur.db.Exec(QueryDeleteUserByEmail, mail)
 	return err
 }
 
@@ -209,17 +245,13 @@ func (ur *sqlUserRepository) UpdateUserPhotos(uid int, newImages *[]string) mode
 			Status:  http.StatusInternalServerError,
 		}
 	}
-	return models.WorkMessage{
-		Request: nil,
-		Message: "",
-		Status:  http.StatusOK,
-	}
+	return CorrectMessage
 }
 
 func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.User) error {
 	//gender := user.GenderById(info.Gender)
 
-	tx, err := ur.db.Begin()
+	tx, err := ur.pgxdb.Begin()
 	if err != nil {
 		return err
 	}
@@ -264,11 +296,7 @@ func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.Use
 }
 
 func (ur *sqlUserRepository) GetValidTags() ([]models.Tag, error) {
-	sqlStatement := `
-		SELECT 		tag_id, name
-		FROM 		tag
-		ORDER BY 	tag_id;`
-	rows, err := ur.db.Query(sqlStatement)
+	rows, err := ur.db.Query(QuerySelectTags)
 	if err != nil {
 		return nil, err
 	}
@@ -293,29 +321,13 @@ func (ur *sqlUserRepository) GetRandomFeedUsers(uid int, limit int, page int) ([
 	if page < 1 || limit < 1 {
 		return nil, errors.New("Page number can't be less than 1\n")
 	}
-	withCondition := `
-		WITH		voted_users AS (SELECT user_id FROM user_vote WHERE uid = $1 ) `
-	sqlCondition := ` 
-		LEFT JOIN	voted_users AS v
-		ON			p.pid = v.user_id
-		WHERE		v.user_id IS NULL
-		AND			p.pid != $1
-		AND			p.photos IS NOT NULL	-- we don't show users without full profile info
-		AND			p.about IS NOT NULL
-		AND			p.about <> ''
-		LIMIT		$2;`
-	return ur.getUsers(withCondition, sqlCondition, uid, limit)
+	return ur.getUsers(QueryWithVotedUsersIncomplete, QueryConditionFeedIncomplete, uid, limit)
 }
 
 // +/- universal method for getting users array by condition (aka sqlStatement)
 // and parameters in args (interface array)
 func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string, args ...interface{}) ([]models.UserGeneral, error) {
-	baseSql := withCondition + `
-		SELECT	p.pid, u.name, p.photos, p.about, p.birthday, p.gender, p.tags
-		FROM	profile_info as p
-		JOIN	profile as u
-		ON		p.pid = u.uid `
-	baseSql += sqlStatement
+	baseSql := withCondition + QuerySelectUserInfoIncomplete + sqlStatement
 	rows, err := ur.db.Query(baseSql, args...)
 	if err != nil {
 		log.Println("getUsers: ", err)
@@ -356,19 +368,8 @@ func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string,
 }
 
 func (ur *sqlUserRepository) GetUsersForChat(cid int64, users *models.UserGeneralList) models.WorkMessage {
-	withCondition := `
-		WITH members_id AS (
-			SELECT  mem.uid
-			FROM    mid_events
-			JOIN    mid_event_members mem
-			ON      mid_events.eid = mem.eid
-			WHERE   chat_id = $1
-		)`
-	sqlCondition := `
-		JOIN		members_id AS mi
-		ON			p.pid = mi.uid;`
 	var err error
-	*users, err = ur.getUsers(withCondition, sqlCondition, cid)
+	*users, err = ur.getUsers(QueryWithChatMembersIncomplete, QueryConditionChatMembersIncomplete, cid)
 	if err != nil {
 		return models.WorkMessage{
 			Request: nil,

@@ -13,4 +13,5 @@ data
 easyjson-*
 deploy_rsa.pub
 deploy_rsa
-mocks/
+mock_*
+*.out
