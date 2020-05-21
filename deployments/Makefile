@@ -132,5 +132,6 @@ install:
 	go get github.com/prometheus/client_golang/prometheus/promhttp
 	go get -u github.com/mailru/easyjson/...
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.27.0
+	go get github.com/golang/mock/mockgen
 
 
