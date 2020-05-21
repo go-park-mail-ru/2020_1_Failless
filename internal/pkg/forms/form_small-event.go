@@ -59,7 +59,8 @@ func (sef *SmallEventForm) GetDBFormat(event *models.SmallEvent) {
 		event.Photos = append(event.Photos, imgName)
 	}
 
-	for _, tag := range sef.TagsId {
-		event.TagsId = append(event.TagsId, tag)
-	}
+	//for _, tag := range sef.TagsId {
+	//	event.TagsId = append(event.TagsId, tag)
+	//}
+	event.TagsId = append(event.TagsId, sef.TagsId...)
 }
