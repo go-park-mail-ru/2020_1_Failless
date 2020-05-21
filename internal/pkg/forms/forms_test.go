@@ -151,10 +151,7 @@ func TestGeneralForm_ValidateGender(t *testing.T) {
 
 // testing all signup forms
 func TestSignForm_Validate(t *testing.T) {
-	faker := Faker{}
-	s := faker.GetSignForm()
-	assert.Equal(t, true, s.Validate())
-	s = SignForm{
+	s := SignForm{
 		Name:     "Se",
 		Phone:    "8502",
 		Email:    "kerchtown!yandex.ru",
