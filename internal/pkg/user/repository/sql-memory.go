@@ -37,12 +37,19 @@ func NewSqlUserRepository(db *pgx.ConnPool) user.Repository {
 }
 
 func (ur *sqlUserRepository) GetUserByUID(uid int) (models.User, error) {
-	sqlStatement := `SELECT uid, name, phone, email, password FROM profile WHERE uid = $1;`
+	sqlStatement := `
+		SELECT 	uid, name, phone, email, password
+		FROM 	profile
+		WHERE 	uid = $1;`
 	return ur.getUser(sqlStatement, uid)
 }
 
 func (ur *sqlUserRepository) GetUserByPhoneOrEmail(phone string, email string) (models.User, error) {
-	sqlStatement := `SELECT uid, name, phone, email, password FROM profile WHERE phone = $1 OR email = LOWER($2);`
+	sqlStatement := `
+		SELECT 	uid, name, phone, email, password
+		FROM 	profile
+		WHERE 	phone = $1
+		OR 		email = LOWER($2);`
 	return ur.getUser(sqlStatement, phone, email)
 }
 
@@ -67,7 +74,10 @@ func (ur *sqlUserRepository) getUser(sqlStatement string, args ...interface{}) (
 
 func (ur *sqlUserRepository) AddNewUser(user *models.User) error {
 	uid := 0
-	sqlStatement := `INSERT INTO profile VALUES (default, $1, $2, LOWER($3), $4) RETURNING uid;`
+	sqlStatement := `
+		INSERT INTO profile
+		VALUES 		(default, $1, $2, LOWER($3), $4)
+		RETURNING 	uid;`
 	err := ur.db.QueryRow(sqlStatement, user.Name, user.Phone, user.Email, user.Password).Scan(&uid)
 	if err != nil {
 		log.Println(err.Error())
@@ -75,7 +85,9 @@ func (ur *sqlUserRepository) AddNewUser(user *models.User) error {
 	}
 
 	user.Uid = uid
-	sqlStatement = `INSERT INTO profile_info VALUES ( $1 , '' , default , default , default , default , default , default ) ;`
+	sqlStatement = `
+		INSERT INTO profile_info
+		VALUES ( $1 , '' , default , default , default , default , default , default ) ;`
 	_, err = ur.db.Exec(sqlStatement, user.Uid)
 	if err != nil {
 		log.Println(sqlStatement, user.Uid)
@@ -85,13 +97,19 @@ func (ur *sqlUserRepository) AddNewUser(user *models.User) error {
 }
 
 func (ur *sqlUserRepository) SetUserLocation(uid int, point models.LocationPoint) error {
-	sqlStatement := `UPDATE profile_info SET location = ST_POINT($1, $2) WHERE pid = $3;`
+	sqlStatement := `
+		UPDATE 	profile_info
+		SET 	location = ST_POINT($1, $2)
+		WHERE 	pid = $3;`
 	_, err := ur.db.Exec(sqlStatement, point.Latitude, point.Longitude, uid)
 	return err
 }
 
 func (ur *sqlUserRepository) UpdateUserRating(uid int, rating float32) error {
-	sqlStatement := `UPDATE profile_info SET rating = $1 WHERE pid = $2;`
+	sqlStatement := `
+		UPDATE 	profile_info
+		SET 	rating = $1
+		WHERE 	pid = $2;`
 	_, err := ur.db.Exec(sqlStatement, rating, uid)
 	return err
 }
@@ -175,34 +193,11 @@ func (ur *sqlUserRepository) GetProfileInfo(uid int) (info models.JsonInfo, err 
 
 // func for testing
 func (ur *sqlUserRepository) DeleteUser(mail string) error {
-	sqlStatement := `DELETE FROM profile WHERE email=$1;`
+	sqlStatement := `
+		DELETE FROM 	profile
+		WHERE 			email=$1;`
 	_, err := ur.db.Exec(sqlStatement, mail)
 	return err
-}
-
-func (ur *sqlUserRepository) GetUserTags(uid int) ([]models.Tag, error) {
-	sqlStatement := `SELECT tag_id, name FROM user_tag NATURAL JOIN tag WHERE uid = $1 ;`
-	rows, err := ur.db.Query(sqlStatement, uid)
-	if err != nil && rows != nil && !rows.Next() {
-		log.Println(sqlStatement)
-		log.Println("user has no tags")
-		return nil, nil
-	} else if err != nil || rows == nil {
-		return nil, err
-	}
-
-	var tags []models.Tag
-	for rows.Next() {
-		tag := models.Tag{}
-		err = rows.Scan(&tag.TagId, &tag.Name)
-		if err != nil {
-			log.Println("Error while getting tags")
-			return nil, err
-		}
-		tags = append(tags, tag)
-	}
-
-	return tags, nil
 }
 
 func (ur *sqlUserRepository) UpdateUserPhotos(uid int, newImages *[]string) models.WorkMessage {
@@ -233,7 +228,10 @@ func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.Use
 	defer tx.Rollback()
 
 	// TODO: add name
-	sqlStatement := `UPDATE profile SET email = $1, phone = $2, password = $3 WHERE uid = $4;`
+	sqlStatement := `
+		UPDATE 	profile
+		SET 	email = $1, phone = $2, password = $3
+		WHERE 	uid = $4;`
 	_, err = tx.Exec(sqlStatement, usr.Email, usr.Phone, usr.Password)
 	if err != nil {
 		log.Println(sqlStatement, usr.Email, usr.Phone, usr.Password)
@@ -241,7 +239,10 @@ func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.Use
 		return err
 	}
 
-	sqlStatement = `UPDATE profile_info SET birthday = $1, gender = $2 WHERE pid = $3;`
+	sqlStatement = `
+		UPDATE 	profile_info
+		SET 	birthday = $1, gender = $2
+		WHERE 	pid = $3;`
 	_, err = tx.Exec(sqlStatement, usr.Email, usr.Phone, usr.Password)
 	if err != nil {
 		log.Println(sqlStatement, usr.Email, usr.Phone, usr.Password)
@@ -258,7 +259,10 @@ func (ur *sqlUserRepository) UpdUserGeneral(info models.JsonInfo, usr models.Use
 }
 
 func (ur *sqlUserRepository) GetValidTags() ([]models.Tag, error) {
-	sqlStatement := `SELECT tag_id, name FROM tag ORDER BY tag_id;`
+	sqlStatement := `
+		SELECT 		tag_id, name
+		FROM 		tag
+		ORDER BY 	tag_id;`
 	rows, err := ur.db.Query(sqlStatement)
 	if err != nil {
 		return nil, err
@@ -285,25 +289,16 @@ func (ur *sqlUserRepository) GetRandomFeedUsers(uid int, limit int, page int) ([
 		return nil, errors.New("Page number can't be less than 1\n")
 	}
 	withCondition := `
-		WITH
-			voted_users AS ( SELECT user_id FROM user_vote WHERE uid = $1 ) `
+		WITH		voted_users AS (SELECT user_id FROM user_vote WHERE uid = $1 ) `
 	sqlCondition := ` 
-		LEFT JOIN
-        	voted_users AS v
-        	ON
-            	p.pid = v.user_id
-		WHERE
-			v.user_id IS NULL
-				AND
-			p.pid != $1
-				AND
-			p.photos IS NOT NULL	-- we don't show users without full profile info
-				AND
-			p.about IS NOT NULL
-				AND
-			p.about <> ''
-		LIMIT
-			$2;`
+		LEFT JOIN	voted_users AS v
+		ON			p.pid = v.user_id
+		WHERE		v.user_id IS NULL
+		AND			p.pid != $1
+		AND			p.photos IS NOT NULL	-- we don't show users without full profile info
+		AND			p.about IS NOT NULL
+		AND			p.about <> ''
+		LIMIT		$2;`
 	return ur.getUsers(withCondition, sqlCondition, uid, limit)
 }
 
@@ -311,14 +306,10 @@ func (ur *sqlUserRepository) GetRandomFeedUsers(uid int, limit int, page int) ([
 // and parameters in args (interface array)
 func (ur *sqlUserRepository) getUsers(withCondition string, sqlStatement string, args ...interface{}) ([]models.UserGeneral, error) {
 	baseSql := withCondition + `
-		SELECT
-			p.pid, u.name, p.photos, p.about, p.birthday, p.gender, p.tags
-		FROM
-			profile_info as p
-			JOIN
-				profile as u
-				ON
-					p.pid = u.uid `
+		SELECT	p.pid, u.name, p.photos, p.about, p.birthday, p.gender, p.tags
+		FROM	profile_info as p
+		JOIN	profile as u
+		ON		p.pid = u.uid `
 	baseSql += sqlStatement
 	rows, err := ur.db.Query(baseSql, args...)
 	if err != nil {

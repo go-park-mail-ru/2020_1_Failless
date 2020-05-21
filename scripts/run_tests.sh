@@ -5,4 +5,3 @@ go test `go list all | grep "failless" | grep -v "mocks"` -coverprofile=coverage
 cat coverage.out.tmp | grep -v ".*_easyjson.go.*" > coverage.out
 go tool cover -func=coverage.out
 rm coverage.out.tmp
-rm coverage.out

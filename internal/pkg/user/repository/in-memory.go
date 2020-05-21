@@ -65,10 +65,6 @@ func (ur *userRepository) DeleteUser(mail string) error {
 	return nil
 }
 
-func (ur *userRepository) GetUserTags(uid int) ([]models.Tag, error) {
-	return nil, nil
-}
-
 func (ur *userRepository) UpdateUserPhotos(uid int, newImages *[]string) models.WorkMessage {
 	return models.WorkMessage{
 		Request: nil,

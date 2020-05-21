@@ -20,7 +20,6 @@ type Repository interface {
 	AddNewUser(user *models.User) error
 	GetUserByPhoneOrEmail(phone string, email string) (models.User, error)
 	GetProfileInfo(uid int) (models.JsonInfo, error)
-	GetUserTags(uid int) ([]models.Tag, error)
 	DeleteUser(mail string) error
 	GetValidTags() ([]models.Tag, error)
 	GetRandomFeedUsers(uid int, limit int, page int) ([]models.UserGeneral, error)
