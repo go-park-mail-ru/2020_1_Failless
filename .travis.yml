@@ -14,6 +14,12 @@ before_install:
 - chmod 600 ~/.ssh/deploy_rsa
 - ssh-add ~/.ssh/deploy_rsa
 - go version
+- sudo apt install -y wget unzip
+- pushd /home/travis
+- wget https://github.com/protocolbuffers/protobuf/releases/download/v3.12.0/protoc-3.12.0-linux-x86_64.zip
+- unzip protoc-3.12.0-linux-x86_64.zip
+- bin/protoc --version
+- popd
 - cd $TRAVIS_BUILD_DIR/deployments && make all
 after_success:
 - go build -o bin/auth $TRAVIS_BUILD_DIR/cmd/auth/main.go

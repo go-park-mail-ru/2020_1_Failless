@@ -104,12 +104,6 @@ clean-log:
 
 install:
 	@echo "  >  Installing dependencies..."
-	sudo apt install -y wget unzip
-	pushd /home/travis
-	wget https://github.com/protocolbuffers/protobuf/releases/download/v3.12.0/protoc-3.12.0-linux-x86_64.zip
-	unzip protoc-3.12.0-linux-x86_64.zip
-	bin/protoc --version
-	popd
 	#unzip protoc-3.12.0-linux-x86_64.zip -d /tmp
 	#sudo cp /tmp/bin/protoc /usr/local/bin/protoc
 	go install google.golang.org/protobuf/cmd/protoc-gen-go
