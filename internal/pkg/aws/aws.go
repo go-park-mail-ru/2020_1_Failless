@@ -44,7 +44,7 @@ func (s *S3Storage) UploadToAWS(r io.ReadSeeker, folder string, name string) err
 		Bucket:             aws.String(S3Bucket),
 		Key:                aws.String(folder + "/" + name),
 		Body:               r,
-		ACL:                aws.String("private"),
+		ACL:                aws.String("public-read"),
 		ContentDisposition: aws.String("attachment"),
 	})
 
