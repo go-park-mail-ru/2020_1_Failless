@@ -112,7 +112,7 @@ func (ud *userDelivery) UpdUserPhotos(w http.ResponseWriter, r *http.Request, ps
 
 	for index := range newImages {
 		if newImages[index].ImgBase64 != "" {
-			if newImages[index].ImgName == "" || !images.ValidateImage(&newImages[index], images.Users) {
+			if !images.ValidateImage(&newImages[index], images.Users) {
 				network.GenErrorCode(w, r, images.MessageImageValidationFailed, http.StatusNotFound)
 				return
 			}
