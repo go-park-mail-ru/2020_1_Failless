@@ -30,12 +30,13 @@ func (pic *EImage) SaveImage(folder string) error {
 	//err := imaging.Save(pic.Img, path.Join(Media, pic.ImgName))
 	buf, err := pic.ImageToBuffer()
 	if err != nil {
-		log.Println("ERROR IN SAVING", pic.ImgName)
+		log.Println("ERROR IN SAVING", pic.ImgName, err)
 		return err
 	}
 
 	s3, err := aws.StartAWS()
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	return s3.UploadToAWS(bytes.NewReader(buf.Bytes()), folder, pic.ImgName)
