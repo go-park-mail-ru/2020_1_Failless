@@ -28,14 +28,15 @@ func (ed *eventDelivery) GetSearchEvents(w http.ResponseWriter, r *http.Request,
 	var searchRequest models.EventRequest
 	err := json.UnmarshalFromReader(r.Body, &searchRequest)
 	if err != nil {
-		network.GenErrorCode(w, r, "Error within parse json", http.StatusBadRequest)
+		network.GenErrorCode(w, r, network.MessageErrorParseJSON, http.StatusBadRequest)
 		return
 	}
 
 	log.Println(searchRequest)
 
-	if searchRequest.Page < 1 {
-		searchRequest.Page = 1
+	// For offset it's best to have it 0 for the first page
+	if searchRequest.Page < 0 {
+		searchRequest.Page = 0
 	}
 
 	var events models.MidAndBigEventList
