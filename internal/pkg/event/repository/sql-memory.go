@@ -531,30 +531,51 @@ func (er *sqlEventsRepository) GetMidEventsWithFollowed(midEvents *models.MidEve
 					CASE WHEN me_mem.uid IS NULL THEN FALSE ELSE TRUE END AS followed
 		FROM 		mid_events AS me
 		LEFT JOIN 	mid_event_members AS me_mem
-		ON			me_mem.eid = me.eid AND me_mem.uid = $1
-		WHERE 		me.admin_id <> $1`
+		ON			me_mem.eid = me.eid AND me_mem.uid = $%v
+		WHERE 		me.admin_id <> $%v`
 	var rows *pgx.Rows
 	var err error
+	var args []interface{}
+	args = append(args, request.Uid, request.Uid)
+
 	if len(request.Query) > 0 {
 		var generator queryGenerator
 		if !generator.remove3PSymbols(request.Query) {
 			return http.StatusInternalServerError, errors.New("Incorrect symbols in the query\n")
 		}
-		args := generator.GenerateArgSlice(request.Limit, request.Page)
 		sqlStatement += `
-		AND 		me.title_tsv @@ phraseto_tsquery( $2 )
-		ORDER BY	(current_timestamp - me.date) ASC, me.time_created DESC
-		LIMIT		$3
-		OFFSET		$4 * 0;` // TODO: offset 0 (it's by default 0 .-.)
-		args = append([]interface{}{request.Uid}, args...)
-		rows, err = er.db.Query(sqlStatement, args...)
-	} else {
-		sqlStatement += `
-		ORDER BY	(current_timestamp - me.date) ASC, me.time_created DESC
-		LIMIT		$2 
-		OFFSET		$3 * 0;` // TODO: offset 0
-		rows, err = er.db.Query(sqlStatement, request.Uid, request.Limit, request.Page)
+		AND 		title_tsv @@ phraseto_tsquery( $%v )`
+		args = append(args, generator.GetQueryString())
 	}
+
+	if request.UserLimit != 0 {
+		sqlStatement += `
+		AND			member_limit = $%v`
+		args = append(args, request.UserLimit)
+	}
+
+	if request.Tags != nil && len(request.Tags) != 0 {
+		sqlStatement += `
+		AND			$%v && tags`
+		args = append(args, request.Tags)
+	}
+
+	sqlStatement += `
+		ORDER BY	(current_timestamp - date) ASC, time_created DESC
+		LIMIT		$%v
+		OFFSET		$%v::INTEGER * $%v::INTEGER`
+	args = append(args, request.Limit, request.Limit, request.Page)
+
+	// Prepare indices for sqlStatement
+	indices := make([]interface{}, len(args))
+	for iii := range indices {
+		 indices[iii] = iii + 1
+	}
+
+	// Fill sqlStatement with indices
+	sqlStatement = fmt.Sprintf(sqlStatement, indices...)
+
+	rows, err = er.db.Query(sqlStatement, args...)
 	if err != nil {
 		log.Println("EventRepo: GetMidEventsWithFollowed: ", err)
 		log.Println(sqlStatement)
