@@ -79,7 +79,6 @@ func (vc *voteUseCase) VoteUser(vote models.Vote) models.WorkMessage {
 			go func(clients map[string]*Client, voteId, matchId int64) {
 				count := uint8(0)
 				for _, item := range clients {
-					log.Println(item.Uid, matchId)
 					if item.Uid == matchId {
 						log.Println("Write to the channel")
 						item.MessagesChannel <- models.Match{
@@ -179,6 +178,7 @@ func (cc *voteUseCase) Subscribe(conn *websocket.Conn, uid int64) {
 	cs.Uid = uid
 	cs.Cond = sync.NewCond(&cs.Mut)
 	cs.MessagesChannel = make(chan models.Match)
-	MainHandler.Clients[id] = cs
+	//MainHandler.Clients[id] = cs
+	MainHandler.Clients[string(uid)] = cs
 	cs.Run()
 }

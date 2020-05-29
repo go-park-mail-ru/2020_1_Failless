@@ -86,24 +86,26 @@ func (cc *Client) Run() {
 		//	message.Uid = int64(user.Uid)
 		//}
 		message.Date = time.Now()
-		//fmt.Println("Before uc.AddNewMessage(&message)", message)
-		code, err := uc.AddNewMessage(&message)
-		if err != nil {
-			log.Println(err.Error())
-			err = cc.Conn.WriteJSON(
-				models.WorkMessage{
-					Message: err.Error(),
-					Status:  code})
+		// check ping-pong message
+		if message.Text != "" {
+			code, err := uc.AddNewMessage(&message)
 			if err != nil {
-				err = cc.Conn.Close()
-				if err != nil {
-					log.Println(err)
-				}
 				log.Println(err.Error())
-				return
+				err = cc.Conn.WriteJSON(
+					models.WorkMessage{
+						Message: err.Error(),
+						Status:  code})
+				if err != nil {
+					err = cc.Conn.Close()
+					if err != nil {
+						log.Println(err)
+					}
+					log.Println(err.Error())
+					return
+				}
 			}
+			MainHandler.Notify(&message)
 		}
-		MainHandler.Notify(&message)
 	}
 }
 
