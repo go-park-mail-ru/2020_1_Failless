@@ -153,14 +153,11 @@ type EventRequest struct {
 	Uid       int           `json:"uid,omitempty"`
 	Page      int           `json:"page"`
 	Limit     int           `json:"limit"`
-	UserLimit int           `json:"user_limit,omitempty"`
+	MinAmount int			`json:"minAmount,omitempty"`
+	MaxAmount int			`json:"maxAmount,omitempty"`
 	Query     string        `json:"query"`
 	Tags      []int         `json:"tags,omitempty"`
 	Location  LocationPoint `json:"location,omitempty"`
-	MinAge    int           `json:"minAge"`
-	MaxAge    int           `json:"maxAge"`
-	Men       bool          `json:"men"`
-	Women     bool          `json:"women"`
 }
 
 type SmallEvent struct {
