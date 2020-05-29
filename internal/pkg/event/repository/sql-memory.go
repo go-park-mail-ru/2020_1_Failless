@@ -7,6 +7,7 @@ import (
 	chatRepository "failless/internal/pkg/chat/repository"
 	"failless/internal/pkg/event"
 	"failless/internal/pkg/models"
+	"fmt"
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/pgtype"
 	"log"
@@ -88,6 +89,12 @@ func (qg *queryGenerator) remove3PSymbols(keys string) bool {
 //		LIMIT 		$` + strconv.Itoa(itemNum+1) + `
 //		OFFSET 		$` + strconv.Itoa(itemNum+2) + ` ;`
 //}
+
+
+// Return tsv-vector or i dunno
+func (qg *queryGenerator) GetQueryString() string {
+	return strings.Join(qg.vector, " ")
+}
 
 // Generate args slice from words vector, using limit and page number,
 // for reusing getEvents method from sqlEventsRepository struct
@@ -434,29 +441,48 @@ func (er *sqlEventsRepository) GetAllMidEvents(midEvents *models.MidEventList, r
 	sqlStatement := `
 		SELECT		eid, title, description, tags, date, photos, member_limit, members, is_public
 		FROM		mid_events
-		`
+		WHERE 		TRUE`
 	var rows *pgx.Rows
 	var err error
+	var args []interface{}
 	if len(request.Query) > 0 {
 		var generator queryGenerator
 		if !generator.remove3PSymbols(request.Query) {
 			return http.StatusInternalServerError, errors.New("Incorrect symbols in the query\n")
 		}
-		args := generator.GenerateArgSlice(request.Limit, request.Page)
 		sqlStatement += `
-		WHERE		title_tsv @@ phraseto_tsquery( $1 )
-		ORDER BY	(current_timestamp - date) ASC, time_created DESC
-		LIMIT		$2::INTEGER
-		OFFSET		$2::INTEGER * $3::INTEGER;`
-		rows, err = er.db.Query(sqlStatement, args...)
-	} else {
-		sqlStatement += `
-		ORDER BY	(current_timestamp - date) ASC, time_created DESC
-		LIMIT		$1::INTEGER
-		OFFSET		$1::INTEGER * $2::INTEGER;`
-		rows, err = er.db.Query(sqlStatement, request.Limit, request.Page)
+		AND 		title_tsv @@ phraseto_tsquery( $%v )`
+		args = append(args, generator.GetQueryString())
 	}
 
+	if request.UserLimit != 0 {
+		sqlStatement += `
+		AND			member_limit = $%v`
+		args = append(args, request.UserLimit)
+	}
+
+	if request.Tags != nil && len(request.Tags) != 0 {
+		sqlStatement += `
+		AND			$%v && tags`
+		args = append(args, request.Tags)
+	}
+
+	sqlStatement += `
+		ORDER BY	(current_timestamp - date) ASC, time_created DESC
+		LIMIT		$%v
+		OFFSET		$%v::INTEGER * $%v::INTEGER`
+	args = append(args, request.Limit, request.Limit, request.Page)
+
+	// Prepare indices for sqlStatement
+	indices := make([]interface{}, len(args))
+	for iii := range indices {
+		 indices[iii] = iii + 1
+	}
+
+	// Fill sqlStatement with indices
+	sqlStatement = fmt.Sprintf(sqlStatement, indices...)
+
+	rows, err = er.db.Query(sqlStatement, args...)
 	if err != nil {
 		log.Println("EventRepo: GetAllMidEvents: ", err, rows)
 		return http.StatusInternalServerError, err
