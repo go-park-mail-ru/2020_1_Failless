@@ -455,10 +455,16 @@ func (er *sqlEventsRepository) GetAllMidEvents(midEvents *models.MidEventList, r
 		args = append(args, generator.GetQueryString())
 	}
 
-	if request.UserLimit != 0 {
+	if request.MinAmount != 0 {
 		sqlStatement += `
-		AND			member_limit = $%v`
-		args = append(args, request.UserLimit)
+		AND			member_limit >= $%v`
+		args = append(args, request.MinAmount)
+	}
+
+	if request.MaxAmount != 0 {
+		sqlStatement += `
+		AND			member_limit <= $%v`
+		args = append(args, request.MaxAmount)
 	}
 
 	if request.Tags != nil && len(request.Tags) != 0 {
@@ -548,10 +554,16 @@ func (er *sqlEventsRepository) GetMidEventsWithFollowed(midEvents *models.MidEve
 		args = append(args, generator.GetQueryString())
 	}
 
-	if request.UserLimit != 0 {
+	if request.MinAmount != 0 {
 		sqlStatement += `
-		AND			member_limit = $%v`
-		args = append(args, request.UserLimit)
+		AND			member_limit >= $%v`
+		args = append(args, request.MinAmount)
+	}
+
+	if request.MaxAmount != 0 {
+		sqlStatement += `
+		AND			member_limit <= $%v`
+		args = append(args, request.MaxAmount)
 	}
 
 	if request.Tags != nil && len(request.Tags) != 0 {
