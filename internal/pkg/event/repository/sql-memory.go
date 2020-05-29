@@ -444,21 +444,21 @@ func (er *sqlEventsRepository) GetAllMidEvents(midEvents *models.MidEventList, r
 		}
 		args := generator.GenerateArgSlice(request.Limit, request.Page)
 		sqlStatement += `
-		WHERE		e.title_tsv @@ phraseto_tsquery( $1 )
+		WHERE		title_tsv @@ phraseto_tsquery( $1 )
 		ORDER BY	(current_timestamp - date) ASC, time_created DESC
-		LIMIT		$2
-		OFFSET		$3 * 0;` // TODO: offset 0
+		LIMIT		$2::INTEGER
+		OFFSET		$2::INTEGER * $3::INTEGER;`
 		rows, err = er.db.Query(sqlStatement, args...)
 	} else {
 		sqlStatement += `
 		ORDER BY	(current_timestamp - date) ASC, time_created DESC
-		LIMIT		$1
-		OFFSET		$2 * 0;`	// TODO: offset 0
+		LIMIT		$1::INTEGER
+		OFFSET		$1::INTEGER * $2::INTEGER;`
 		rows, err = er.db.Query(sqlStatement, request.Limit, request.Page)
 	}
 
 	if err != nil {
-		log.Println("EventRepo: GetAllMidEvents: ", err)
+		log.Println("EventRepo: GetAllMidEvents: ", err, rows)
 		return http.StatusInternalServerError, err
 	}
 	defer rows.Close()
