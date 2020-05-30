@@ -512,6 +512,7 @@ func (er *sqlEventsRepository) GetSubscriptionMidEvents(midEvents *models.MidEve
 		JOIN		mid_event_members
 		ON			mid_events.eid = mid_event_members.eid
 		AND			mid_event_members.uid = $1
+		AND         mid_events.admin_id <> mid_event_members.uid
 		ORDER BY	(current_timestamp - date) ASC, time_created DESC
 		LIMIT		30;`
 	rows, err := er.db.Query(sqlStatement, uid)
