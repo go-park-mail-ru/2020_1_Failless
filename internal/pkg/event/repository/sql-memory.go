@@ -727,8 +727,8 @@ func (er *sqlEventsRepository) GetSubscriptionMidEventsWithAnotherUserFollowed(m
 			FROM		mid_events ME
 			JOIN		mid_event_members MEM
 			ON			ME.eid = MEM.eid
-			AND			(MEM.uid = $1
-			OR			MEM.uid = $2)
+			AND			(MEM.uid = $1 OR MEM.uid = $2)
+			AND 		ME.admin_id <> $1
 			GROUP BY	ME.eid, date, time_created) AS grouped
 		JOIN		mid_event_members MEM
 		ON			MEM.eid = grouped.eid
