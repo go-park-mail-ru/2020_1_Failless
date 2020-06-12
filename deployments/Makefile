@@ -8,7 +8,7 @@ GO = go
 PID1 := /tmp/.$(TARGET_SERVER).pid
 PID2 := /tmp/.$(TARGET_AUTH).pid
 PID3 := /tmp/.$(TARGET_CHAT).pid
-PID3 := /tmp/.$(TARGET_EMAIL).pid
+PID4 := /tmp/.$(TARGET_EMAIL).pid
 
 GOFILES := $(PWD)/..
 

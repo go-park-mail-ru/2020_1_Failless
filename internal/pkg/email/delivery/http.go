@@ -27,5 +27,9 @@ func (ed *emailDelivery) SendReminder(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-
+	if msg := ed.UseCase.SendReminder(&receiver); msg.Status >= 400 {
+		network.GenErrorCode(w, r, msg.Message, msg.Status)
+		return
+	}
+	network.Jsonify(w, receiver, http.StatusOK)
 }

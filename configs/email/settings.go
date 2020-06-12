@@ -10,7 +10,7 @@ import (
 )
 
 var routesMap = map[string][]settings.MapHandler{
-	"/api/srv/email/construction": {{
+	"/api/email/construction": {{
 		Type:         "POST",
 		Handler:      delivery.GetDelivery().SendReminder,
 		CORS:         true,
@@ -18,12 +18,6 @@ var routesMap = map[string][]settings.MapHandler{
 		CSRF:         false,
 		WS:           false,
 	}},
-}
-
-// Env variables which must to be set before running server
-var Secrets = []string{
-	"EMAIL_LOGIN",
-	"EMAIL_PASSWORD",
 }
 
 var doOnce sync.Once
@@ -62,6 +56,8 @@ func GetConfig() *settings.ServerSettings {
 		conf.InitSecure(&settings.SecureSettings)
 		conf.InitConf(&settings.UseCaseConf)
 		router.InitRouter(&conf, httptreemux.New())
+
+		settings.InitSMTP()
 	})
 	return &conf
 }

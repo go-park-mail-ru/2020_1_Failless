@@ -20,8 +20,8 @@ func Start() {
 		}
 	}()
 
-	if ok := settings.CheckSecretes(email.Secrets); !ok {
-		log.Println("Can't find variables ", email.Secrets)
+	if ok := settings.CheckSecretes(settings.Secrets); !ok {
+		log.Println("Can't find variables ", settings.Secrets)
 		log.Fatal("Environment variables don't set")
 	}
 	serverSettings := email.GetConfig()
