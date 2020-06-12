@@ -9,8 +9,8 @@ import (
 
 const (
 	QueryInsertEmail = `
-		INSERT INTO	emails (email)
-		VALUES		($1);`
+		INSERT INTO	emails (email, lang)
+		VALUES		($1, $2);`
 )
 
 type sqlEmailsRepository struct {
@@ -22,7 +22,7 @@ func NewSqlEmailRepository(db *pgx.ConnPool) email.Repository {
 }
 
 func (er *sqlEmailsRepository) SaveEmail(email *models.Email) (int, error) {
-	cTag, err := er.db.Exec(QueryInsertEmail, email.Email)
+	cTag, err := er.db.Exec(QueryInsertEmail, email.Email, email.Lang)
 	if err != nil || cTag.RowsAffected() == 0 {
 		return http.StatusConflict, err
 	} else {
