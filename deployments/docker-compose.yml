@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.4'
 services:
   eventum_serv:
     container_name: eventumserv
@@ -68,6 +68,25 @@ services:
       context: ../.
       dockerfile: ./build/chat.dockerfile
 
+  eventum_email:
+    container_name: eventumemail
+    restart: always
+    environment:
+      - EMAIL_LOGIN
+      - EMAIL_PASSWORD
+    ports:
+      - '3004:3004'
+    command: bin/email
+    links:
+      - eventumdb
+      - pgbouncer
+    working_dir: /home/eventum
+    networks:
+      - backend
+    build:
+      context: ../.
+      dockerfile: ./build/email.dockerfile
+
   pgbouncer:
     container_name: pgbouncer
     restart: always
@@ -128,6 +147,7 @@ services:
       - eventum_chat
       - eventum_serv
       - eventum_auth
+      - eventum_email
 
 volumes:
   database-data:

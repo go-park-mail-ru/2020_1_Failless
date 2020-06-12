@@ -1,12 +1,14 @@
 TARGET_SERVER = server
 TARGET_AUTH = auth
 TARGET_CHAT = chat
+TARGET_EMAIL = email
 GO = go
 
 # PID file will keep the process id of the server
 PID1 := /tmp/.$(TARGET_SERVER).pid
 PID2 := /tmp/.$(TARGET_AUTH).pid
 PID3 := /tmp/.$(TARGET_CHAT).pid
+PID3 := /tmp/.$(TARGET_EMAIL).pid
 
 GOFILES := $(PWD)/..
 
@@ -27,15 +29,15 @@ help: Makefile
 all: install generate compile
 
 ## start: Run development mode.
-start: start-auth start-server start-chat
+start: start-auth start-server start-chat start-email
 ## stop: Stop development mode.
-stop: stop-server stop-auth stop-chat
+stop: stop-server stop-auth stop-chat stop-email
 
 clean: clean-bin clean-log clean-json
 
 generate: protoc easyjson
 
-compile: build-server build-auth build-chat
+compile: build-server build-auth build-chat build-email
 
 start-server:
 	@echo "  >  $(TARGET_SERVER) is available at localhost:$(SERVER_PORT)"
@@ -52,6 +54,11 @@ start-chat:
 	@-$(GOFILES)/bin/chat 2>&1 & echo $$! > $(PID3)
 	@cat $(PID3) | sed "/^/s/^/  \>  PID: /"
 
+start-email:
+	@echo "  >  $(TARGET_EMAIL) is available at localhost:$(EMAIL_PORT)"
+	@-$(GOFILES)/bin/email 2>&1 & echo $$! > $(PID4)
+	@cat $(PID4) | sed "/^/s/^/  \>  PID: /"
+
 stop-server:
 	@-touch $(PID1)
 	@-kill `cat $(PID1)` 2> /dev/null || true
@@ -67,6 +74,11 @@ stop-chat:
 	@-kill `cat $(PID3)` 2> /dev/null || true
 	@-rm $(PID3)
 
+stop-email:
+	@-touch $(PID4)
+	@-kill `cat $(PID4)` 2> /dev/null || true
+	@-rm $(PID4)
+
 build-server:
 	@echo "  >  Building binary for $(TARGET_SERVER)..."
 	$(GO) build $(FLAGS) -o $(GOFILES)/bin/server $(GOFILES)/cmd/server
@@ -78,6 +90,10 @@ build-auth:
 build-chat:
 	@echo "  >  Building binary for $(TARGET_CHAT)..."
 	$(GO) build $(FLAGS) -o $(GOFILES)/bin/chat $(GOFILES)/cmd/chat
+
+build-email:
+	@echo "  >  Building binary for $(TARGET_EMAIL)..."
+	$(GO) build $(FLAGS) -o $(GOFILES)/bin/email $(GOFILES)/cmd/email
 
 easyjson:
 	@echo "  >  Generating easyjson files..."
