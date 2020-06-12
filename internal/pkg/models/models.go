@@ -241,4 +241,5 @@ type Match struct {
 
 type Email struct {
 	Email	string	`json:"email"`
+	Lang	string	`json:"lang"`
 }

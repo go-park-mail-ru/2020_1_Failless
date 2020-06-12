@@ -26,12 +26,12 @@ func (eu *emailUseCase) SendReminder(email *models.Email) models.WorkMessage {
 	if err != nil {
 		return models.WorkMessage{
 			Request: nil,
-			Message: err.Error(),
+			Message: "Email is already in database",
 			Status:  code,
 		}
 	}
 
-	if err = eu.SendEmail([]string{email.Email}); err != nil {
+	if err = eu.SendEmail(email); err != nil {
 		return models.WorkMessage{
 			Request: nil,
 			Message: "",
@@ -46,11 +46,25 @@ func (eu *emailUseCase) SendReminder(email *models.Email) models.WorkMessage {
 	}
 }
 
-func (eu *emailUseCase) SendEmail(to []string) error {
-    message := []byte("This is a really unimaginative message, I know.")
+func (eu *emailUseCase) SendEmail(email *models.Email) error {
+	to := []string{email.Email}
+	var message []byte
+	if email.Lang == "ru" {
+		message = []byte(RU_Notify)
+	} else if email.Lang == "es" {
+		message = []byte(ES_Notify)
+	} else {
+		message = []byte(EN_Notify)
+	}
     err := smtp.SendMail(settings.EmailServer.Host + ":" + settings.EmailServer.Port, settings.EmailServer.Auth, settings.EmailServer.Login, to, message)
 	if err != nil {
 		log.Println(err)
 	}
     return err
 }
+
+const (
+	RU_Notify = "Вы получили это сообщение, поскольку захотели, что бы мы уведомили Вас, когда сервис Eventum снова начнёт работать. Если это были не Вы - напишите нам"
+	EN_Notify = "You've received this message since you asked us to notify you, when Eventum is back on its feet. If it weren't you - let us know"
+	ES_Notify = "Has recibido este mensaje desde que nos has pedido que te lo notifiquemos cuando Eventum vuelva a ponerse de pie. Si no fuera usted - háganoslo saber"
+)
