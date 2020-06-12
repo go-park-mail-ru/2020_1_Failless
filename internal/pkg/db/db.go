@@ -35,7 +35,7 @@ func init() {
 	dbase, err := pgx.NewConnPool(pgxConnPoolConfig)
 	if err != nil {
 		if settings.UseCaseConf.InHDD {
-			log.Fatal("Connection to database was failed")
+			log.Fatal("Connection to database was failed", pgxConfig)
 		}
 		db = nil
 	} else {
