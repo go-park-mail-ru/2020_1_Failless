@@ -35,7 +35,7 @@ func init() {
 	dbase, err := pgx.NewConnPool(pgxConnPoolConfig)
 	if err != nil {
 		if settings.UseCaseConf.InHDD {
-			log.Fatal("Connection to database was failed", pgxConfig)
+			log.Fatal("Connection to database was failed")
 		}
 		db = nil
 	} else {
@@ -44,7 +44,7 @@ func init() {
 }
 func ConnectToDB() *pgx.ConnPool {
 	if db == nil {
-		log.Fatal("Connection to database was failed", host, port, user)
+		log.Fatal("Connection to database was failed")
 	}
 	//syncOnce.Do(func() {
 	//	pgxConfig := pgx.ConnConfig{

@@ -72,6 +72,9 @@ services:
     container_name: eventumemail
     restart: always
     environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
       - EMAIL_LOGIN
       - EMAIL_PASSWORD
     ports:
