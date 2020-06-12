@@ -44,7 +44,7 @@ func init() {
 }
 func ConnectToDB() *pgx.ConnPool {
 	if db == nil {
-		log.Fatal("Connection to database was failed")
+		log.Fatal("Connection to database was failed", host, port, user)
 	}
 	//syncOnce.Do(func() {
 	//	pgxConfig := pgx.ConnConfig{
