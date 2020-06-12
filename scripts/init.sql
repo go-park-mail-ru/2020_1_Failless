@@ -196,6 +196,12 @@ CREATE TABLE IF NOT EXISTS user_vote
     CONSTRAINT unique_user_vote UNIQUE (uid, user_id)
 );
 
+CREATE TABLE IF NOT EXISTS emails
+(
+    email   VARCHAR(64) UNIQUE NOT NULL CHECK ( email <> '' ),
+    lang    VARCHAR(10)
+);
+
 
 CREATE OR REPLACE PROCEDURE add_location(uid INT, latitude FLOAT, longitude FLOAT)
     LANGUAGE plpgsql AS

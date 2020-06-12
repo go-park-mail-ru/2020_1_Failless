@@ -18,3 +18,10 @@ scrape_configs:
       - targets: ['localhost:3003']
         labels:
           group: 'production'
+  - job_name: 'eventum_email'
+    scrape_interval: 5s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['localhost:3004']
+        labels:
+          group: 'production'

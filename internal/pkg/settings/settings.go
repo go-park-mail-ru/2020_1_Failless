@@ -3,6 +3,8 @@ package settings
 import (
 	pb "failless/api/proto/auth"
 	"net/http"
+	"net/smtp"
+	"os"
 	"time"
 )
 
@@ -81,4 +83,30 @@ type RouterInterface interface {
 
 func (s *ServerSettings) GetRouter() http.Handler {
 	return s.Router
+}
+
+type SMTPServer struct {
+	Login	string
+	Pass	string
+	Host 	string
+	Port 	string
+	Auth	smtp.Auth
+}
+
+// Env variables which must to be set before running server
+var Secrets = []string{
+	"EMAIL_LOGIN",
+	"EMAIL_PASSWORD",
+}
+
+var EmailServer SMTPServer
+
+func InitSMTP() {
+	EmailServer = SMTPServer{
+		Host: "smtp.gmail.com",
+		Port: "587",
+		Login: os.Getenv(Secrets[0]),
+		Pass:  os.Getenv(Secrets[1]),
+	}
+	EmailServer.Auth = smtp.PlainAuth("", EmailServer.Login, EmailServer.Pass, EmailServer.Host)
 }

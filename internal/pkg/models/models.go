@@ -238,3 +238,8 @@ type Match struct {
 	MatchID int64  `json:"match_id"`
 	Message string `json:"message"`
 }
+
+type Email struct {
+	Email	string	`json:"email"`
+	Lang	string	`json:"lang"`
+}

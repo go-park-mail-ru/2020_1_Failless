@@ -24,16 +24,13 @@ import (
 var (
 	TestEventRequest = models.EventRequest{
 		Uid:       1,
-		Page:      1,
+		Page:      0,
 		Limit:     10,
-		UserLimit: 15,
+		MinAmount: 3,
+		MaxAmount: 15,
 		Query:     "kek",
 		Tags:      nil,
 		Location:  models.LocationPoint{},
-		MinAge:    18,
-		MaxAge:    100,
-		Men:       true,
-		Women:     true,
 	}
 	testSmallEvent = models.SmallEvent{
 		EId:    1,
